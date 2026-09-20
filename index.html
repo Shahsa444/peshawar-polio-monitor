@@ -1,0 +1,1238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Peshawar Division Polio Monitor</title>
+<meta name="description" content="Campaign coverage, independent monitoring and cluster GPS checks for Peshawar Division, Khyber Pakhtunkhwa">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
+<style>
+:root{
+  --ground:#F3F2F7; --surface:#FFFFFF; --surface-2:#F8F7FB; --sunk:#EEECF4;
+  --ink:#191426; --ink-2:#4B4560; --muted:#77718A; --line:#E3E0EC; --line-2:#CFCADC;
+  --accent:#6A3DBD; --accent-ink:#FFFFFF; --accent-soft:#EEE7FB; --accent-2:#8B63D6;
+  --rail:#17112B; --rail-2:#231B3D; --rail-ink:#D9D2EE; --rail-muted:#8E86AB; --rail-hi:#C4A8FF;
+  --pass:#1F8A5B; --watch:#C98A0B; --fail:#C7392F; --grey:#9993AA;
+  --pass-soft:#E2F2E9; --watch-soft:#FBF0D6; --fail-soft:#FBE5E2;
+  --b1:#F3D67E; --b2:#EBA650; --b3:#D96B3B; --b4:#AE2E29;
+  --h0:#EEE7FA; --h1:#D2BFF1; --h2:#AC8BE0; --h3:#8157C6; --h4:#4F2A92;
+  --nodata:#DDD9E6; --outside:#EBE9F1; --outline:#FFFFFF; --edge:#2A2240;
+  --shadow:0 1px 2px rgba(25,20,38,.05),0 10px 28px -16px rgba(25,20,38,.22);
+  --display:"Bricolage Grotesque","Segoe UI",system-ui,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --ground:#110E19; --surface:#1A1624; --surface-2:#1F1B2B; --sunk:#15121E;
+  --ink:#EEEAF6; --ink-2:#C0B9D2; --muted:#8C85A0; --line:#2B263A; --line-2:#3A344B;
+  --accent:#B294F4; --accent-ink:#170F2C; --accent-soft:#2A2143; --accent-2:#9C7BE8;
+  --rail:#0C0915; --rail-2:#1A1430; --rail-ink:#D9D2EE; --rail-muted:#7F779C; --rail-hi:#C4A8FF;
+  --pass:#2FA873; --watch:#D39A22; --fail:#E4574B; --grey:#6E6883;
+  --pass-soft:#14301F; --watch-soft:#33280E; --fail-soft:#3A1916;
+  --b1:#8A7430; --b2:#B77B2E; --b3:#D8683A; --b4:#F0685A;
+  --h0:#2E2544; --h1:#48376D; --h2:#6D52A0; --h3:#9677D0; --h4:#CDB7F5;
+  --nodata:#332E42; --outside:#1F1B29; --outline:#1A1624; --edge:#E9E2F8;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 12px 30px -16px rgba(0,0,0,.7); color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --ground:#110E19; --surface:#1A1624; --surface-2:#1F1B2B; --sunk:#15121E;
+  --ink:#EEEAF6; --ink-2:#C0B9D2; --muted:#8C85A0; --line:#2B263A; --line-2:#3A344B;
+  --accent:#B294F4; --accent-ink:#170F2C; --accent-soft:#2A2143; --accent-2:#9C7BE8;
+  --rail:#0C0915; --rail-2:#1A1430; --rail-ink:#D9D2EE; --rail-muted:#7F779C; --rail-hi:#C4A8FF;
+  --pass:#2FA873; --watch:#D39A22; --fail:#E4574B; --grey:#6E6883;
+  --pass-soft:#14301F; --watch-soft:#33280E; --fail-soft:#3A1916;
+  --b1:#8A7430; --b2:#B77B2E; --b3:#D8683A; --b4:#F0685A;
+  --h0:#2E2544; --h1:#48376D; --h2:#6D52A0; --h3:#9677D0; --h4:#CDB7F5;
+  --nodata:#332E42; --outside:#1F1B29; --outline:#1A1624; --edge:#E9E2F8;
+  --shadow:0 1px 2px rgba(0,0,0,.35),0 12px 30px -16px rgba(0,0,0,.7); color-scheme:dark;}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button,select,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
+.num,td,.tnum{font-variant-numeric:tabular-nums}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+
+/* ============ shell ============ */
+.shell{display:grid;grid-template-columns:248px minmax(0,1fr);min-height:100%}
+.rail{background:var(--rail);color:var(--rail-ink);position:sticky;top:env(safe-area-inset-top,0px);height:100vh;height:100dvh;display:flex;flex-direction:column;padding:18px 12px 14px;overflow-y:auto}
+.brand{display:flex;gap:11px;align-items:center;padding:4px 8px 20px}
+.brand svg{width:36px;height:36px;flex:none}
+.brand b{display:block;font-family:var(--display);font-weight:750;font-size:17px;letter-spacing:-.01em;color:#fff;line-height:1.1}
+.brand small{display:block;color:var(--rail-muted);font-size:11.5px;margin-top:2px}
+.nav-g{margin:6px 0 14px}
+.nav-h{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--rail-muted);padding:6px 10px 6px;display:flex;align-items:center;gap:8px}
+.nav-h i{width:7px;height:7px;border-radius:2px;background:var(--rail-hi);display:inline-block}
+.nav-h i.icm{background:#7FD1B9}.nav-h i.x{background:#F3C969}
+.nav a{display:flex;align-items:center;gap:10px;color:var(--rail-ink);text-decoration:none;padding:8px 10px;border-radius:9px;font-weight:500;font-size:13.5px}
+.nav a svg{width:17px;height:17px;flex:none;opacity:.75}
+.nav a:hover{background:var(--rail-2)}
+.nav a[aria-current="page"]{background:var(--rail-2);color:#fff;font-weight:650}
+.nav a[aria-current="page"] svg{opacity:1;color:var(--rail-hi)}
+.rail-foot{margin-top:auto;padding:12px 10px 0;border-top:1px solid rgba(255,255,255,.08);font-size:11.5px;color:var(--rail-muted);display:flex;flex-direction:column;gap:6px}
+.rail-foot b{color:var(--rail-ink);font-weight:600}
+.menu-btn{display:none}
+
+.main{min-width:0;display:flex;flex-direction:column}
+.ctx{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--ground) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.ctx-in{padding:14px clamp(16px,2.4vw,32px) 12px;display:flex;flex-direction:column;gap:10px}
+.ctx-top{display:flex;align-items:flex-end;gap:14px 24px;flex-wrap:wrap;justify-content:space-between}
+.ptitle h1{font-family:var(--display);font-weight:750;font-size:clamp(21px,2.1vw,27px);letter-spacing:-.02em;margin:0;line-height:1.05;text-wrap:balance}
+.ptitle p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
+.eyebrow{font-size:10.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);margin-bottom:5px;display:flex;gap:8px;align-items:center}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{border:1px solid var(--line-2);background:var(--surface);border-radius:999px;padding:5px 12px;font-size:12.5px;font-weight:600;color:var(--ink-2);cursor:pointer;white-space:nowrap}
+.chip:hover{border-color:var(--accent);color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--surface)}
+.chip .lt{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;margin-left:6px;opacity:.7}
+.frow{display:flex;gap:8px 10px;flex-wrap:wrap;align-items:flex-end}
+.fld{display:flex;flex-direction:column;gap:3px;min-width:0;flex:0 1 170px}
+.fld label{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+select,.inp{appearance:none;-webkit-appearance:none;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:7px 28px 7px 10px;font-size:12.5px;font-weight:500;width:100%;min-width:0;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 14px) 54%,calc(100% - 9px) 54%;background-size:5px 5px;background-repeat:no-repeat}
+.inp{background-image:none;padding-right:10px}
+select.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background-color:var(--accent-soft)}
+select:disabled{opacity:.55}
+.linkbtn{border:0;background:none;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;padding:7px 2px}
+
+.page{padding:18px clamp(16px,2.4vw,32px) 48px;display:flex;flex-direction:column;gap:18px}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:8px}
+.sec-h h2{font-family:var(--display);font-weight:700;font-size:19px;letter-spacing:-.015em;margin:0}
+.sec-h p{margin:0;color:var(--muted);font-size:12.5px}
+
+/* ============ cards ============ */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;min-width:0}
+.card.lift{box-shadow:var(--shadow)}
+.card-h{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;padding:14px 16px 8px;flex-wrap:wrap}
+.card-h h3{font-family:var(--display);font-weight:700;font-size:15.5px;letter-spacing:-.01em;margin:0;text-wrap:balance}
+.card-h p{margin:2px 0 0;color:var(--muted);font-size:12px}
+.card-b{padding:0 16px 16px}
+.g2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.g4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
+.g-side{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:18px;align-items:start}
+@media (max-width:1280px){.g4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:1100px){.g3{grid-template-columns:repeat(2,minmax(0,1fr))}.g-side{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
+
+/* KPI band */
+.kband{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.k{padding:13px 16px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:5px;min-width:0}
+.k:last-child{border-right:0}
+.k .kn{font-size:11.5px;font-weight:600;color:var(--ink-2);line-height:1.25}
+.k .kv{font-family:var(--display);font-weight:700;font-size:27px;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.k .ks{font-size:11.5px;color:var(--muted);display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.dl{font-weight:700}.dl.good{color:var(--pass)}.dl.bad{color:var(--fail)}.dl.flat{color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:10.5px;font-weight:700;letter-spacing:.02em;padding:2px 7px 2px 5px;border-radius:999px;white-space:nowrap;line-height:1.4}
+.pill svg{width:10px;height:10px}
+.pill.pass{background:var(--pass-soft);color:var(--pass)}.pill.watch{background:var(--watch-soft);color:var(--watch)}.pill.fail{background:var(--fail-soft);color:var(--fail)}
+
+/* gauges */
+.gauges{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0}
+.gauge{padding:10px 14px 14px;text-align:center;min-width:0}
+.gauge+.gauge{border-left:1px solid var(--line)}
+.gauge>svg{width:100%;max-width:240px;height:auto;display:block;margin:0 auto}
+.gauge .gl{font-size:12.5px;font-weight:650;color:var(--ink-2);margin-top:2px}
+
+/* tables */
+.tw{overflow:auto;max-width:100%}
+.tw.tall{max-height:520px}
+table{border-collapse:separate;border-spacing:0;width:100%;font-size:12.5px}
+th,td{padding:7px 10px;text-align:right;white-space:nowrap;border-bottom:1px solid var(--line)}
+thead th{position:sticky;top:0;z-index:2;background:var(--surface);font-size:10.5px;font-weight:700;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;vertical-align:bottom;white-space:normal;min-width:64px;line-height:1.25}
+th.l,td.l{text-align:left}
+th.s{cursor:pointer;user-select:none}th.s:hover{color:var(--ink)}th.on{color:var(--accent)}
+tbody td.l:first-child,thead th.l:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
+thead th.l:first-child{z-index:3}
+td.l b{font-weight:650}
+td .sub{display:block;font-size:11px;color:var(--muted);font-weight:500}
+tbody tr.click{cursor:pointer}
+tbody tr:hover td{background:var(--surface-2)}
+tr.cur td{background:var(--accent-soft)!important}
+tr.tot td{font-weight:700;background:var(--sunk)!important;border-top:1px solid var(--line-2)}
+td.c-pass{color:var(--pass);font-weight:700}td.c-watch{color:var(--watch);font-weight:700}td.c-fail{color:var(--fail);font-weight:700}
+td.bgc-pass{background:var(--pass-soft)}td.bgc-watch{background:var(--watch-soft)}td.bgc-fail{background:var(--fail-soft)}
+td .bar{display:inline-block;height:6px;border-radius:3px;vertical-align:middle;margin-right:8px;background:var(--h2)}
+.rk{color:var(--muted);font-size:11px;font-weight:700;width:26px}
+.empty{padding:22px 16px;color:var(--muted);font-size:13px}
+.tag{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:600;padding:1px 6px;border-radius:5px;background:var(--sunk);color:var(--ink-2)}
+
+/* charts */
+.chart svg{display:block;width:100%;height:auto;overflow:visible}
+.chart text{font-family:var(--body);fill:var(--muted);font-size:11px}
+.chart .vl{fill:var(--ink);font-weight:700;font-size:11.5px}
+.chart .gl{stroke:var(--line);stroke-width:1}
+.chart .ref{stroke:var(--ink-2);stroke-dasharray:3 3}
+.legend{display:flex;flex-wrap:wrap;gap:5px 14px;font-size:11.5px;color:var(--ink-2);align-items:center}
+.lg{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.sw{width:12px;height:12px;border-radius:3px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}
+.dot{width:10px;height:10px;border-radius:50%;flex:none}
+
+/* maps */
+.mgrid{display:grid;gap:14px}
+.mgrid.n9{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mgrid.n6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.mgrid.n4{grid-template-columns:repeat(2,minmax(0,1fr))}
+.mgrid.n1{grid-template-columns:minmax(0,1fr)}
+@media (max-width:1180px){.mgrid.n9,.mgrid.n6{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:700px){.mgrid.n9,.mgrid.n6,.mgrid.n4{grid-template-columns:minmax(0,1fr)}}
+.mp{display:flex;flex-direction:column}
+.mp-h{display:flex;gap:8px;align-items:center;padding:10px 12px 4px;flex-wrap:wrap}
+.mp-h h3{font-family:var(--display);font-weight:700;font-size:14.5px;margin:0;flex:1 1 auto;min-width:0}
+.mp-h select{width:auto;flex:0 1 auto;max-width:100%;font-size:12px;padding:5px 26px 5px 8px}
+.mp-h .ind-sel{flex:1 1 150px;font-weight:650;font-size:13px}
+.ibtn{border:1px solid var(--line-2);background:var(--surface);border-radius:8px;width:30px;height:30px;display:grid;place-items:center;cursor:pointer;flex:none;color:var(--ink-2)}
+.ibtn:hover{border-color:var(--accent);color:var(--accent)}
+.ibtn svg{width:15px;height:15px}
+.mp-sum{padding:0 12px;font-size:11.5px;color:var(--muted);min-height:16px}
+.msvg{display:block;width:100%;height:auto}
+.msvg .u{stroke:var(--outline);stroke-width:.55;vector-effect:non-scaling-stroke;cursor:pointer}
+.msvg .u.o{cursor:pointer;opacity:.9}
+.msvg .u:hover{stroke:var(--ink);stroke-width:1.6}
+.msvg .u.sel{stroke:var(--ink);stroke-width:2.6}
+.msvg .t{fill:none;stroke:var(--edge);stroke-opacity:.28;stroke-width:.8;vector-effect:non-scaling-stroke;pointer-events:none}
+.msvg .d{fill:none;stroke:var(--edge);stroke-width:1.5;vector-effect:non-scaling-stroke;pointer-events:none;stroke-linejoin:round}
+.msvg text{pointer-events:none;font-family:var(--body);font-weight:600;fill:var(--ink);paint-order:stroke;stroke:var(--surface);stroke-linejoin:round}
+.msvg text.dn{font-family:var(--display);font-weight:800;letter-spacing:.1em;fill:var(--ink-2)}
+.mp .legend{padding:6px 12px 12px}
+.mwrap{position:relative;padding:0 6px}
+.zoomctl{position:absolute;right:12px;top:8px;display:flex;flex-direction:column;gap:4px;z-index:2}
+
+/* spot */
+.spt circle{stroke:var(--surface);stroke-width:.6;vector-effect:non-scaling-stroke}
+.spt .u{fill:var(--sunk);stroke:var(--line-2);stroke-width:.6;vector-effect:non-scaling-stroke}
+.spt .u.in{fill:var(--surface-2)}
+.spt .u.fo{fill:var(--accent-soft);stroke:var(--accent)}
+
+/* modal */
+.modal{position:fixed;inset:0;z-index:80;background:rgba(10,7,18,.55);display:flex;align-items:center;justify-content:center;padding:clamp(8px,3vw,40px)}
+.modal[hidden]{display:none}
+.modal .card{width:min(1200px,100%);max-height:100%;overflow:auto;display:flex;flex-direction:column}
+.modal .msvg{max-height:calc(100dvh - 190px)}
+
+/* tooltip */
+.tip{position:fixed;z-index:90;pointer-events:none;background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);padding:10px 12px;font-size:12.5px;min-width:190px;max-width:300px;opacity:0;transition:opacity .08s}
+.tip.show{opacity:1}
+.tip h4{margin:0;font-family:var(--display);font-size:15px;font-weight:700}
+.tip .w{color:var(--muted);font-size:11.5px;margin:1px 0 8px}
+.tip dl{display:grid;grid-template-columns:1fr auto;gap:3px 14px;margin:0}
+.tip dt{color:var(--ink-2)}.tip dd{margin:0;text-align:right;font-weight:700;font-variant-numeric:tabular-nums}
+.tip .hl{color:var(--ink)}
+
+/* race */
+.race-ctl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{border:1px solid var(--line-2);background:var(--surface);border-radius:9px;padding:7px 14px;font-weight:650;font-size:13px;cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.race-round{font-family:var(--display);font-weight:800;font-size:clamp(28px,4vw,46px);letter-spacing:-.03em;color:var(--line-2);text-align:right;line-height:1}
+.race svg text{font-family:var(--body)}
+
+.note{font-size:12px;color:var(--muted)}
+.callout{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;background:var(--accent-soft);color:var(--ink-2);font-size:12.5px}
+.callout b{color:var(--ink)}
+.loading{padding:120px 20px;text-align:center;color:var(--muted)}
+.err{margin:60px auto;max-width:640px;background:var(--fail-soft);border-radius:14px;padding:18px 20px}
+.err b{color:var(--fail)}
+.foot{padding:4px 0 0;color:var(--muted);font-size:12px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+details.defs summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
+.defs-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:4px 24px;margin-top:8px}
+.defs-g div{padding:7px 0;border-top:1px solid var(--line);font-size:12px}
+.defs-g b{color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line-2);border-radius:9px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;background:none;padding:6px 11px;font-size:12px;font-weight:650;color:var(--ink-2);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line-2)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+
+@media (max-width:900px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .rail{position:fixed;left:0;top:0;bottom:0;width:270px;z-index:70;transform:translateX(-100%);transition:transform .2s;padding-top:calc(18px + env(safe-area-inset-top,0px))}
+  body.nav-open .rail{transform:none;box-shadow:0 0 0 100vmax rgba(10,7,18,.45)}
+  .menu-btn{display:grid}
+  .k .kv{font-size:23px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+
+<div class="shell">
+  <aside class="rail" id="rail" aria-label="Sections">
+    <div class="brand">
+      <svg viewBox="0 0 36 36" aria-hidden="true"><rect width="36" height="36" rx="10" fill="#6A3DBD"/><path d="M13.5 29V15.5a4.5 4.5 0 0 1 9 0V29" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M13.5 18h9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="18" cy="10.6" r="2.6" fill="#C4A8FF"/></svg>
+      <div><b>Polio Monitor</b><small>Peshawar Division · KP</small></div>
+    </div>
+    <nav class="nav">
+      <div class="nav-g"><div class="nav-h"><i></i>Campaign coverage</div>
+        <a href="#/cov/report" data-p="cov/report"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M6.5 13V10M10 13V7M13.5 13V9"/></svg>Campaign report</a>
+        <a href="#/cov/maps" data-p="cov/maps"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5.5 7.5 3.5l5 2 4.5-2v11l-4.5 2-5-2L3 16.5z"/><path d="M7.5 3.5v11M12.5 5.5v11"/></svg>UC maps</a>
+        <a href="#/cov/tables" data-p="cov/tables"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3.5" width="14" height="13" rx="2"/><path d="M3 8h14M3 12.3h14M8 3.5v13"/></svg>Report tables</a>
+        <a href="#/cov/race" data-p="cov/race"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 5h11M3.5 10h7M3.5 15h9.5"/><circle cx="16" cy="10" r="1.3" fill="currentColor"/></svg>Still-missed race</a>
+      </div>
+      <div class="nav-g"><div class="nav-h"><i class="icm"></i>Independent monitoring</div>
+        <a href="#/icm/dash" data-p="icm/dash"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg>ICM dashboard</a>
+        <a href="#/icm/maps" data-p="icm/maps"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5.5 7.5 3.5l5 2 4.5-2v11l-4.5 2-5-2L3 16.5z"/><path d="M7.5 3.5v11M12.5 5.5v11"/></svg>ICM maps</a>
+        <a href="#/icm/spot" data-p="icm/spot"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="7" r="1.6" fill="currentColor"/><circle cx="12.5" cy="5.5" r="1.6" fill="currentColor"/><circle cx="9.5" cy="12" r="1.6" fill="currentColor"/><circle cx="14.5" cy="14" r="1.6"/><path d="M3 17h14"/></svg>Cluster spot map</a>
+        <a href="#/icm/compare" data-p="icm/compare"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="4" width="4.5" height="12" rx="1.2"/><rect x="7.8" y="4" width="4.5" height="12" rx="1.2"/><rect x="13" y="4" width="4.5" height="12" rx="1.2"/></svg>Three-round spots</a>
+        <a href="#/icm/audit" data-p="icm/audit"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="9" cy="9" r="5"/><path d="m13 13 4 4M7 9h4"/></svg>GPS audit</a>
+        <a href="#/icm/tables" data-p="icm/tables"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3.5" width="14" height="13" rx="2"/><path d="M3 8h14M3 12.3h14M8 3.5v13"/></svg>ICM tables</a>
+      </div>
+      <div class="nav-g"><div class="nav-h"><i class="x"></i>Cross-check</div>
+        <a href="#/cmp" data-p="cmp"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 17V3M3 17h14"/><circle cx="8" cy="11" r="1.4" fill="currentColor"/><circle cx="12" cy="7" r="1.4" fill="currentColor"/><circle cx="14.5" cy="12.5" r="1.4" fill="currentColor"/></svg>Coverage vs ICM</a>
+      </div>
+    </nav>
+    <div class="rail-foot" id="rail-foot"></div>
+  </aside>
+  <div class="main">
+    <header class="ctx" id="ctx"></header>
+    <main class="page" id="page"><div class="loading">Loading campaign data…</div></main>
+  </div>
+</div>
+<div class="tip" id="tip" role="tooltip"></div>
+<div class="modal" id="modal" hidden><div class="card lift" role="dialog" aria-modal="true" aria-labelledby="modal-h" id="modal-card"></div></div>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs id="geo-defs"></defs></svg>
+<script>
+"use strict";
+/* =====================================================================
+   PESHAWAR DIVISION POLIO MONITOR
+   Reads three files written by the "Export for Web" buttons:
+     data/coverage.csv   UC x campaign x day rows from DATA&MASTER
+     data/icm.csv        one row per ICM cluster (no names, GPS ~100 m)
+     data/geo.json       UC / tehsil / district outlines
+   ===================================================================== */
+const FILES={cov:"data/coverage.csv",icm:"data/icm.csv",geo:"data/geo.json",covUpd:"data/coverage.updated.txt",icmUpd:"data/icm.updated.txt"};
+const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const up=s=>String(s??"").trim().toUpperCase();
+const tc=s=>String(s??"").toLowerCase().replace(/\b([a-z])/g,m=>m.toUpperCase());
+const nf=new Intl.NumberFormat("en-US");
+const div=(a,b)=>b?a/b:null;
+
+function parseCSV(text){
+  if(text.charCodeAt(0)===0xFEFF) text=text.slice(1);
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){
+    const c=text[i];
+    if(q){ if(c==='"'){ if(text[i+1]==='"'){f+='"';i++;} else q=false; } else f+=c; }
+    else if(c==='"') q=true;
+    else if(c===','){row.push(f);f="";}
+    else if(c==='\n'||c==='\r'){ if(c==='\r'&&text[i+1]==='\n')i++; row.push(f);f=""; if(row.length>1||row[0]!=="")rows.push(row); row=[]; }
+    else f+=c;
+  }
+  if(f!==""||row.length){row.push(f);rows.push(row);}
+  return rows;
+}
+const MONTHS={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
+function campRank(n){ const m=String(n).toUpperCase().match(/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[^0-9]*(\d{4})/); return m?(+m[2])*100+MONTHS[m[1]]:0; }
+const campKey=n=>up(n).replace(/\s+/g," ");
+const shortCamp=c=>String(c).replace(/^KP-Special-1-/i,"Special ");
+const tinyCamp=c=>{ const m=String(c).match(/^(\S*?)\s*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s*(\d{4})/i); if(!m) return c; const pre=/special/i.test(c)?"Spl ":/^SNID/i.test(c)?"SNID ":""; return pre+m[2][0].toUpperCase()+m[2].slice(1).toLowerCase()+" '"+m[3].slice(2); };
+
+/* ---------------- coverage: same formulas as the Power Pivot model ---------------- */
+const LO=["bycots","security_na","security_aval_noteam","security_other","snow_bound","other","postpone"];
+const COV_F=["hh059","cd","cu","ac","loc","ccna","ccref","outhh","fix","transit","guest","school","recna","recref","reclo","crna","crref",
+ "covna","covref","hhmp","neap","mob","reg","newborn","zerod","zeroh","hhvisit","hhplan","afp","locked","opvg","opvu"];
+function covRow(g){
+  const S=(...c)=>c.reduce((a,k)=>a+g(k),0);
+  const ccna=g("Leftover2.cumulative_covered_na"), ccref=g("Leftover2.cumulative_covered_ref");
+  return {hh059:g("HH059"),cd:S("CovNA059","CovRef059"),
+    cu:S("Catchup1.CCovNA059","Catchup1.CCovRef059","Catchup1.UnRecorded_Cov"),
+    ac:S("AfterCatchup.ACCovNA059","AfterCatchup.ACCovRef059","AfterCatchup.UnRecCov"),
+    loc:LO.reduce((a,x)=>a+g("Leftover2."+x+"_covered"),0),ccna,ccref,
+    outhh:S("OutofH059","Catchup1.COutofH059","AfterCatchup.ACOutofH059","Leftover2.street_covered"),
+    fix:S("FixSite059","Catchup1.CFixSite059","AfterCatchup.ac_fix_sites_059"),
+    transit:S("Transit059","Catchup1.CTransit059","AfterCatchup.ac_transit_059"),
+    guest:S("Guests","Catchup1.CGuests","AfterCatchup.ACGuests","Leftover2.guest_covered"),
+    school:g("VaccinatedSchool"),
+    recna:S("RecNA059","Leftover2.cumulative_recorded_na"), recref:S("RecRef059","Leftover2.cumulative_recorded_ref"),
+    reclo:LO.reduce((a,x)=>a+g("Leftover2."+x+"_recorded"),0),
+    crna:g("Leftover2.cumulative_recorded_na"), crref:g("Leftover2.cumulative_recorded_ref"),
+    covna:S("CovNA059","Catchup1.CCovNA059","AfterCatchup.ACCovNA059")+ccna,
+    covref:S("CovRef059","Catchup1.CCovRef059","AfterCatchup.ACCovRef059")+ccref,
+    hhmp:g("HH059_MP"), neap:g("Neap Target"),
+    mob:S("CovMob","Catchup1.CCovMob","AfterCatchup.ACCovMob"), reg:g("reg_mob"),
+    newborn:S("NewBorn","Catchup1.CNewBorn","AfterCatchup.ACNewBorn","Leftover2.newborn_covered"),
+    zerod:S("ZeroRt","AfterCatchup.ac_zero_dose5","Catchup1.ZeroDos1"),
+    zeroh:S("zero_houses","Catchup1.c_zero_houses","AfterCatchup.ac_zero_houses"),
+    hhvisit:g("HHvisit"), hhplan:g("HHPlan"),
+    afp:S("Weakness","Catchup1.AFP_CaseRpt","AfterCatchup.ac_afp_case_rpt"),
+    locked:S("locked_houses","Catchup1.c_locked_houses","AfterCatchup.ac_locked_houses"),
+    opvg:S("OPVGiven","Catchup1.OPVGiven","AfterCatchup.OPVGiven"),
+    opvu:S("OPVUsed","Catchup1.OPVUsed","AfterCatchup.OPVUsed")};
+}
+function band3(v,good,mid){ if(v==null||!isFinite(v)) return null; return good(v)?3:mid(v)?2:1; }
+function covM(s){
+  const hhCov=s.hh059+s.cd+s.cu+s.ac+s.loc+s.ccna+s.ccref;
+  const other=s.fix+s.transit+s.guest+s.outhh+s.school;
+  const hhOther=hhCov+other+s.ccna+s.ccref;
+  const recMissed=s.reclo+s.recna+s.recref, covMissed=s.covna+s.covref+s.loc+s.ccna+s.ccref;
+  const stillNA=s.recna-s.covna, stillRef=s.recref-s.covref, stillLO=s.reclo-(s.loc+s.crna+s.crref), still=stillLO+stillNA+stillRef;
+  const m={...s,hhCov,other,hhOther,recMissed,covMissed,stillNA,stillRef,stillLO,still,tsTarget:s.hhmp,diffHH:s.hhvisit-s.hhplan,covStill:hhCov+still,
+    targetGap:s.neap-(hhCov+still),
+    hhcovPct:div(hhCov,s.neap),dailyPct:div(hhCov,s.hhmp),overallPct:div(hhOther,s.neap),sdc:div(s.cd,s.recna+s.recref),
+    msTar:div(still,s.neap),msRec:div(still,recMissed),mmpPct:div(s.mob,s.reg),zeroPct:div(s.zeroh,s.hhvisit),lockedPct:div(s.locked,s.hhvisit),
+    wastage:div(s.opvu-hhOther,s.opvu),rmPct:div(recMissed,s.neap),covOfRec:div(covMissed,recMissed),refCov:div(s.covref,s.recref),opvUsedPct:div(s.opvu,s.opvg)};
+  const sc=[band3(m.hhcovPct,v=>v>=.95&&v<=1.05,v=>(v>=.8&&v<.95)||(v>1.05&&v<=1.2)),band3(m.rmPct,v=>v>=.02&&v<=.2,v=>v>.2&&v<.4),
+    band3(m.sdc,v=>v>=.3&&v<=1,v=>v>=.2&&v<.3),band3(m.covOfRec,v=>v>=.95&&v<=1,v=>v>=.8&&v<.95),
+    band3(m.refCov,v=>v>=.95&&v<=1,v=>v>=.7&&v<.95),band3(m.msTar,v=>v>=0&&v<=.0075,v=>v>.0075&&v<=.02)];
+  m.score=sc.some(x=>x!=null)? sc.reduce((a,x)=>a+(x||0),0)/18 : null;
+  m.category=m.score==null?"":m.score<.7?"Poor performing":m.score<.8?"Needs improvement":"Satisfactory";
+  return m;
+}
+/* ---------------- ICM ---------------- */
+const ICM_F=["clusters","hh","a1","a1c","a2","a2c","nt","tv","na","ref","g","gv","st","sv","ri","vm","ff","ma","pc"];
+function icmM(s){
+  const chk=s.a1+s.a2, vac=s.a1c+s.a2c;
+  return {...s,children:chk,vaccinated:vac,recallPct:div(vac,chk),missed:chk-vac,seenPct:div(s.sv,s.st),seen:s.st,guestPct:div(s.gv,s.g),ntTv:s.nt+s.tv};
+}
+
+/* ---------------- indicator catalogue (bands from _MapColours / ICM pass marks) ---------------- */
+const P="pct",N="int";
+const IND={
+  // coverage
+  hhcovPct:{t:"HH coverage %",f:P,band:[.85,.95],hb:true,d:"HH covered (campaign days + catch-up + after catch-up + leftover) ÷ NEAP target"},
+  overallPct:{t:"Total coverage %",f:P,band:[.85,.95],hb:true,d:"HH + other coverage (school, guests, fixed, transit, out-of-house) ÷ NEAP target"},
+  dailyPct:{t:"Daily HH coverage %",f:P,band:[.85,.95],hb:true,d:"HH covered ÷ daily micro-plan target"},
+  sdc:{t:"Same-day coverage (SDC%)",f:P,band:[.395,null],hb:true,d:"Missed children covered on the campaign day ÷ recorded NA + refusals"},
+  msTar:{t:"MS% (of target)",f:P,dp:2,band:[.0075,.02],hb:false,d:"Total still-missed children ÷ NEAP target"},
+  msRec:{t:"MS% (of recorded)",f:P,band:[.05495,null],hb:false,d:"Total still-missed children ÷ recorded missed children"},
+  mmpPct:{t:"MMP coverage %",f:P,band:[.85,.95],hb:true,d:"Mobile / migrant children covered ÷ registered MMP"},
+  score:{t:"UC score %",f:P,band:[.6,.8],hb:true,d:"Six scored indicators out of 18: coverage, recorded missed, SDC, missed covered, refusals covered, still missed"},
+  wastage:{t:"Wastage %",f:P,band:[.05495,null],hb:false,d:"(OPV used − children vaccinated) ÷ OPV used"},
+  zeroPct:{t:"Zero HH %",f:P,band:[.01,.03],hb:false,d:"Houses with no children ÷ houses visited"},
+  lockedPct:{t:"Locked HH %",f:P,band:[.02,.05],hb:false,d:"Locked houses ÷ houses visited"},
+  refCov:{t:"Refusals covered %",f:P,band:[.7,.95],hb:true,d:"Covered refusals ÷ recorded refusals"},
+  covOfRec:{t:"Missed covered %",f:P,band:[.8,.95],hb:true,d:"Covered missed ÷ recorded missed"},
+  rmPct:{t:"Recorded missed % of target",f:P,d:"Recorded missed ÷ NEAP target"},
+  opvUsedPct:{t:"OPV used / given %",f:P,d:"OPV used ÷ OPV given"},
+  neap:{t:"NEAP target",f:N,d:"Round target (not split by day)"}, tsTarget:{t:"TS target",f:N,d:"Daily micro-plan target (HH059_MP)"},
+  hhCov:{t:"HH covered",f:N}, cd:{t:"Campaign-days coverage",f:N}, cu:{t:"Catch-up coverage",f:N}, ac:{t:"After catch-up coverage",f:N}, loc:{t:"Leftover covered",f:N},
+  hhOther:{t:"HH + other coverage",f:N}, other:{t:"Other coverages",f:N}, outhh:{t:"Out-of-house coverage",f:N}, school:{t:"Vaccinated at school",f:N},
+  transit:{t:"Transit",f:N}, fix:{t:"Fixed sites",f:N}, guest:{t:"Guests",f:N},
+  recna:{t:"Recorded NA",f:N}, recref:{t:"Recorded refusals",f:N}, reclo:{t:"Recorded leftover",f:N}, recMissed:{t:"Recorded missed",f:N},
+  covna:{t:"Covered NA",f:N}, covref:{t:"Covered refusals",f:N}, covMissed:{t:"Covered missed",f:N},
+  stillNA:{t:"Still NA",f:N,bad:true,d:"Recorded NA − covered NA"}, stillRef:{t:"Still refusals",f:N,bad:true,d:"Recorded refusals − covered refusals"},
+  stillLO:{t:"Still leftover",f:N,bad:true}, still:{t:"Total still missed",f:N,bad:true,d:"Still NA + still refusals + still leftover"},
+  reg:{t:"Registered MMP",f:N,d:"Mobile / migrant children registered"}, mob:{t:"MMP coverage",f:N,d:"Mobile / migrant children covered"},
+  newborn:{t:"New born",f:N}, zerod:{t:"Zero dose",f:N,bad:true}, hhplan:{t:"HH plan",f:N}, hhvisit:{t:"HH visited",f:N}, diffHH:{t:"Difference in HH",f:N},
+  zeroh:{t:"Zero houses",f:N}, locked:{t:"Locked HH",f:N}, afp:{t:"AFP cases",f:N,bad:true}, opvg:{t:"OPV given",f:N}, opvu:{t:"OPV used",f:N},
+  covStill:{t:"Coverage + still missed",f:N}, targetGap:{t:"Target − (coverage + still missed)",f:N},
+  // ICM
+  recallPct:{t:"Recall %",f:P,band:[.9,null],hb:true,d:"Children vaccinated (recall) ÷ children checked, 0–59 months. Pass mark 90%"},
+  seenPct:{t:"Seen %",f:P,band:[.95,null],hb:true,d:"Children seen finger-marked ÷ children seen. Pass mark 95%"},
+  guestPct:{t:"Guest %",f:P,d:"Guest children vaccinated ÷ guest children"},
+  clusters:{t:"Clusters",f:N}, hh:{t:"HH checked",f:N}, children:{t:"Recall checked",f:N}, vaccinated:{t:"Recall vaccinated",f:N},
+  missed:{t:"Missed children",f:N,bad:true,d:"Children checked − children vaccinated"},
+  nt:{t:"NT",f:N,bad:true,d:"No team visited"}, tv:{t:"TVBMC",f:N,bad:true,d:"Team visited but missed child"},
+  na:{t:"NA",f:N,bad:true}, ref:{t:"Refusals",f:N,bad:true}, ri:{t:"RI zero dose",f:N,bad:true}, vm:{t:"Vaccinated by monitor",f:N},
+  ff:{t:"Fake finger-marked",f:N,bad:true}, ma:{t:"Missed areas",f:N,bad:true,d:"Clusters with at least one NT house"},
+  pc:{t:"Poorly covered areas",f:N,bad:true,d:"Clusters with >2 missed children and TVBMC, where a team did visit"},
+  ntTv:{t:"NT + TVBMC",f:N,bad:true}, g:{t:"Guests",f:N}, st:{t:"Seen total",f:N}
+};
+for(const k in IND) IND[k].k=k;
+const COV_MAP_IND=["hhcovPct","overallPct","dailyPct","sdc","stillNA","stillRef","still","msTar","msRec","mmpPct","reg","mob","score","wastage","zeroPct","lockedPct","refCov","covOfRec","zerod","afp","neap","hhCov"];
+const ICM_MAP_IND=["recallPct","seenPct","nt","tv","pc","ma","missed","clusters","hh","na","ref","ri","ff","vm"];
+
+/* ---------------- formatting & bands ---------------- */
+function fmt(v,ind){ if(v==null||!isFinite(v)) return "–"; if(ind&&ind.f===P) return (v*100).toFixed(ind.dp??1)+"%"; if(ind&&ind.f==="txt") return esc(v); return nf.format(Math.round(v)); }
+function bandOf(ind,v){ if(!ind||!ind.band||v==null||!isFinite(v)) return null; const [lo,hi]=ind.band;
+  if(ind.hb){ if(hi==null) return v>=lo?"pass":"fail"; return v>=hi?"pass":v>=lo?"watch":"fail"; }
+  if(hi==null) return v<=lo?"pass":"fail"; return v<=lo?"pass":v<=hi?"watch":"fail"; }
+const BL={pass:"On target",watch:"Watch",fail:"Below standard"};
+function bandText(ind){ const [lo,hi]=ind.band, p=x=>(x*100).toFixed(x<.01?2:x<.1?1:0).replace(/\.0+$/,"")+"%";
+  if(ind.hb) return hi==null?{pass:"≥ "+p(lo),fail:"< "+p(lo)}:{pass:"≥ "+p(hi),watch:p(lo)+"–"+p(hi),fail:"< "+p(lo)};
+  return hi==null?{pass:"≤ "+p(lo),fail:"> "+p(lo)}:{pass:"≤ "+p(lo),watch:p(lo)+"–"+p(hi),fail:"> "+p(hi)}; }
+const ICO={pass:'<svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+ watch:'<svg viewBox="0 0 12 12"><path d="M6 2.5v4.2" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="6" cy="9.2" r="1.1" fill="currentColor"/></svg>',
+ fail:'<svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>'};
+const pill=b=>b?`<span class="pill ${b}">${ICO[b]}${BL[b]}</span>`:"";
+function quantBreaks(vals){ const v=vals.filter(x=>x!=null&&isFinite(x)&&x>0).sort((a,b)=>a-b); if(!v.length) return [];
+  const q=p=>v[Math.min(v.length-1,Math.floor(p*v.length))]; return [...new Set([q(.25),q(.5),q(.75)].map(x=>Math.round(x*100)/100))]; }
+/* colour for a value on a map */
+function colorFor(ind,v,br){
+  if(v==null||!isFinite(v)) return "var(--nodata)";
+  if(ind.band) return "var(--"+bandOf(ind,v)+")";
+  if(ind.bad){ if(v<=0) return "var(--pass)"; let i=0; while(i<br.length&&v>br[i]) i++; return "var(--b"+Math.min(4,i+1)+")"; }
+  let i=0; while(i<br.length&&v>br[i]) i++; return "var(--h"+Math.min(4,i+(v>0?1:0))+")";
+}
+function rangeLab(ind,lo,hi,i){ const int=ind.f!==P, f=x=>fmt(x,ind);
+  if(hi==null) return int?f(Math.floor(lo)+1)+"+":"> "+f(lo);
+  if(int){ const a=i===0?1:Math.floor(lo)+1, b=Math.floor(hi); return a>=b?f(b):f(a)+"–"+f(b); }
+  return i===0?"≤ "+f(hi):f(lo)+"–"+f(hi); }
+function legendHTML(ind,br,vals){
+  const cnt=f=>vals.filter(f).length, ucs=n=>` <span class="note">${n}</span>`;
+  let h="";
+  if(ind.band){ const bt=bandText(ind); for(const b of ["pass","watch","fail"]) if(bt[b]) h+=`<span class="lg"><span class="sw" style="background:var(--${b})"></span>${bt[b]}${ucs(cnt(v=>bandOf(ind,v)===b))}</span>`; }
+  else if(ind.bad){ h+=`<span class="lg"><span class="sw" style="background:var(--pass)"></span>0 (none)${ucs(cnt(v=>v!=null&&v<=0))}</span>`;
+    const edges=[0,...br]; for(let i=0;i<=br.length;i++){ const lo=edges[i], hi=br[i]; const lab=rangeLab(ind,lo,hi,i);
+      h+=`<span class="lg"><span class="sw" style="background:var(--b${Math.min(4,i+1)})"></span>${lab}${ucs(cnt(v=>v>0&&v>(i?lo:0)&&(hi==null||v<=hi)))}</span>`; } }
+  else { const edges=[0,...br]; for(let i=0;i<=br.length;i++){ const lo=edges[i],hi=br[i]; const lab=rangeLab(ind,lo,hi,i); h+=`<span class="lg"><span class="sw" style="background:var(--h${Math.min(4,i+1)})"></span>${lab}</span>`; } }
+  return h+`<span class="lg"><span class="sw" style="background:var(--nodata)"></span>No data</span>`;
+}
+
+/* =====================================================================
+   STATE
+   ===================================================================== */
+const S={page:"cov/report",geo:{district:"",tehsil:"",uc:""},
+  cov:{camp:"",day:"",tier:"",risk:"",rankCamp:""},icm:{camp:"",day:"",designation:"",org:"",pop:""},cmp:{camp:"",x:"hhcovPct",y:"recallPct"},
+  covMaps:{n:9,all:"",panels:[]},icmMaps:{},spot:{color:"gps",sel:null},sort:{},covTable:"division",icmTable:"ucsum",race:{m:"still"},search:{}};
+let D=null;
+
+async function load(){
+  const get=async(u,t)=>{const r=await fetch(u,{cache:"no-cache"}); if(!r.ok) throw new Error(u+" ("+r.status+")"); return t==="json"?r.json():r.text();};
+  const opt=async u=>{try{return (await get(u)).trim();}catch(e){return "";}};
+  const [covT,icmT,geo,cu,iu]=await Promise.all([get(FILES.cov),get(FILES.icm),get(FILES.geo,"json"),opt(FILES.covUpd),opt(FILES.icmUpd)]);
+  // coverage
+  const cr=parseCSV(covT), ch=cr.shift(), ci=Object.fromEntries(ch.map((h,i)=>[h,i]));
+  const cov=[];
+  for(const r of cr){
+    const t=k=>(ci[k]==null?"":(r[ci[k]]??"").trim());
+    const g=k=>{const i=ci[k]; if(i==null) return 0; const v=r[i]; return v?(+v||0):0;};
+    const o={camp:t("campaign"),district:up(t("district")),tehsil:up(t("tehsil")),uc:up(t("uc")),day:t("day").toUpperCase(),tier:t("tier"),risk:t("risk"),camp_:t("camp"),campst:t("campstatus"),comnet:t("comnet")};
+    if(!o.camp||!o.uc||o.uc==="NULL") continue; o.v=covRow(g); cov.push(o);
+  }
+  // icm clusters
+  const ir=parseCSV(icmT), ih=ir.shift(), ii=Object.fromEntries(ih.map((h,i)=>[h,i]));
+  const icm=[];
+  for(const r of ir){
+    const t=k=>(ii[k]==null?"":(r[ii[k]]??"").trim());
+    const o={camp:t("campaign"),district:up(t("district")),tehsil:up(t("tehsil")),uc:up(t("uc")),day:t("day"),designation:t("designation"),org:t("org"),pop:t("pop").toLowerCase(),lat:+t("lat")||null,lon:+t("lon")||null};
+    if(!o.camp||!o.uc) continue;
+    const v={clusters:1}; for(const k of ICM_F){ if(k==="clusters") continue; const x=ii[k]==null?"":r[ii[k]]; v[k]=x?(+x||0):0; }
+    o.v=v; icm.push(o);
+  }
+  // geometry: projected for drawing, raw lon/lat for GPS tests
+  const kx=Math.cos(34*Math.PI/180);
+  const pj=([lon,lat])=>[lon*kx*100,-lat*100];
+  const U=[],T=[],Di=[];
+  for(const f of geo){
+    let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9,big=null,bigA=-1,lo0=1e9,la0=1e9,lo1=-1e9,la1=-1e9;
+    const prj=f.r.map(r=>r.map(pj));
+    for(const r of prj){ let a=0; for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length]; a+=p[0]*q[1]-q[0]*p[1]; x0=Math.min(x0,p[0]);x1=Math.max(x1,p[0]);y0=Math.min(y0,p[1]);y1=Math.max(y1,p[1]);} a=Math.abs(a); if(a>bigA){bigA=a;big=r;} }
+    for(const r of f.r) for(const [lo,la] of r){lo0=Math.min(lo0,lo);lo1=Math.max(lo1,lo);la0=Math.min(la0,la);la1=Math.max(la1,la);}
+    const d="M"+prj.map(r=>r.map(p=>p[0].toFixed(2)+" "+p[1].toFixed(2)).join("L")).join("ZM")+"Z";
+    const o={district:up(f.d),tehsil:up(f.t),name:up(f.n),d,bb:[x0,y0,x1,y1],llbb:[lo0,la0,lo1,la1],c:centroid(big),rings:f.r};
+    o.key=o.district+"|"+o.name;
+    (f.l==="UC"?U:f.l==="TEH"?T:Di).push(o);
+  }
+  U.forEach((u,i)=>u.i=i); T.forEach((u,i)=>u.i=i); Di.forEach((u,i)=>u.i=i);
+  $("#geo-defs").innerHTML=U.map(u=>`<path id="gu${u.i}" d="${u.d}" vector-effect="non-scaling-stroke"/>`).join("")+T.map(t=>`<path id="gt${t.i}" d="${t.d}" vector-effect="non-scaling-stroke"/>`).join("")+Di.map(t=>`<path id="gd${t.i}" d="${t.d}" vector-effect="non-scaling-stroke"/>`).join("");
+  D={cov,icm,U,T,Di,upd:{cov:cu,icm:iu},pj,kx};
+  D.ucByKey=new Map(U.map(u=>[u.key,u]));
+  D.covCamps=[...new Set(cov.map(r=>r.camp))].sort((a,b)=>campRank(a)-campRank(b));
+  D.icmCamps=[...new Set(icm.map(r=>r.camp))].sort((a,b)=>campRank(a)-campRank(b));
+  const ik=new Set(D.icmCamps.map(campKey)); D.cmpCamps=D.covCamps.filter(c=>ik.has(campKey(c)));
+  D.icmByKey=Object.fromEntries(D.icmCamps.map(c=>[campKey(c),c]));
+  const H={}; for(const r of [...cov,...icm]) ((H[r.district]??={})[r.tehsil]??=new Set()).add(r.uc);
+  for(const u of U) if(u.tehsil) ((H[u.district]??={})[u.tehsil]??=new Set()).add(u.name);
+  D.H=H; D.tehOf=new Map(); for(const d in H) for(const t in H[d]) for(const u of H[d][t]) if(!D.tehOf.has(d+"|"+u)) D.tehOf.set(d+"|"+u,t);
+  const full=(rows,camps)=>{const n=c=>new Set(rows.filter(r=>r.camp===c).map(r=>r.uc)).size; const mx=Math.max(...camps.map(n)); return [...camps].reverse().find(c=>n(c)>=mx*.5)||camps.at(-1);};
+  S.cov.camp=full(cov,D.covCamps); S.icm.camp=full(icm,D.icmCamps); S.cmp.camp=full(cov,D.cmpCamps)||D.cmpCamps.at(-1);
+  analyseSpots();
+}
+function centroid(r){ let a=0,x=0,y=0; for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],c=p[0]*q[1]-q[0]*p[1]; a+=c; x+=(p[0]+q[0])*c; y+=(p[1]+q[1])*c;} return a?[x/(3*a),y/(3*a)]:r[0]; }
+
+/* ---------------- GPS check, same rule as the ICM Cluster Spot sheet ----------------
+   inside its own UC (or a neighbouring UC of the same tehsil, or within 1.5 km of its edge) = right place
+   up to 5 km outside = borderline · beyond 5 km = wrong place
+   UC with no outline: distance from the median of all its clusters (needs 5+ clusters) */
+function pip(lon,lat,rings){ let ins=false; for(const r of rings){ for(let i=0,j=r.length-1;i<r.length;j=i++){ const [xi,yi]=r[i],[xj,yj]=r[j]; if(((yi>lat)!==(yj>lat))&&(lon<(xj-xi)*(lat-yi)/(yj-yi)+xi)) ins=!ins; } } return ins; }
+const inBB=(lon,lat,b)=>lon>=b[0]&&lon<=b[2]&&lat>=b[1]&&lat<=b[3];
+function km(la1,lo1,la2,lo2){ const k=111.32, dx=(lo1-lo2)*k*Math.cos((la1+la2)/2*Math.PI/180), dy=(la1-la2)*k; return Math.hypot(dx,dy); }
+function inUC(u,lon,lat){ return inBB(lon,lat,u.llbb)&&pip(lon,lat,u.rings); }
+function whereIs(lon,lat){ for(const u of D.U) if(inUC(u,lon,lat)) return u; return null; }
+function analyseSpots(){
+  const byUC=new Map(); for(const r of D.icm) if(r.lat){ const k=r.district+"|"+r.uc; (byUC.get(k)||byUC.set(k,[]).get(k)).push(r); }
+  const med=a=>{const s=[...a].sort((x,y)=>x-y), m=s.length>>1; return s.length%2?s[m]:(s[m-1]+s[m])/2;};
+  const centre=new Map(); for(const [k,a] of byUC) if(a.length>=5) centre.set(k,[med(a.map(r=>r.lat)),med(a.map(r=>r.lon))]);
+  for(const r of D.icm){
+    if(!r.lat){ r.band=-1; continue; }
+    const u=D.ucByKey.get(r.district+"|"+r.uc);
+    if(u){
+      if(inUC(u,r.lon,r.lat)){ r.band=0; r.kmOut=0; continue; }
+      let best=1e9; for(const ring of u.rings) for(const [lo,la] of ring){ const d=km(r.lat,r.lon,la,lo); if(d<best) best=d; }
+      r.kmOut=best;
+      const nb=D.U.find(o=>o!==u&&o.tehsil===u.tehsil&&o.district===u.district&&inUC(o,r.lon,r.lat));
+      if(nb){ r.band=0; continue; }
+      r.band=best<=1.5?0:best<5?1:2;
+    } else {
+      const c=centre.get(r.district+"|"+r.uc);
+      if(!c){ r.band=3; r.kmOut=null; continue; }
+      r.kmOut=km(r.lat,r.lon,c[0],c[1]); r.band=r.kmOut<2?0:r.kmOut<5?1:2;
+    }
+    if(r.band>0){ const w=whereIs(r.lon,r.lat); r.standing=w?w.name:""; r.standingD=w?w.district:"outside mapped UCs"; }
+  }
+}
+const SPOT_BAND=[{k:0,t:"Right place",d:"inside its UC, a neighbouring UC of the same tehsil, or within 1.5 km",c:"var(--pass)"},{k:1,t:"Borderline",d:"1.5–5 km outside its UC",c:"var(--watch)"},{k:2,t:"Wrong place",d:"more than 5 km from its UC",c:"var(--fail)"},{k:3,t:"Not judged",d:"no outline and fewer than 5 clusters",c:"var(--grey)"}];
+
+/* =====================================================================
+   FILTERING & AGGREGATION
+   ===================================================================== */
+function geoOK(r,skipUC){ const g=S.geo; return (!g.district||r.district===g.district)&&(!g.tehsil||r.tehsil===g.tehsil)&&(skipUC||!g.uc||r.uc===g.uc); }
+/* o.camp: undefined = current campaign · "" = every campaign · name = that campaign
+   o.geo: "full" (default) | "noUC" | "none" */
+function covRows(o={}){ const camp=o.camp===undefined?S.cov.camp:o.camp, c=S.cov;
+  return D.cov.filter(r=>(!camp||r.camp===camp)&&(o.geo==="none"||geoOK(r,o.geo==="noUC"))&&(!c.tier||r.tier===c.tier)&&(!c.risk||r.risk===c.risk)&&(!o.campOnly||r.camp_)); }
+/* The day filter applies to every figure except the NEAP target — same rule as the workbook */
+function covAgg(rows,keyFn=()=>"all",o={}){ const out=new Map(), day=o.noDay?"":S.cov.day;
+  for(const r of rows){ const k=keyFn(r); let s=out.get(k); if(!s){s=Object.fromEntries(COV_F.map(f=>[f,0])); out.set(k,s);}
+    if(!day||r.day===day){ for(const f of COV_F) if(f!=="neap") s[f]+=r.v[f]; } s.neap+=r.v.neap; }
+  const m=new Map(); for(const [k,s] of out) m.set(k,covM(s)); return m; }
+function icmRows(o={}){ const camp=o.camp===undefined?S.icm.camp:o.camp, c=S.icm;
+  return D.icm.filter(r=>(!camp||r.camp===camp)&&(o.geo==="none"||geoOK(r,o.geo==="noUC"))&&(o.noDay||!c.day||r.day===c.day)&&(!c.designation||r.designation===c.designation)&&(!c.org||r.org===c.org)&&(!c.pop||r.pop===c.pop)); }
+function icmAgg(rows,keyFn=()=>"all"){ const out=new Map();
+  for(const r of rows){ const k=keyFn(r); let s=out.get(k); if(!s){s=Object.fromEntries(ICM_F.map(f=>[f,0])); out.set(k,s);} for(const f of ICM_F) s[f]+=r.v[f]; }
+  const m=new Map(); for(const [k,s] of out) m.set(k,icmM(s)); return m; }
+const ucKey=r=>r.district+"|"+r.uc;
+const one=m=>m.get("all");
+function scopeName(){ const g=S.geo; return g.uc?tc(g.uc)+" UC":g.tehsil?tc(g.tehsil)+" tehsil":g.district?tc(g.district)+" district":"Peshawar Division"; }
+
+/* =====================================================================
+   UI PIECES
+   ===================================================================== */
+const tip=$("#tip");
+function showTip(e,html){ tip.innerHTML=html; tip.classList.add("show"); const r=tip.getBoundingClientRect(); let x=e.clientX+14,y=e.clientY+14;
+  if(x+r.width>innerWidth-8) x=e.clientX-r.width-14; if(y+r.height>innerHeight-8) y=e.clientY-r.height-14; tip.style.left=Math.max(8,x)+"px"; tip.style.top=Math.max(8,y)+"px"; }
+function hideTip(){ tip.classList.remove("show"); }
+function dlist(pairs){ return `<dl>${pairs.map(([t,v,h])=>`<dt class="${h?"hl":""}">${esc(t)}</dt><dd class="${h?"hl":""}">${v}</dd>`).join("")}</dl>`; }
+
+function kpi(ind,v,prev,prevCamp,label){
+  const b=bandOf(ind,v); let s="";
+  if(prev!=null&&v!=null&&isFinite(v)&&isFinite(prev)){ const d=v-prev; const better=ind.band?(ind.hb?d>0:d<0):ind.bad?d<0:null;
+    const txt=ind.f===P?(d>=0?"+":"−")+Math.abs(d*100).toFixed(1)+" pts":(d>=0?"+":"−")+nf.format(Math.abs(Math.round(d)));
+    s=`<span class="dl ${Math.abs(d)<1e-9||better==null?"flat":better?"good":"bad"}">${txt}</span><span>vs ${esc(shortCamp(prevCamp))}</span>`; }
+  return `<div class="k"><span class="kn">${esc(label||ind.t)}</span><span class="kv">${fmt(v,ind)}</span><span class="ks">${pill(b)}${s}</span></div>`;
+}
+function gauge(v,ind,label,max=1.2){
+  const W=220,H=132,cx=110,cy=116,R=88,sw=14, ang=x=>Math.PI*(1-Math.min(max,Math.max(0,x))/max);
+  const pt=(x,r)=>[cx+r*Math.cos(ang(x)),cy-r*Math.sin(ang(x))];
+  const arc=(x0,x1,col,w,op=1)=>{const [a0,b0]=pt(x0,R),[a1,b1]=pt(x1,R); return `<path d="M${a0.toFixed(2)} ${b0.toFixed(2)}A${R} ${R} 0 0 1 ${a1.toFixed(2)} ${b1.toFixed(2)}" stroke="${col}" stroke-width="${w}" fill="none" opacity="${op}"/>`;};
+  const [lo,hi]=ind.band, b=bandOf(ind,v); let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)} ${fmt(v,ind)}">`;
+  s+=arc(0,lo,"var(--fail)",sw,.18)+arc(lo,hi,"var(--watch)",sw,.18)+arc(hi,max,"var(--pass)",sw,.18);
+  if(v!=null&&isFinite(v)){ s+=arc(0,Math.min(v,max)-.0001,`var(--${b})`,sw,1); const [mx,my]=pt(Math.min(v,max),R); s+=`<circle cx="${mx}" cy="${my}" r="${sw/2+3}" fill="var(--surface)" stroke="var(--${b})" stroke-width="3"/>`; }
+  for(const t of [lo,hi,1]){ const [tx,ty]=pt(t,R+sw/2+10); s+=`<text x="${tx}" y="${ty+3}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="var(--body)">${Math.round(t*100)}%</text>`; }
+  s+=`<text x="${cx}" y="${cy-10}" text-anchor="middle" font-family="var(--display)" font-weight="750" font-size="32" letter-spacing="-.5" fill="var(--${b||"ink"})">${fmt(v,ind)}</text></svg>`;
+  return `<div class="gauge">${s}<div class="gl">${esc(label)}</div><div style="margin-top:4px">${pill(b)}</div></div>`;
+}
+function niceTicks(lo,hi,n){ const span=hi-lo||1, st0=span/n, mag=Math.pow(10,Math.floor(Math.log10(st0))), e=st0/mag, st=(e<=1?1:e<=2?2:e<=2.5?2.5:e<=5?5:10)*mag;
+  const a=Math.floor(lo/st)*st, b=Math.ceil(hi/st)*st, out=[]; for(let v=a;v<=b+st/2;v+=st) out.push(+v.toFixed(10)); return out; }
+/* vertical bars, one series; colour by band when the indicator has one */
+function barsSVG(el,pts,ind,o={}){
+  const W=Math.max(280,(el.clientWidth||600)), H=o.h||200, ml=46,mr=10,mt=22,mb=34, iw=W-ml-mr, ih=H-mt-mb;
+  const vs=pts.map(p=>p.v).filter(v=>v!=null&&isFinite(v)); if(!vs.length){ el.innerHTML='<div class="empty">No data for this selection.</div>'; return; }
+  let hi=Math.max(...vs,ind.band?Math.max(...ind.band.filter(x=>x!=null)):0,ind.f===P?.01:1); const tk=niceTicks(0,hi,4); hi=tk.at(-1);
+  const y=v=>mt+ih-v/hi*ih, step=iw/pts.length, bw=Math.min(56,step*.58);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(ind.t)}">`;
+  for(const t of tk) s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${y(t)}" y2="${y(t)}"/><text x="${ml-7}" y="${y(t)+4}" text-anchor="end">${ind.f===P?Math.round(t*100)+"%":nf.format(t)}</text>`;
+  if(ind.band) for(const b of ind.band.filter(x=>x!=null)) s+=`<line class="ref" x1="${ml}" x2="${W-mr}" y1="${y(b)}" y2="${y(b)}"/>`;
+  pts.forEach((p,i)=>{ const cx=ml+step*i+step/2; if(p.v!=null&&isFinite(p.v)){ const top=y(Math.max(0,p.v)), h=Math.max(1,y(0)-top), r=Math.min(4,h), b=bandOf(ind,p.v);
+      const fill=b?`var(--${b})`:(p.hl?"var(--accent)":"var(--h2)");
+      s+=`<path d="M${cx-bw/2} ${y(0)}V${top+r}q0 -${r} ${r} -${r}H${cx+bw/2-r}q${r} 0 ${r} ${r}V${y(0)}Z" fill="${fill}" opacity="${p.hl||o.all?1:.5}"><title>${esc(p.label)}: ${fmt(p.v,ind)}</title></path><text class="vl" x="${cx}" y="${top-6}" text-anchor="middle">${fmt(p.v,ind)}</text>`; }
+    s+=`<text x="${cx}" y="${H-mb+16}" text-anchor="middle" style="${p.hl?"fill:var(--ink);font-weight:700":""}">${esc(step<110?tinyCamp(p.label):shortCamp(p.label))}</text>`; });
+  el.innerHTML=s+`<line x1="${ml}" x2="${W-mr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line-2)"/></svg>`;
+}
+/* grouped bars, two or three series, with legend */
+function groupSVG(el,cats,series,o={}){
+  const W=Math.max(280,(el.clientWidth||600)), H=o.h||210, ml=46,mr=10,mt=22,mb=34, iw=W-ml-mr, ih=H-mt-mb;
+  const all=series.flatMap(s=>s.vals).filter(v=>v!=null); const tk=niceTicks(0,Math.max(1,...all),4), hi=tk.at(-1);
+  const y=v=>mt+ih-v/hi*ih, step=iw/cats.length, gw=Math.min(90,step*.7), bw=(gw-(series.length-1)*3)/series.length;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
+  for(const t of tk) s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${y(t)}" y2="${y(t)}"/><text x="${ml-7}" y="${y(t)+4}" text-anchor="end">${nf.format(t)}</text>`;
+  cats.forEach((c,i)=>{ const x0=ml+step*i+step/2-gw/2; series.forEach((se,j)=>{ const v=se.vals[i]; if(v==null) return; const x=x0+j*(bw+3), top=y(v), h=Math.max(1,y(0)-top), r=Math.min(3,h);
+      s+=`<path d="M${x} ${y(0)}V${top+r}q0 -${r} ${r} -${r}H${x+bw-r}q${r} 0 ${r} ${r}V${y(0)}Z" fill="${se.color}"><title>${esc(se.name)} · ${esc(c)}: ${nf.format(v)}</title></path><text class="vl" x="${x+bw/2}" y="${top-5}" text-anchor="middle" style="font-size:10.5px">${nf.format(v)}</text>`; });
+    s+=`<text x="${ml+step*i+step/2}" y="${H-mb+16}" text-anchor="middle">${esc(step<110?tinyCamp(c):shortCamp(c))}</text>`; });
+  el.innerHTML=s+`<line x1="${ml}" x2="${W-mr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line-2)"/></svg><div class="legend" style="margin-top:6px">${series.map(se=>`<span class="lg"><span class="sw" style="background:${se.color}"></span>${esc(se.name)}</span>`).join("")}</div>`;
+}
+
+/* generic table. cols: {k,t,ind,l,fn,bg} · rows: objects · o.id enables sorting */
+function tableHTML(cols,rows,o={}){
+  const id=o.id, st=id?S.sort[id]:null; let R=rows;
+  if(st){ const c=cols.find(c=>c.k===st.k); if(c){ R=[...rows].sort((a,b)=>{ const x=c.sv?c.sv(a):a[c.k], y=c.sv?c.sv(b):b[c.k]; if(typeof x==="string"||typeof y==="string") return String(x??"").localeCompare(String(y??""))*st.d; if(x==null||!isFinite(x)) return 1; if(y==null||!isFinite(y)) return -1; return (x-y)*st.d; }); } }
+  let h=`<table${id?` data-tid="${id}"`:""}><thead><tr>${o.rank?'<th class="l rk">#</th>':""}${cols.map((c,i)=>`<th class="${c.l?"l ":""}${id?"s ":""}${st&&st.k===c.k?"on":""}" ${id?`data-k="${c.k}"`:""}>${esc(c.t??IND[c.k]?.t??c.k)}${st&&st.k===c.k?(st.d>0?" ↑":" ↓"):""}</th>`).join("")}</tr></thead><tbody>`;
+  R.forEach((r,ix)=>{ h+=`<tr class="${o.onRow?"click ":""}${o.cur&&o.cur(r)?"cur":""}${r._tot?" tot":""}"${r._k?` data-k="${esc(r._k)}"`:""}>${o.rank?`<td class="l rk">${r._tot?"":ix+1}</td>`:""}${cols.map(c=>{ const v=r[c.k]; const ind=c.ind||IND[c.k];
+    if(c.fn) return `<td class="${c.l?"l":""}">${c.fn(r)}</td>`;
+    if(c.l) return `<td class="l">${esc(v??"")}</td>`;
+    const b=ind?bandOf(ind,v):null; return `<td class="${b?(c.bg?"bgc-":"c-")+b:""}">${fmt(v,ind||{f:N})}</td>`; }).join("")}</tr>`; });
+  if(!R.length) h+=`<tr><td class="l" colspan="${cols.length+(o.rank?1:0)}"><span class="note">Nothing for this selection.</span></td></tr>`;
+  return h+"</tbody></table>";
+}
+function wireTable(el,rerender,onRow){
+  $$("th.s",el).forEach(th=>th.onclick=()=>{ const id=th.closest("table").dataset.tid, k=th.dataset.k, cur=S.sort[id]; S.sort[id]={k,d:cur&&cur.k===k?-cur.d:-1}; rerender(); });
+  if(onRow) $$("tr[data-k]",el).forEach(tr=>tr.onclick=()=>onRow(tr.dataset.k));
+}
+function ucLabel(k){ const [d,u]=k.split("|"); return `<b>${esc(tc(u))}</b><span class="sub">${esc(tc(D.tehOf.get(k)||""))} · ${esc(tc(d))}</span>`; }
+function pickUC(k){ const [d,u]=k.split("|"); if(S.geo.uc===u&&S.geo.district===d){S.geo.uc="";} else {S.geo.district=d;S.geo.tehsil=D.tehOf.get(k)||"";S.geo.uc=u;} hideTip(); render(); }
+
+/* =====================================================================
+   CHOROPLETH MAP  (UC outlines are defined once and reused with <use>)
+   ===================================================================== */
+function scopeUCs(){ const g=S.geo; return D.U.filter(u=>(!g.district||u.district===g.district)&&(!g.tehsil||u.tehsil===g.tehsil)); }
+function extentOf(list){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const u of list){x0=Math.min(x0,u.bb[0]);y0=Math.min(y0,u.bb[1]);x1=Math.max(x1,u.bb[2]);y1=Math.max(y1,u.bb[3]);}
+  const p=Math.max(x1-x0,y1-y0)*.035; return [x0-p,y0-p,x1-x0+2*p,y1-y0+2*p]; }
+function mapSVG(vals,ind,o={}){
+  const g=S.geo, inS=scopeUCs(), set=new Set(inS.map(u=>u.i)); const list=inS.length?inS:D.U; const vb=o.vb||extentOf(list);
+  const vv=inS.map(u=>vals.get(u.key)?.[ind.k]); const br=ind.band?[]:quantBreaks(vv);
+  const fs=Math.max(vb[2],vb[3])/(o.big?110:80);
+  let s=`<svg class="msvg" viewBox="${vb.join(" ")}" data-vb="${vb.join(" ")}" role="img" aria-label="${esc(ind.t)} map">`;
+  for(const u of D.U){ const b=u.bb; if(b[2]<vb[0]||b[0]>vb[0]+vb[2]||b[3]<vb[1]||b[1]>vb[1]+vb[3]) continue; const ins=set.has(u.i), v=vals.get(u.key)?.[ind.k];
+    s+=`<use href="#gu${u.i}" class="u${ins?"":" o"}${g.uc===u.name&&g.district===u.district?" sel":""}" fill="${ins?colorFor(ind,v,br):"var(--outside)"}" data-k="${esc(u.key)}"/>`; }
+  for(const t of D.T){ const b=t.bb; if(b[2]<vb[0]||b[0]>vb[0]+vb[2]||b[3]<vb[1]||b[1]>vb[1]+vb[3]) continue; s+=`<use href="#gt${t.i}" class="t"/>`; }
+  for(const d of D.Di) s+=`<use href="#gd${d.i}" class="d"/>`;
+  const labels=o.labels!==false&&inS.length&&inS.length<=(o.big?140:60);
+  if(labels) for(const u of inS){ const v=vals.get(u.key)?.[ind.k]; s+=`<text x="${u.c[0]}" y="${u.c[1]}" text-anchor="middle" font-size="${fs*.55}" style="stroke-width:${fs*.16}px">${esc(tc(u.name))}${o.values&&v!=null&&isFinite(v)?`<tspan x="${u.c[0]}" dy="${fs*.62}" font-weight="700">${fmt(v,ind)}</tspan>`:""}</text>`; }
+  else if(!g.district) for(const d of D.Di) s+=`<text class="dn" x="${d.c[0]}" y="${d.c[1]}" text-anchor="middle" font-size="${fs*.9}" style="stroke-width:${fs*.22}px">${esc(d.district)}</text>`;
+  s+="</svg>";
+  return {svg:s,legend:legendHTML(ind,br,vv),br,vv};
+}
+function bindMap(el,vals,ind,o={}){
+  const svg=$("svg.msvg",el); if(!svg) return;
+  svg.addEventListener("mousemove",e=>{ const u=e.target.closest("use.u"); if(!u){hideTip();return;} const k=u.dataset.k, m=vals.get(k); const [d,n]=k.split("|");
+    const extra=(o.extra||[]).filter(x=>x!==ind.k).slice(0,5).map(x=>[IND[x].t,m?fmt(m[x],IND[x]):"–"]);
+    showTip(e,`<h4>${esc(tc(n))}</h4><div class="w">${esc(tc(D.tehOf.get(k)||""))} · ${esc(tc(d))}${o.campLabel?" · "+esc(o.campLabel):""}</div>`+(m?dlist([[ind.t,fmt(m[ind.k],ind)+" "+pill(bandOf(ind,m[ind.k])),1],...extra]):`<div class="w">No data for this selection</div>`)); });
+  svg.addEventListener("mouseleave",hideTip);
+  svg.addEventListener("click",e=>{ const u=e.target.closest("use.u"); if(u&&!svg.dataset.dragged) pickUC(u.dataset.k); });
+  if(o.zoom) panZoom(svg,el);
+}
+function panZoom(svg,host){
+  let vb=svg.getAttribute("viewBox").split(" ").map(Number); const base=[...vb]; let drag=null;
+  const set=()=>svg.setAttribute("viewBox",vb.join(" "));
+  const zoomAt=(f,cx,cy)=>{ const nw=Math.min(base[2]*1.5,Math.max(base[2]/40,vb[2]*f)), nh=nw*vb[3]/vb[2]; vb=[cx-(cx-vb[0])*nw/vb[2],cy-(cy-vb[1])*nh/vb[3],nw,nh]; set(); };
+  const toSvg=e=>{ const r=svg.getBoundingClientRect(); return [vb[0]+(e.clientX-r.left)/r.width*vb[2], vb[1]+(e.clientY-r.top)/r.height*vb[3]]; };
+  svg.addEventListener("wheel",e=>{ e.preventDefault(); const [x,y]=toSvg(e); zoomAt(e.deltaY>0?1.2:1/1.2,x,y); },{passive:false});
+  svg.addEventListener("pointerdown",e=>{ if(e.pointerType==="touch") return; drag={x:e.clientX,y:e.clientY,vb:[...vb],moved:false}; delete svg.dataset.dragged; });
+  svg.addEventListener("pointermove",e=>{ if(!drag) return; const r=svg.getBoundingClientRect(); const dx=(e.clientX-drag.x)/r.width*vb[2], dy=(e.clientY-drag.y)/r.height*vb[3];
+    if(Math.abs(e.clientX-drag.x)+Math.abs(e.clientY-drag.y)>4){ drag.moved=true; svg.dataset.dragged="1"; hideTip(); } if(drag.moved){ vb=[drag.vb[0]-dx,drag.vb[1]-dy,vb[2],vb[3]]; set(); } });
+  addEventListener("pointerup",()=>{ if(drag&&drag.moved) setTimeout(()=>delete svg.dataset.dragged,0); drag=null; });
+  const ctl=document.createElement("div"); ctl.className="zoomctl";
+  ctl.innerHTML=`<button class="ibtn" aria-label="Zoom in"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="ibtn" aria-label="Zoom out"><svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="ibtn" aria-label="Reset view"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 3v2.5h2.5"/></svg></button>`;
+  const [bi,bo,br]=$$("button",ctl); bi.onclick=()=>zoomAt(1/1.4,vb[0]+vb[2]/2,vb[1]+vb[3]/2); bo.onclick=()=>zoomAt(1.4,vb[0]+vb[2]/2,vb[1]+vb[3]/2); br.onclick=()=>{vb=[...base];set();};
+  host.style.position="relative"; host.appendChild(ctl);
+}
+function openModal(html,after){ const m=$("#modal"), c=$("#modal-card"); c.innerHTML=html; m.hidden=false; after&&after(c); const close=()=>{m.hidden=true;c.innerHTML="";hideTip();};
+  $("[data-close]",c)?.addEventListener("click",close); m.onclick=e=>{ if(e.target===m) close(); }; document.addEventListener("keydown",function k(e){ if(e.key==="Escape"){close();document.removeEventListener("keydown",k);} }); }
+const X_ICON='<svg viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>';
+const EXPAND='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M9.5 2.5h4v4M6.5 13.5h-4v-4M13.5 2.5 9 7M2.5 13.5 7 9"/></svg>';
+</script>
+<script>
+"use strict";
+/* =====================================================================
+   CONTEXT BAR (title + campaign + filters)
+   ===================================================================== */
+const PAGES={
+  "cov/report":{eb:"Campaign coverage",t:"Campaign report",ds:"cov"},
+  "cov/maps":{eb:"Campaign coverage",t:"UC maps",ds:"cov"},
+  "cov/tables":{eb:"Campaign coverage",t:"Report tables",ds:"cov"},
+  "cov/race":{eb:"Campaign coverage",t:"Still-missed children, round by round",ds:"cov",noCamp:true},
+  "icm/dash":{eb:"Independent monitoring",t:"ICM dashboard",ds:"icm"},
+  "icm/maps":{eb:"Independent monitoring",t:"ICM maps",ds:"icm"},
+  "icm/spot":{eb:"Independent monitoring",t:"Cluster spot map",ds:"icm"},
+  "icm/compare":{eb:"Independent monitoring",t:"Cluster spots — last three rounds",ds:"icm",noCamp:true},
+  "icm/audit":{eb:"Independent monitoring",t:"GPS audit",ds:"icm"},
+  "icm/tables":{eb:"Independent monitoring",t:"ICM tables",ds:"icm"},
+  "cmp":{eb:"Cross-check",t:"Coverage vs independent monitoring",ds:"cmp"}
+};
+function sel(id,label,arr,cur,all,lab=x=>tc(x),dis=false){
+  return `<div class="fld"><label for="${id}">${label}</label><select id="${id}"${cur?' class="on"':""}${dis||!arr.length?" disabled":""}><option value="">${esc(all)}</option>${arr.map(v=>`<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(lab(v))}</option>`).join("")}</select></div>`;
+}
+const DAYLAB=d=>({CD:"Campaign day ",CU:"Catch-up ",AC:"After catch-up ",LO:"Leftover "}[String(d).slice(0,2)]||d)+String(d).slice(2);
+const dayOrd=d=>({CD:0,CU:1,AC:2,LO:3}[String(d).slice(0,2)]??9)*10+(+String(d).slice(2)||0);
+function renderCtx(){
+  const P=PAGES[S.page], ds=P.ds, g=S.geo;
+  const dists=Object.keys(D.H).sort(), tehs=g.district?Object.keys(D.H[g.district]||{}).sort():[], ucs=g.tehsil?[...(D.H[g.district]?.[g.tehsil]||[])].sort():[];
+  let camps="", extra="";
+  if(ds==="cov"){
+    if(!P.noCamp) camps=chipRow(D.covCamps,S.cov.camp,"cov");
+    const rows=D.cov.filter(r=>r.camp===S.cov.camp), u=k=>[...new Set(rows.map(r=>r[k]).filter(Boolean))];
+    extra=sel("f-day","Day",u("day").sort((a,b)=>dayOrd(a)-dayOrd(b)),S.cov.day,"All days",DAYLAB,P.noCamp)
+      +sel("f-tier","Tier",u("tier").sort(),S.cov.tier,"All tiers",x=>"Tier "+x)+sel("f-risk","Risk category",u("risk").sort(),S.cov.risk,"All categories",x=>x);
+  } else if(ds==="icm"){
+    if(!P.noCamp) camps=chipRow(D.icmCamps,S.icm.camp,"icm");
+    const rows=D.icm.filter(r=>P.noCamp||r.camp===S.icm.camp), u=k=>[...new Set(rows.map(r=>r[k]).filter(Boolean))];
+    extra=sel("f-iday","Day",u("day").sort((a,b)=>a-b),S.icm.day,"All days",x=>"Day "+x)
+      +sel("f-des","Designation",u("designation").sort(),S.icm.designation,"All designations",x=>x.length>30?x.slice(0,28)+"…":x)
+      +sel("f-org","Organisation",u("org").sort(),S.icm.org,"All organisations",x=>x.length>30?x.slice(0,28)+"…":x)
+      +sel("f-pop","Population",u("pop").sort(),S.icm.pop,"HRMP + non-HRMP",x=>x==="hrmp"?"HRMP":x==="nonhrmp"?"Non-HRMP":x);
+  } else camps=chipRow(D.cmpCamps,S.cmp.camp,"cmp");
+  const any=g.district||g.tehsil||g.uc||(ds==="cov"&&(S.cov.day||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.day||S.icm.designation||S.icm.org||S.icm.pop));
+  $("#ctx").innerHTML=`<div class="ctx-in">
+    <div class="ctx-top">
+      <div style="display:flex;gap:12px;align-items:flex-end;min-width:0">
+        <button class="ibtn menu-btn" id="menu" aria-label="Open menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
+        <div class="ptitle"><div class="eyebrow">${esc(P.eb)}</div><h1>${esc(P.t)}</h1><p>${esc(scopeName())}${ds==="cov"&&!P.noCamp?" · "+esc(S.cov.camp):""}${ds==="icm"&&!P.noCamp?" · "+esc(S.icm.camp):""}${ds==="cmp"?" · "+esc(S.cmp.camp):""}</p></div>
+      </div>
+      ${camps}
+    </div>
+    <div class="frow">
+      ${sel("f-dist","District",dists,g.district,"All districts")}
+      ${ds==="cmp"?"":sel("f-teh","Tehsil",tehs,g.tehsil,g.district?"All tehsils":"Pick a district first")}
+      ${ds==="cmp"?"":sel("f-uc","Union council",ucs,g.uc,g.tehsil?"All UCs":"Pick a tehsil first")}
+      ${extra}
+      ${any?'<button class="linkbtn" id="f-clear">Clear filters</button>':""}
+    </div></div>`;
+  const on=(id,fn)=>{const e=$("#"+id); if(e) e.onchange=ev=>{fn(ev.target.value); render();};};
+  on("f-dist",v=>{S.geo.district=v;S.geo.tehsil="";S.geo.uc="";}); on("f-teh",v=>{S.geo.tehsil=v;S.geo.uc="";}); on("f-uc",v=>S.geo.uc=v);
+  on("f-day",v=>S.cov.day=v); on("f-tier",v=>S.cov.tier=v); on("f-risk",v=>S.cov.risk=v);
+  on("f-iday",v=>S.icm.day=v); on("f-des",v=>S.icm.designation=v); on("f-org",v=>S.icm.org=v); on("f-pop",v=>S.icm.pop=v);
+  $$("[data-camp]").forEach(b=>b.onclick=()=>{ S[b.dataset.ds].camp=b.dataset.camp; if(b.dataset.ds==="cov") S.covMaps.all=""; render(); });
+  $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo={district:"",tehsil:"",uc:""}; if(ds==="cov") Object.assign(S.cov,{day:"",tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{day:"",designation:"",org:"",pop:""}); render();});
+  $("#menu").onclick=()=>document.body.classList.toggle("nav-open");
+}
+function chipRow(list,cur,ds){ return `<div class="chips" role="group" aria-label="Campaign">${list.map((c,i)=>`<button class="chip" data-ds="${ds}" data-camp="${esc(c)}" aria-pressed="${c===cur}">${esc(shortCamp(c))}${i===list.length-1?'<span class="lt">latest</span>':""}</button>`).join("")}</div>`; }
+
+/* =====================================================================
+   CAMPAIGN REPORT (Dashboard sheet)
+   ===================================================================== */
+function pgCovReport(el){
+  const camps=D.covCamps, cur=S.cov.camp, iC=camps.indexOf(cur), prevC=camps[iC-1];
+  const T=one(covAgg(covRows())), Pv=prevC?one(covAgg(covRows({camp:prevC}))):null;
+  const byCamp=covAgg(covRows({camp:""}),r=>r.camp);
+  const last3=camps.slice(Math.max(0,iC-2),iC+1);
+  const rc=S.cov.rankCamp||cur;
+  const ucs=covAgg(covRows({camp:rc}),ucKey);
+  const rowsFor=keys=>last3.map(c=>({_k:c,camp:c,...byCamp.get(c)}));
+  const campCol={k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`};
+  el.innerHTML=`
+  <div class="g-side">
+    <div class="kband">${kpi(IND.neap,T?.neap,Pv?.neap,prevC)}${kpi(IND.hhCov,T?.hhCov,Pv?.hhCov,prevC)}${kpi(IND.sdc,T?.sdc,Pv?.sdc,prevC)}${kpi(IND.still,T?.still,Pv?.still,prevC)}${kpi(IND.msTar,T?.msTar,Pv?.msTar,prevC)}${kpi(IND.mmpPct,T?.mmpPct,Pv?.mmpPct,prevC)}${kpi(IND.score,T?.score,Pv?.score,prevC)}${kpi(IND.wastage,T?.wastage,Pv?.wastage,prevC)}</div>
+    <div class="card"><div class="gauges">${gauge(T?.overallPct,IND.overallPct,"Total coverage")}${gauge(T?.hhcovPct,IND.hhcovPct,"HH coverage")}</div></div>
+  </div>
+  <div class="sec-h"><h2>Round on round</h2><p>${esc(last3.join(" · "))} · ${esc(scopeName())}</p></div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>Total coverage comparison</h3><p>Target and every child vaccinated, in and out of house</p></div></div><div class="tw">${tableHTML([campCol,{k:"neap",t:"Total target"},{k:"hhOther",t:"Total coverage"},{k:"overallPct",t:"Total coverage %",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>HH coverage comparison</h3><p>House-to-house coverage against the NEAP target</p></div></div><div class="tw">${tableHTML([campCol,{k:"neap"},{k:"hhCov"},{k:"hhcovPct",bg:1},{k:"dailyPct",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Missed children coverage comparison</h3><p>Recorded, covered and still missed</p></div></div><div class="tw">${tableHTML([campCol,{k:"recna"},{k:"recref"},{k:"covna"},{k:"covref"},{k:"sdc",t:"CDay % (SDC)",bg:1},{k:"stillNA"},{k:"stillRef"},{k:"msTar",bg:1},{k:"msRec",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Other coverage comparison</h3><p>Children vaccinated outside the house-to-house round</p></div></div><div class="tw">${tableHTML([campCol,{k:"school",t:"At school"},{k:"guest"},{k:"fix"},{k:"transit"},{k:"outhh",t:"Out of house"},{k:"other",t:"Total other"}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>HH plan / visited</h3><p>Houses planned against houses visited</p></div></div><div class="tw">${tableHTML([campCol,{k:"hhplan"},{k:"hhvisit"},{k:"diffHH"},{k:"zeroPct",bg:1},{k:"lockedPct",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>MMP and quality</h3><p>Mobile / migrant population, AFP and vaccine use</p></div></div><div class="tw">${tableHTML([campCol,{k:"reg"},{k:"mob"},{k:"mmpPct",bg:1},{k:"zerod"},{k:"afp"},{k:"wastage",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
+  </div>
+  <div class="sec-h"><h2>Every round</h2><p>${esc(scopeName())}${S.cov.day?" · "+esc(DAYLAB(S.cov.day)):""}</p></div>
+  <div class="g3">
+    <div class="card"><div class="card-h"><div><h3>Total coverage %</h3></div></div><div class="card-b chart" id="ch1"></div></div>
+    <div class="card"><div class="card-h"><div><h3>HH coverage %</h3></div></div><div class="card-b chart" id="ch2"></div></div>
+    <div class="card"><div class="card-h"><div><h3>Same-day coverage %</h3></div></div><div class="card-b chart" id="ch3"></div></div>
+  </div>
+  <div class="sec-h"><h2>Union councils to act on</h2><div class="frow">${sel("rank-camp","Campaign for these four tables",D.covCamps,rc,"Current campaign",x=>x)}</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>Top 10 UCs by still-missed children</h3><p>${esc(rc)}</p></div></div><div class="tw" id="rk1"></div></div>
+    <div class="card"><div class="card-h"><div><h3>Lowest 12 UCs by same-day coverage</h3><p>${esc(rc)} · pass mark ${fmt(.395,IND.sdc)}</p></div></div><div class="tw" id="rk2"></div></div>
+    <div class="card"><div class="card-h"><div><h3>Top 12 UCs by shortfall, HH planned vs visited</h3><p>${esc(rc)} · most negative first</p></div></div><div class="tw" id="rk3"></div></div>
+    <div class="card"><div class="card-h"><div><h3>Top 10 UCs: HH target vs coverage + still missed</h3><p>${esc(rc)} · biggest gap either way</p></div></div><div class="tw" id="rk4"></div></div>
+  </div>
+  ${footer(["hhcovPct","overallPct","sdc","msTar","msRec","mmpPct","score","wastage","zeroPct","lockedPct"])}`;
+  const pts=k=>camps.map(c=>({label:c,v:byCamp.get(c)?.[k],hl:c===cur}));
+  barsSVG($("#ch1"),pts("overallPct"),IND.overallPct); barsSVG($("#ch2"),pts("hhcovPct"),IND.hhcovPct); barsSVG($("#ch3"),pts("sdc"),IND.sdc);
+  const U=[...ucs].map(([k,m])=>({_k:k,...m}));
+  const ucc={k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)};
+  const top=(arr,f,n)=>arr.filter(r=>f(r)!=null&&isFinite(f(r))).sort((a,b)=>f(b)-f(a)).slice(0,n);
+  $("#rk1").innerHTML=tableHTML([ucc,{k:"still"},{k:"stillNA"},{k:"stillRef"},{k:"msRec",bg:1},{k:"msTar",bg:1}],top(U,r=>r.still,10),{rank:1,onRow:1});
+  $("#rk2").innerHTML=tableHTML([ucc,{k:"sdc",bg:1},{k:"recna"},{k:"recref"},{k:"cd",t:"Covered same day"}],top(U.filter(r=>r.recna+r.recref>0),r=>-r.sdc,12),{rank:1,onRow:1});
+  $("#rk3").innerHTML=tableHTML([ucc,{k:"hhplan"},{k:"hhvisit"},{k:"diffHH"},{k:"zeroh"},{k:"locked"},{k:"zeroPct",bg:1},{k:"lockedPct",bg:1}],top(U.filter(r=>r.hhplan>0),r=>-r.diffHH,12),{rank:1,onRow:1});
+  $("#rk4").innerHTML=tableHTML([ucc,{k:"neap",t:"HH target"},{k:"covStill"},{k:"targetGap",t:"Difference"}],top(U.filter(r=>r.neap>0),r=>Math.abs(r.targetGap),10),{rank:1,onRow:1});
+  $$("#rk1,#rk2,#rk3,#rk4").forEach(t=>wireTable(t,null,pickUC));
+  $("#rank-camp").onchange=e=>{S.cov.rankCamp=e.target.value;render();};
+}
+
+/* =====================================================================
+   COVERAGE MAPS (9 panels, each with its own indicator + campaign)
+   ===================================================================== */
+const COV_DEFAULT_PANELS=["hhcovPct","sdc","stillNA","stillRef","msTar","msRec","mmpPct","reg","mob"];
+function pgCovMaps(el){
+  const cm=S.covMaps; if(!cm.panels.length) cm.panels=COV_DEFAULT_PANELS.map(k=>({k,camp:""}));
+  const n=cm.n, cache=new Map();
+  const valsFor=camp=>{ const key=camp||S.cov.camp; if(!cache.has(key)) cache.set(key,covAgg(covRows({camp:camp==="*"?"":key,geo:"noUC"}),ucKey)); return cache.get(key); };
+  el.innerHTML=`
+  <div class="callout"><div><b>Each map has its own indicator and campaign.</b> The district, tehsil, day, tier and risk filters above apply to every map. Click a union council to select it; use the corner button to open a map full-screen with names and values.</div></div>
+  <div class="frow" style="justify-content:space-between">
+    <div class="frow">${sel("all-camp","Campaign for all maps",["*",...D.covCamps],cm.all,"Use each map's own",x=>x==="*"?"All campaigns combined":x)}</div>
+    <div class="seg" role="group" aria-label="Number of maps">${[1,4,6,9].map(k=>`<button data-n="${k}" aria-pressed="${n===k}">${k} map${k>1?"s":""}</button>`).join("")}</div>
+  </div>
+  <div class="mgrid n${n}" id="mg"></div>
+  ${footer(COV_DEFAULT_PANELS)}`;
+  const mg=$("#mg");
+  cm.panels.slice(0,n).forEach((p,i)=>{
+    const ind=IND[p.k], camp=cm.all||p.camp||S.cov.camp, vals=valsFor(camp==="*"?"*":camp);
+    const m=mapSVG(vals,ind,{labels:n<=4});
+    const card=document.createElement("div"); card.className="card mp";
+    const avg=scopeUCs().map(u=>vals.get(u.key)?.[p.k]).filter(v=>v!=null&&isFinite(v));
+    card.innerHTML=`<div class="mp-h"><select class="ind-sel" aria-label="Indicator for map ${i+1}">${COV_MAP_IND.map(k=>`<option value="${k}"${k===p.k?" selected":""}>${esc(IND[k].t)}</option>`).join("")}</select>
+      <select aria-label="Campaign for map ${i+1}"${cm.all?" disabled":""}><option value="">${esc(shortCamp(S.cov.camp))}</option><option value="*"${p.camp==="*"?" selected":""}>All campaigns</option>${D.covCamps.map(c=>`<option value="${esc(c)}"${p.camp===c?" selected":""}>${esc(shortCamp(c))}</option>`).join("")}</select>
+      <button class="ibtn" aria-label="Open full screen">${EXPAND}</button></div>
+      <div class="mp-sum">${camp==="*"?"All campaigns":esc(camp)} · ${avg.length} UCs with data${ind.band?` · ${avg.filter(v=>bandOf(ind,v)==="fail").length} below standard`:""}</div>
+      <div class="mwrap">${m.svg}</div><div class="legend">${m.legend}</div>`;
+    mg.appendChild(card);
+    const [si,sc]=$$("select",card);
+    si.onchange=()=>{p.k=si.value;render();}; sc.onchange=()=>{p.camp=sc.value;render();};
+    $(".ibtn",card).onclick=()=>bigMap(vals,ind,camp==="*"?"All campaigns":camp,COV_DEFAULT_PANELS);
+    bindMap(card,vals,ind,{extra:COV_DEFAULT_PANELS,campLabel:camp==="*"?"All campaigns":shortCamp(camp)});
+  });
+  $("#all-camp").onchange=e=>{cm.all=e.target.value;render();};
+  $$("[data-n]").forEach(b=>b.onclick=()=>{cm.n=+b.dataset.n;render();});
+}
+function bigMap(vals,ind,campLabel,extra){
+  const m=mapSVG(vals,ind,{big:true,values:true});
+  openModal(`<div class="card-h"><div><div class="eyebrow">${esc(campLabel)}</div><h3 id="modal-h" style="font-size:20px">${esc(ind.t)} by union council</h3><p>${esc(scopeName())} · scroll or pinch to zoom, drag to move</p></div><button class="ibtn" data-close aria-label="Close">${X_ICON}</button></div><div class="mwrap" id="bigm">${m.svg}</div><div class="legend" style="padding:8px 16px 16px">${m.legend}</div>`,
+    c=>bindMap($("#bigm",c),vals,ind,{extra,zoom:true,campLabel}));
+}
+
+/* =====================================================================
+   COVERAGE REPORT TABLES (Division level, District comparative, UC level …)
+   ===================================================================== */
+const DIV_ROWS=[["Target",["neap","tsTarget"]],["HH coverage",["cd","dailyPct","cu","ac","loc","hhCov","hhcovPct","hhOther","overallPct"]],
+  ["Missed children",["recna","recref","reclo","recMissed","covna","covref","covMissed","sdc","stillNA","stillRef","stillLO","still","msRec","msTar"]],
+  ["Other coverage",["outhh","school","transit","fix","guest","other"]],["MMP",["reg","mob","mmpPct"]],
+  ["Houses",["hhplan","hhvisit","diffHH","zeroh","locked","zeroPct","lockedPct"]],["Quality",["newborn","zerod","afp","opvg","opvu","wastage","score"]]];
+const COV_TABLES=[["division","Division level"],["district","District comparative"],["uc","UC level"],["less","Tehsil-wise less coverage"],["afp","AFP cases"],["wastage","Wastage %"],["transit","Transit teams"],["camps","Camps report"],["microplan","Micro-plan target difference"]];
+function pgCovTables(el){
+  const t=S.covTable;
+  el.innerHTML=`<div class="chips" role="tablist" aria-label="Report">${COV_TABLES.map(([k,l])=>`<button class="chip" data-t="${k}" aria-pressed="${k===t}">${l}</button>`).join("")}</div><div id="tb"></div>`;
+  $$("[data-t]",el).forEach(b=>b.onclick=()=>{S.covTable=b.dataset.t;render();});
+  const tb=$("#tb"), rer=()=>pgCovTables(el);
+  const card=(h,p,body,tools="")=>`<div class="card"><div class="card-h"><div><h3>${h}</h3><p>${p}</p></div>${tools}</div><div class="tw tall" id="tt">${body}</div></div>`;
+  if(t==="division"){
+    const bc=covAgg(covRows({camp:""}),r=>r.camp), cs=D.covCamps;
+    let h=`<table><thead><tr><th class="l">Indicator</th>${cs.map(c=>`<th class="${c===S.cov.camp?"on":""}">${esc(c)}</th>`).join("")}</tr></thead><tbody>`;
+    for(const [grp,keys] of DIV_ROWS){ h+=`<tr class="tot"><td class="l" colspan="${cs.length+1}">${grp}</td></tr>`; for(const k of keys) h+=`<tr><td class="l">${esc(IND[k].t)}</td>${cs.map(c=>{const v=bc.get(c)?.[k], b=bandOf(IND[k],v); return `<td class="${b?"bgc-"+b:""}">${fmt(v,IND[k])}</td>`;}).join("")}</tr>`; }
+    tb.innerHTML=card("Division level",`${esc(scopeName())} · every indicator, every round`,h+"</tbody></table>");
+  } else if(t==="district"){
+    const bd=covAgg(covRows({geo:"none"}),r=>r.district), T=one(covAgg(covRows({geo:"none"}))), ds=[...bd.keys()].sort();
+    let h=`<table><thead><tr><th class="l">Indicator</th>${ds.map(d=>`<th class="${d===S.geo.district?"on":""}">${esc(tc(d))}</th>`).join("")}<th>Division</th></tr></thead><tbody>`;
+    for(const [grp,keys] of DIV_ROWS){ h+=`<tr class="tot"><td class="l" colspan="${ds.length+2}">${grp}</td></tr>`; for(const k of keys) h+=`<tr><td class="l">${esc(IND[k].t)}</td>${[...ds.map(d=>bd.get(d)?.[k]),T?.[k]].map(v=>{const b=bandOf(IND[k],v); return `<td class="${b?"bgc-"+b:""}">${fmt(v,IND[k])}</td>`;}).join("")}</tr>`; }
+    tb.innerHTML=card("District comparative",`${esc(S.cov.camp)} · all districts side by side`,h+"</tbody></table>");
+  } else if(t==="uc"||t==="less"){
+    let U=[...covAgg(covRows(),ucKey)].map(([k,m])=>({_k:k,teh:D.tehOf.get(k)||"",...m}));
+    if(t==="less") U=U.filter(r=>r.hhcovPct!=null&&r.hhcovPct<.95);
+    const q=(S.search.uc||"").toUpperCase(); if(q) U=U.filter(r=>r._k.includes(q)||r.teh.includes(q));
+    const cols=[{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k.split("|")[1]},{k:"neap"},{k:"tsTarget"},{k:"hhCov"},{k:"hhcovPct",bg:1},{k:"hhOther"},{k:"overallPct",bg:1},{k:"sdc",bg:1},{k:"stillNA"},{k:"stillRef"},{k:"still"},{k:"msRec",bg:1},{k:"msTar",bg:1},{k:"reg"},{k:"mmpPct",bg:1},{k:"zeroPct",bg:1},{k:"lockedPct",bg:1},{k:"wastage",bg:1},{k:"score",bg:1},{k:"category",t:"Performance",fn:r=>r.category?`<span class="pill ${r.category==="Satisfactory"?"pass":r.category==="Poor performing"?"fail":"watch"}">${r.category}</span>`:"",sv:r=>r.score}];
+    if(!S.sort["ucl"]) S.sort["ucl"]={k:t==="less"?"hhcovPct":"score",d:1};
+    tb.innerHTML=card(t==="less"?"UCs below 95% HH coverage":"UC level",`${esc(S.cov.camp)} · ${U.length} union councils · click a column to sort`,tableHTML(cols,U,{id:"ucl",onRow:1,cur:r=>r._k===S.geo.district+"|"+S.geo.uc}),`<input class="inp" id="ucq" type="search" placeholder="Search UC or tehsil" aria-label="Search" value="${esc(S.search.uc||"")}" style="width:220px">`);
+    wireTable($("#tt"),rer,pickUC); const qi=$("#ucq"); qi.oninput=()=>{S.search.uc=qi.value; const p=qi.selectionStart; rer(); const n=$("#ucq"); n.focus(); n.setSelectionRange(p,p);};
+  } else if(t==="afp"){
+    const rows=covRows().filter(r=>r.v.afp>0).map(r=>({_k:r.district+"|"+r.uc,day:r.day,afp:r.v.afp}));
+    tb.innerHTML=card("AFP cases reported during the campaign",`${esc(S.cov.camp)} · ${nf.format(rows.reduce((a,r)=>a+r.afp,0))} cases`,tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)},{k:"day",t:"Day",fn:r=>`<span class="tag">${esc(r.day||"–")}</span>`},{k:"afp"}],rows,{onRow:1}));
+    wireTable($("#tt"),rer,pickUC);
+  } else if(t==="wastage"){
+    const U=[...covAgg(covRows(),ucKey)].map(([k,m])=>({_k:k,...m})).filter(r=>r.opvu>0);
+    if(!S.sort.wst) S.sort.wst={k:"wastage",d:-1};
+    tb.innerHTML=card("Wastage % by union council",`${esc(S.cov.camp)} · (OPV used − children vaccinated) ÷ OPV used`,tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k},{k:"opvg"},{k:"opvu"},{k:"opvUsedPct"},{k:"hhOther"},{k:"wastage",bg:1}],U,{id:"wst",onRow:1}));
+    wireTable($("#tt"),rer,pickUC);
+  } else if(t==="transit"){
+    const rows=covRows(), days=[...new Set(rows.map(r=>r.day).filter(Boolean))].sort((a,b)=>dayOrd(a)-dayOrd(b));
+    const m=new Map(); for(const r of rows){ const k=ucKey(r); const o=m.get(k)||m.set(k,{_k:k,total:0}).get(k); o[r.day]=(o[r.day]||0)+r.v.transit; o.total+=r.v.transit; }
+    const U=[...m.values()].filter(r=>r.total>0); if(!S.sort.trn) S.sort.trn={k:"total",d:-1};
+    tb.innerHTML=card("Transit teams coverage",`${esc(S.cov.camp)} · children vaccinated at transit points, by day`,tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k},...days.map(d=>({k:d,t:d})),{k:"total",t:"Total"}],U,{id:"trn",onRow:1}));
+    wireTable($("#tt"),rer,pickUC);
+  } else if(t==="camps"){
+    const rows=covRows({camp:"",campOnly:true}), cs=D.covCamps;
+    const m=new Map(); for(const r of rows){ const k=ucKey(r); const o=m.get(k)||m.set(k,{_k:k,campName:r.camp_,st:r.campst,rows:[]}).get(k); o.rows.push(r); }
+    const out=[...m.values()].map(o=>{ const a=covAgg(o.rows,r=>r.camp,{}); const r={_k:o._k,campName:o.campName,st:o.st}; for(const c of cs){ r["p"+c]=a.get(c)?.hhplan; r["m"+c]=a.get(c)?.mob; r["c"+c]=a.get(c)?.hhcovPct; } return r; });
+    tb.innerHTML=card("Afghan refugee camps",`UCs with a camp · HH planned, MMP coverage and HH coverage % by round`,tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)},{k:"campName",t:"Camp",l:1,fn:r=>`${esc(r.campName)}<span class="sub">${esc(r.st||"")}</span>`},
+      ...cs.map(c=>({k:"p"+c,t:"HH plan · "+shortCamp(c)})),...cs.map(c=>({k:"m"+c,t:"MMP covered · "+shortCamp(c)})),...cs.map(c=>({k:"c"+c,t:"HH cov % · "+shortCamp(c),ind:IND.hhcovPct}))],out,{onRow:1}));
+    wireTable($("#tt"),rer,pickUC);
+  } else if(t==="microplan"){
+    const cs=D.covCamps, cur=S.cov.camp, prev=S.search.mpPrev&&cs.includes(S.search.mpPrev)?S.search.mpPrev:cs[Math.max(0,cs.indexOf(cur)-1)];
+    const a=covAgg(covRows({camp:prev}),ucKey,{noDay:1}), b=covAgg(covRows({camp:cur}),ucKey,{noDay:1});
+    const keys=new Set([...a.keys(),...b.keys()]); const U=[...keys].map(k=>({_k:k,a:a.get(k)?.neap,b:b.get(k)?.neap,d:(b.get(k)?.neap||0)-(a.get(k)?.neap||0)})).filter(r=>r.a||r.b);
+    if(!S.sort.mp) S.sort.mp={k:"d",d:1};
+    tb.innerHTML=card("Micro-plan target difference",`NEAP target in ${esc(cur)} against an earlier round`,tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k},{k:"a",t:"Target · "+shortCamp(prev)},{k:"b",t:"Target · "+shortCamp(cur)},{k:"d",t:"Difference",fn:r=>`<span style="color:${r.d<0?"var(--fail)":r.d>0?"var(--pass)":"inherit"};font-weight:700">${r.d>0?"+":""}${nf.format(r.d)}</span>`}],U,{id:"mp",onRow:1}),
+      `<div class="fld">${sel("mp-prev","Compare with",cs.filter(c=>c!==cur),prev,"",x=>x).replace(/<option value="">[^<]*<\/option>/,"")}</div>`);
+    wireTable($("#tt"),rer,pickUC); const ps=$("#mp-prev"); ps&&(ps.onchange=()=>{S.search.mpPrev=ps.value;rer();});
+  }
+}
+
+/* =====================================================================
+   BAR CHART RACE (Race sheet)
+   ===================================================================== */
+const DCOL={CHARSADA:["#2a78d6","#3987e5"],KHYBER:["#1baf7a","#199e70"],MOHMAND:["#eb6834","#d95926"],NOWSHERA:["#4a3aa7","#9085e9"],PESHAWAR:["#e87ba4","#d55181"]};
+const isDark=()=>matchMedia("(prefers-color-scheme: dark)").matches&&document.documentElement.dataset.theme!=="light"||document.documentElement.dataset.theme==="dark";
+let raceTimer=null;
+function pgCovRace(el){
+  const mk=S.race.m, ind=IND[mk], camps=D.covCamps;
+  const frames=camps.map(c=>{ const a=covAgg(covRows({camp:c}),ucKey); return {c,vals:new Map([...a].map(([k,m])=>[k,m[mk]]))}; });
+  el.innerHTML=`<div class="card lift"><div class="card-h"><div><h3>${esc(ind.t)} — the 15 highest union councils, round by round</h3><p>${esc(scopeName())} · bars are coloured by district</p></div>
+    <div class="race-ctl"><div class="seg">${[["stillNA","Still NA"],["stillRef","Still refusals"],["still","Still missed"]].map(([k,l])=>`<button data-m="${k}" aria-pressed="${k===mk}">${l}</button>`).join("")}</div><button class="btn pri" id="play">Play rounds</button></div></div>
+    <div class="card-b"><div class="race-round" id="rr">${esc(camps.at(-1))}</div><div class="chart race" id="race"></div><div class="legend" style="margin-top:8px">${Object.keys(DCOL).map(d=>`<span class="lg"><span class="sw" style="background:${DCOL[d][isDark()?1:0]}"></span>${tc(d)}</span>`).join("")}</div></div></div>
+    <div class="card"><div class="card-h"><div><h3>${esc(ind.t)} by round</h3><p>${esc(scopeName())}</p></div></div><div class="card-b chart" id="rt"></div></div>`;
+  const tot=covAgg(covRows({camp:""}),r=>r.camp); barsSVG($("#rt"),camps.map(c=>({label:c,v:tot.get(c)?.[mk],hl:true})),ind,{all:1});
+  const host=$("#race"), W=Math.max(320,host.clientWidth), rowH=26, top=15, H=top*rowH+24, ml=Math.min(190,W*.34), mr=60;
+  const draw=(fa,fb,t)=>{ const keys=new Set([...fa.vals.keys(),...fb.vals.keys()]); const cur=[...keys].map(k=>{const a=fa.vals.get(k)||0,b=fb.vals.get(k)||0; return {k,v:a+(b-a)*t,ra:0,rb:0};});
+    const rank=m=>{ const arr=[...m].filter(([,v])=>v>0).sort((x,y)=>y[1]-x[1]); return new Map(arr.map(([k],i)=>[k,i])); };
+    const Ra=rank(fa.vals), Rb=rank(fb.vals); for(const o of cur){ const a=Ra.get(o.k)??top+2, b=Rb.get(o.k)??top+2; o.r=a+(b-a)*t; }
+    const vis=cur.filter(o=>o.r<top+.5&&o.v>0); const mx=Math.max(1,...vis.map(o=>o.v)); const x=v=>ml+(W-ml-mr)*v/mx;
+    let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Bar chart race">`;
+    for(const o of vis){ const y=12+o.r*rowH, [d,u]=o.k.split("|"), col=DCOL[d]?DCOL[d][isDark()?1:0]:"var(--h3)", op=Math.max(0,Math.min(1,top+.5-o.r));
+      s+=`<g opacity="${op}"><text x="${ml-8}" y="${y+rowH/2}" text-anchor="end" dominant-baseline="middle" style="font-size:12px;font-weight:600;fill:var(--ink)">${esc(tc(u))}</text><rect x="${ml}" y="${y+3}" width="${Math.max(2,x(o.v)-ml)}" height="${rowH-6}" rx="4" fill="${col}"/><text x="${x(o.v)+6}" y="${y+rowH/2}" dominant-baseline="middle" style="font-size:12px;font-weight:700;fill:var(--ink)" class="tnum">${nf.format(Math.round(o.v))}</text></g>`; }
+    host.innerHTML=s+"</svg>"; };
+  const n=frames.length; draw(frames[n-1],frames[n-1],1);
+  $$("[data-m]",el).forEach(b=>b.onclick=()=>{S.race.m=b.dataset.m;render();});
+  $("#play").onclick=()=>{ cancelAnimationFrame(raceTimer); let i=0,t0=null; const dur=1600;
+    const step=ts=>{ if(t0==null) t0=ts; const t=Math.min(1,(ts-t0)/dur); const e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2; draw(frames[i],frames[Math.min(n-1,i+1)],n===1?1:e); $("#rr").textContent=frames[t<.5?i:Math.min(n-1,i+1)].c;
+      if(t>=1){ i++; t0=null; if(i>=n-1) return; setTimeout(()=>raceTimer=requestAnimationFrame(step),500); return; } raceTimer=requestAnimationFrame(step); };
+    draw(frames[0],frames[0],1); $("#rr").textContent=frames[0].c; if(n>1) setTimeout(()=>raceTimer=requestAnimationFrame(step),600); };
+}
+</script>
+<script>
+"use strict";
+/* =====================================================================
+   ICM DASHBOARD
+   ===================================================================== */
+function pgIcmDash(el){
+  const camps=D.icmCamps, cur=S.icm.camp, prevC=camps[camps.indexOf(cur)-1];
+  const T=one(icmAgg(icmRows())), Pv=prevC?one(icmAgg(icmRows({camp:prevC}))):null;
+  const byC=icmAgg(icmRows({camp:""}),r=>r.camp);
+  const R=camps.map(c=>({_k:c,camp:c,...byC.get(c)}));
+  const campCol={k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`};
+  const byD=icmAgg(icmRows({geo:"none"}),r=>r.district), byDes=icmAgg(icmRows(),r=>r.designation||"(blank)"), byU=icmAgg(icmRows(),ucKey);
+  const U=[...byU].map(([k,m])=>({_k:k,...m}));
+  let eff=30; let low=[]; while(true){ low=U.filter(r=>r.clusters>=eff&&r.recallPct!=null); if(low.length||eff<=0) break; eff=eff>>1; }
+  low.sort((a,b)=>a.recallPct-b.recallPct); low=low.slice(0,12);
+  const ntv=U.filter(r=>r.ntTv>0).sort((a,b)=>b.ntTv-a.ntTv).slice(0,12);
+  const ucc={k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)};
+  el.innerHTML=`
+  <div class="kband">${kpi(IND.clusters,T?.clusters,Pv?.clusters,prevC,"Clusters taken")}${kpi(IND.hh,T?.hh,Pv?.hh,prevC)}${kpi(IND.recallPct,T?.recallPct,Pv?.recallPct,prevC)}${kpi(IND.seenPct,T?.seenPct,Pv?.seenPct,prevC)}${kpi(IND.missed,T?.missed,Pv?.missed,prevC)}${kpi(IND.nt,T?.nt,Pv?.nt,prevC)}${kpi(IND.tv,T?.tv,Pv?.tv,prevC)}${kpi(IND.pc,T?.pc,Pv?.pc,prevC)}</div>
+  <div class="sec-h"><h2>All rounds</h2><p>${esc(scopeName())} · the selected round is highlighted</p></div>
+  <div class="g3">
+    <div class="card"><div class="card-h"><div><h3>ICM coverage</h3></div></div><div class="tw">${tableHTML([campCol,{k:"clusters"},{k:"hh"},{k:"children"},{k:"vaccinated"},{k:"recallPct",bg:1},{k:"seenPct",bg:1}],R,{cur:r=>r.camp===cur})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Missed children</h3></div></div><div class="tw">${tableHTML([campCol,{k:"missed",t:"Total missed"},{k:"nt"},{k:"tv"},{k:"na"},{k:"ref"}],R,{cur:r=>r.camp===cur})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Quality and assurance</h3></div></div><div class="tw">${tableHTML([campCol,{k:"guestPct"},{k:"ri"},{k:"vm"},{k:"ff"},{k:"ma"},{k:"pc"}],R,{cur:r=>r.camp===cur})}</div></div>
+  </div>
+  <div class="g3">
+    <div class="card"><div class="card-h"><div><h3>Recall coverage by round</h3><p>Pass mark 90%</p></div></div><div class="card-b chart" id="c1"></div></div>
+    <div class="card"><div class="card-h"><div><h3>Seen (finger-marked) by round</h3><p>Pass mark 95%</p></div></div><div class="card-b chart" id="c2"></div></div>
+    <div class="card"><div class="card-h"><div><h3>NT and TVBMC by round</h3><p>Children missed by no visit and in visited houses</p></div></div><div class="card-b chart" id="c3"></div></div>
+  </div>
+  <div class="sec-h"><h2>${esc(cur)}</h2><p>District, designation and union council performance</p></div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>District comparison</h3><p>Click a district to filter</p></div></div><div class="tw" id="dt">${tableHTML([{k:"_k",t:"District",l:1,fn:r=>`<b>${esc(tc(r._k))}</b>`},{k:"clusters"},{k:"recallPct",bg:1},{k:"seenPct",bg:1},{k:"missed"},{k:"nt"},{k:"tv"},{k:"pc"},{k:"ma"}],[...byD].sort().map(([k,m])=>({_k:k,...m})),{onRow:1,cur:r=>r._k===S.geo.district})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Designation-wise performance</h3><p>Who took the clusters, and what they found</p></div></div><div class="tw tall" id="des">${tableHTML([{k:"_k",t:"Designation",l:1,fn:r=>`<b title="${esc(r._k)}">${esc(r._k.length>34?r._k.slice(0,32)+"…":r._k)}</b>`,sv:r=>r._k},{k:"clusters"},{k:"recallPct",bg:1},{k:"seenPct",bg:1},{k:"missed"},{k:"nt"},{k:"tv"}],[...byDes].map(([k,m])=>({_k:k,...m})),{id:"des"})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Lowest 12 UCs by recall %</h3><p>Union councils with ${eff}+ clusters</p></div></div><div class="tw" id="lw">${tableHTML([ucc,{k:"clusters"},{k:"recallPct",bg:1},{k:"missed"},{k:"seenPct",bg:1}],low,{rank:1,onRow:1})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Top 12 UCs by NT + TVBMC</h3><p>Where teams missed houses or children</p></div></div><div class="tw" id="nt">${tableHTML([ucc,{k:"nt"},{k:"tv"},{k:"missed"},{k:"recallPct",bg:1}],ntv,{rank:1,onRow:1})}</div></div>
+  </div>
+  ${footer(["recallPct","seenPct","nt","tv","pc","ma","missed"])}`;
+  barsSVG($("#c1"),camps.map(c=>({label:c,v:byC.get(c)?.recallPct,hl:c===cur})),IND.recallPct);
+  barsSVG($("#c2"),camps.map(c=>({label:c,v:byC.get(c)?.seenPct,hl:c===cur})),IND.seenPct);
+  groupSVG($("#c3"),camps,[{name:"NT",color:"var(--b3)",vals:camps.map(c=>byC.get(c)?.nt??null)},{name:"TVBMC",color:"var(--h3)",vals:camps.map(c=>byC.get(c)?.tv??null)}]);
+  wireTable($("#dt"),null,k=>{S.geo.district=S.geo.district===k?"":k;S.geo.tehsil="";S.geo.uc="";render();});
+  wireTable($("#des"),()=>render()); wireTable($("#lw"),null,pickUC); wireTable($("#nt"),null,pickUC);
+}
+
+/* =====================================================================
+   ICM MAPS (six panels)
+   ===================================================================== */
+const ICM_PANELS=["recallPct","seenPct","nt","tv","pc","ma"];
+function pgIcmMaps(el){
+  const vals=icmAgg(icmRows({geo:"noUC"}),ucKey);
+  el.innerHTML=`<div class="mgrid n6" id="mg"></div>${footer(ICM_PANELS)}`;
+  const mg=$("#mg");
+  ICM_PANELS.forEach(k=>{ const ind=IND[k], m=mapSVG(vals,ind,{labels:false}); const vv=scopeUCs().map(u=>vals.get(u.key)?.[k]).filter(v=>v!=null);
+    const card=document.createElement("div"); card.className="card mp";
+    const sum=ind.band?`${vv.filter(v=>bandOf(ind,v)==="fail").length} of ${vv.length} UCs below ${fmt(ind.band[0],ind)}`:`${vv.filter(v=>v>0).length} of ${vv.length} UCs with any · total ${nf.format(vv.reduce((a,b)=>a+b,0))}`;
+    card.innerHTML=`<div class="mp-h"><h3>${esc(ind.t)}${ind.d&&!ind.band?` <span class="note" style="font-family:var(--body);font-weight:500">— ${esc(ind.d)}</span>`:""}</h3><button class="ibtn" aria-label="Open full screen">${EXPAND}</button></div><div class="mp-sum">${sum}</div><div class="mwrap">${m.svg}</div><div class="legend">${m.legend}</div>`;
+    mg.appendChild(card); $(".ibtn",card).onclick=()=>bigMap(vals,ind,S.icm.camp,ICM_PANELS);
+    bindMap(card,vals,ind,{extra:["clusters",...ICM_PANELS],campLabel:shortCamp(S.icm.camp)}); });
+}
+
+/* =====================================================================
+   CLUSTER SPOT MAP
+   ===================================================================== */
+function spotColor(r,mode){ if(mode==="gps") return SPOT_BAND[r.band]?.c||"var(--grey)";
+  const m=r.v, chk=m.a1+m.a2, vac=m.a1c+m.a2c; if(mode==="missed") return m.nt>0?"var(--fail)":(m.tv>0?"var(--watch)":"var(--pass)");
+  const p=chk?vac/chk:null; return p==null?"var(--grey)":p>=.9?"var(--pass)":p>=.8?"var(--watch)":"var(--fail)"; }
+const SPOT_MODES={gps:{t:"GPS check",leg:SPOT_BAND.map(b=>[b.c,b.t,b.d])},
+  recall:{t:"Cluster recall %",leg:[["var(--pass)","≥ 90%",""],["var(--watch)","80–90%",""],["var(--fail)","< 80%",""],["var(--grey)","No children checked",""]]},
+  missed:{t:"NT / TVBMC found",leg:[["var(--pass)","None",""],["var(--watch)","TVBMC only",""],["var(--fail)","NT found",""]]}};
+function spotSVG(pts,vb,mode,o={}){
+  const g=S.geo; const r=Math.max(vb[2],vb[3])/(o.small?260:380);
+  let s=`<svg class="msvg spt" viewBox="${vb.join(" ")}" role="img" aria-label="Cluster positions">`;
+  for(const u of D.U){ const b=u.bb; if(b[2]<vb[0]||b[0]>vb[0]+vb[2]||b[3]<vb[1]||b[1]>vb[1]+vb[3]) continue; const ins=(!g.district||u.district===g.district)&&(!g.tehsil||u.tehsil===g.tehsil);
+    s+=`<use href="#gu${u.i}" class="u${ins?" in":""}${g.uc===u.name&&g.district===u.district?" fo":""}" data-k="${esc(u.key)}"/>`; }
+  for(const d of D.Di) s+=`<use href="#gd${d.i}" class="d"/>`;
+  const order=[...pts].sort((a,b)=>(o.mode==="gps"?(a.band===2)-(b.band===2):0));
+  for(const p of order){ const [x,y]=D.pj([p.lon,p.lat]); s+=`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(p.band===2&&mode==="gps"?r*1.5:r).toFixed(3)}" fill="${spotColor(p,mode)}" data-i="${p._i}"/>`; }
+  return s+"</svg>";
+}
+function spotTip(e,r){ const m=r.v, chk=m.a1+m.a2, vac=m.a1c+m.a2c;
+  showTip(e,`<h4>${esc(tc(r.uc))}</h4><div class="w">${esc(tc(r.tehsil))} · ${esc(tc(r.district))} · ${esc(shortCamp(r.camp))} · day ${esc(r.day)}</div>`+dlist([["GPS check",`<span style="color:${SPOT_BAND[r.band]?.c}">${SPOT_BAND[r.band]?.t||"No reading"}</span>`,1],...(r.kmOut>0?[["Distance outside its UC",r.kmOut.toFixed(1)+" km"]]:[]),...(r.band>0&&r.band<3?[["Actually standing in",r.standing?tc(r.standing)+" ("+tc(r.standingD)+")":tc(r.standingD||"—")]]:[]),["Designation",esc(r.designation)],["Organisation",esc(r.org)],["Children checked",nf.format(chk)],["Recall %",chk?fmt(vac/chk,IND.recallPct):"–"],["NT / TVBMC",m.nt+" / "+m.tv]])); }
+function pgIcmSpot(el){
+  D.icm.forEach((r,i)=>r._i=i);
+  const rows=icmRows(), pts=rows.filter(r=>r.lat), mode=S.spot.color;
+  const bad=rows.filter(r=>!r.lat).length, n=pts.length, cnt=b=>pts.filter(r=>r.band===b).length;
+  const inS=scopeUCs(); let vb=extentOf(inS.length?inS:D.U);
+  if(S.geo.uc){ const u=D.ucByKey.get(S.geo.district+"|"+S.geo.uc); if(u){ const own=pts.filter(r=>r.uc===S.geo.uc); vb=extentOf([u,...own.map(p=>{const [x,y]=D.pj([p.lon,p.lat]);return {bb:[x,y,x,y]};})]); } }
+  const wrong=pts.filter(r=>r.band===2||r.band===1).sort((a,b)=>(b.kmOut||0)-(a.kmOut||0));
+  // every round, every district: UCs with no cluster
+  const uni=new Map(); for(const r of D.cov) if(geoOK(r,true)) (uni.get(r.district)||uni.set(r.district,new Set()).get(r.district)).add(r.uc);
+  for(const u of D.U) if((!S.geo.district||u.district===S.geo.district)&&(!S.geo.tehsil||u.tehsil===S.geo.tehsil)) (uni.get(u.district)||uni.set(u.district,new Set()).get(u.district)).add(u.name);
+  const worked=new Map(); for(const r of icmRows({geo:"noUC"})) (worked.get(r.district)||worked.set(r.district,new Set()).get(r.district)).add(r.uc);
+  const cov=[...uni].sort().map(([d,s])=>{ const w=worked.get(d)||new Set(); const miss=[...s].filter(u=>!w.has(u)); return {_k:d,total:s.size,worked:[...s].filter(u=>w.has(u)).length,missed:miss.length,pct:s.size?miss.length/s.size:null,list:miss}; });
+  const perUC=[...icmAgg(pts,ucKey)].map(([k,m])=>{ const a=pts.filter(r=>ucKey(r)===k); return {_k:k,clusters:a.length,right:a.filter(r=>r.band===0).length,border:a.filter(r=>r.band===1).length,wrongN:a.filter(r=>r.band===2).length,wp:a.length?a.filter(r=>r.band===2).length/a.length:null}; });
+  if(!S.sort.puc) S.sort.puc={k:"wrongN",d:-1};
+  el.innerHTML=`
+  <div class="kband">
+    <div class="k"><span class="kn">Clusters plotted</span><span class="kv">${nf.format(n)}</span><span class="ks">${bad?nf.format(bad)+" with a broken GPS reading":"all readings usable"}</span></div>
+    ${SPOT_BAND.slice(0,3).map(b=>`<div class="k"><span class="kn"><span class="dot" style="background:${b.c};display:inline-block;margin-right:6px"></span>${b.t}</span><span class="kv">${nf.format(cnt(b.k))}</span><span class="ks">${n?(cnt(b.k)/n*100).toFixed(1)+"%":"–"} · ${esc(b.d)}</span></div>`).join("")}
+    <div class="k"><span class="kn">UCs without a cluster</span><span class="kv">${nf.format(cov.reduce((a,r)=>a+r.missed,0))}</span><span class="ks">of ${nf.format(cov.reduce((a,r)=>a+r.total,0))} union councils in scope</span></div>
+  </div>
+  <div class="g-side">
+    <div class="card lift mp"><div class="mp-h"><h3>Where every ICM cluster was uploaded from</h3><div class="seg" role="group" aria-label="Colour dots by">${Object.entries(SPOT_MODES).map(([k,m])=>`<button data-mode="${k}" aria-pressed="${k===mode}">${m.t}</button>`).join("")}</div></div>
+      <div class="mp-sum">${esc(S.icm.camp)} · ${esc(scopeName())} · scroll to zoom, drag to move, click a UC to focus</div>
+      <div class="mwrap" id="spot">${spotSVG(pts,vb,mode)}</div>
+      <div class="legend">${SPOT_MODES[mode].leg.map(([c,t,d])=>`<span class="lg"><span class="dot" style="background:${c}"></span><b>${t}</b>${d?` <span class="note">${esc(d)}</span>`:""}</span>`).join("")}</div></div>
+    <div class="card"><div class="card-h"><div><h3>How a dot gets its colour</h3></div></div><div class="card-b" style="font-size:12.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:8px">
+      <p style="margin:0">Each cluster's GPS reading is tested against the outline of the union council it was recorded for. Standing in a neighbouring UC of the same tehsil is normal boundary work and counts as the right place.</p>
+      <p style="margin:0">Where a UC has no outline on file, its centre is the median of every cluster ever recorded there, and the distance is measured from that point.</p>
+      <p style="margin:0">A red dot does not prove the monitor was elsewhere — phone GPS can be off by a few hundred metres — but more than 5 km is worth a call.</p>
+      <p class="note" style="margin:0">Positions are rounded to about 100 m for privacy. Monitor names are not published.</p></div></div>
+  </div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>Uploaded from the wrong place</h3><p>${wrong.filter(r=>r.band===2).length} more than 5 km out · ${wrong.filter(r=>r.band===1).length} borderline · furthest first</p></div></div><div class="tw tall" id="wr">${tableHTML([{k:"uc",t:"UC on the record",l:1,fn:r=>`<b>${esc(tc(r.uc))}</b><span class="sub">${esc(tc(r.tehsil))} · ${esc(tc(r.district))}</span>`},{k:"designation",t:"Designation",l:1,fn:r=>`<span title="${esc(r.designation)}">${esc(r.designation.length>30?r.designation.slice(0,28)+"…":r.designation)}</span>`,sv:r=>r.designation},{k:"day",t:"Day",fn:r=>`<span class="tag">${esc(r.day)}</span>`},{k:"kmOut",t:"Km out",fn:r=>`<b style="color:${SPOT_BAND[r.band].c}">${(r.kmOut||0).toFixed(1)}</b>`},{k:"standing",t:"Actually standing in",l:1,fn:r=>r.standing?`${esc(tc(r.standing))}<span class="sub">${esc(tc(r.standingD))}</span>`:`<span class="note">${esc(tc(r.standingD||"—"))}</span>`}],wrong.slice(0,400).map(r=>({...r,_k:r.district+"|"+r.uc})),{onRow:1})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Every district: UCs left without a single ICM cluster</h3><p>${esc(S.icm.camp)}${S.icm.day?" · day "+esc(S.icm.day):""}${S.icm.designation?" · "+esc(S.icm.designation):""}</p></div></div><div class="tw tall">${tableHTML([{k:"_k",t:"District",l:1,fn:r=>`<b>${esc(tc(r._k))}</b>`},{k:"total",t:"Union councils"},{k:"worked",t:"Worked"},{k:"missed",t:"Missed"},{k:"pct",t:"Missed %",ind:{f:P,band:[.05,.15],hb:false}},{k:"list",t:"Union councils missed",l:1,fn:r=>`<span style="white-space:normal;display:block;min-width:220px">${r.list.slice(0,12).map(u=>esc(tc(u))).join(", ")||'<span class="note">none</span>'}${r.list.length>12?` <span class="note">and ${r.list.length-12} more</span>`:""}</span>`}],cov)}</div></div>
+  </div>
+  <div class="card"><div class="card-h"><div><h3>GPS check by union council</h3><p>Click a column to sort · click a UC to focus the map</p></div></div><div class="tw tall" id="pu">${tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k},{k:"clusters"},{k:"right",t:"Right place"},{k:"border",t:"Borderline"},{k:"wrongN",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:{f:P,band:[.02,.1],hb:false}}],perUC,{id:"puc",onRow:1})}</div></div>`;
+  const host=$("#spot"), svg=$("svg",host);
+  svg.addEventListener("mousemove",e=>{ const c=e.target.closest("circle"); if(c){ spotTip(e,D.icm[+c.dataset.i]); return; } const u=e.target.closest("use.u"); if(u){ const [d,n]=u.dataset.k.split("|"); const a=pts.filter(r=>r.district===d&&r.uc===n); showTip(e,`<h4>${esc(tc(n))}</h4><div class="w">${esc(tc(D.tehOf.get(u.dataset.k)||""))} · ${esc(tc(d))}</div>`+dlist([["Clusters recorded here",nf.format(a.length)],["Wrong place",nf.format(a.filter(r=>r.band===2).length)]])); return; } hideTip(); });
+  svg.addEventListener("mouseleave",hideTip);
+  svg.addEventListener("click",e=>{ if(svg.dataset.dragged) return; const u=e.target.closest("use.u"); if(u) pickUC(u.dataset.k); });
+  panZoom(svg,host);
+  $$("[data-mode]",el).forEach(b=>b.onclick=()=>{S.spot.color=b.dataset.mode;render();});
+  wireTable($("#wr"),null,pickUC); wireTable($("#pu"),()=>render(),pickUC);
+}
+
+/* =====================================================================
+   THREE-ROUND SPOT COMPARISON
+   ===================================================================== */
+function pgIcmCompare(el){
+  const last=D.icmCamps.slice(-3);
+  const rows=icmRows({camp:""}).filter(r=>r.lat);
+  const inS=scopeUCs(); const vb=extentOf(inS.length?inS:D.U);
+  const stats=D.icmCamps.map(c=>{ const a=rows.filter(r=>r.camp===c); const n=a.length; return {_k:c,camp:c,n,right:a.filter(r=>r.band===0).length,border:a.filter(r=>r.band===1).length,wrong:a.filter(r=>r.band===2).length,wp:n?a.filter(r=>r.band===2).length/n:null}; });
+  el.innerHTML=`<div class="callout"><div><b>All three maps share the same extent</b>, so a dot in the same place is the same place in every round. Filters above (district, tehsil, day, designation, organisation) apply to all three.</div></div>
+  <div class="g3" id="cm"></div>
+  <div class="legend">${SPOT_BAND.map(b=>`<span class="lg"><span class="dot" style="background:${b.c}"></span><b>${b.t}</b> <span class="note">${esc(b.d)}</span></span>`).join("")}</div>
+  <div class="card"><div class="card-h"><div><h3>Round by round — is GPS discipline getting better or worse?</h3><p>${esc(scopeName())}</p></div></div><div class="tw">${tableHTML([{k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`},{k:"n",t:"Clusters"},{k:"right",t:"Right place"},{k:"border",t:"Borderline"},{k:"wrong",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:{f:P,dp:2,band:[.005,.02],hb:false},bg:1}],stats)}</div></div>`;
+  const cm=$("#cm");
+  for(const c of last){ const a=rows.filter(r=>r.camp===c); const w=a.filter(r=>r.band===2).length;
+    const card=document.createElement("div"); card.className="card mp";
+    card.innerHTML=`<div class="mp-h"><h3>${esc(c)}</h3></div><div class="mp-sum">${nf.format(a.length)} clusters · ${a.length?(w/a.length*100).toFixed(1):0}% in the wrong place</div><div class="mwrap">${spotSVG(a,vb,"gps",{small:true})}</div>`;
+    cm.appendChild(card); const svg=$("svg",card);
+    svg.addEventListener("mousemove",e=>{ const ci=e.target.closest("circle"); if(ci) spotTip(e,D.icm[+ci.dataset.i]); else hideTip(); }); svg.addEventListener("mouseleave",hideTip); }
+}
+
+/* =====================================================================
+   GPS AUDIT
+   ===================================================================== */
+function pgIcmAudit(el){
+  const pts=icmRows().filter(r=>r.lat), off=pts.filter(r=>r.band===1||r.band===2);
+  const grp=key=>{ const m=new Map(); for(const r of pts){ const k=r[key]||"(blank)"; const o=m.get(k)||m.set(k,{_k:k,n:0,b:0,w:0}).get(k); o.n++; if(r.band===1)o.b++; if(r.band===2)o.w++; } return [...m.values()].map(o=>({...o,wp:o.n?o.w/o.n:null,op:o.n?(o.w+o.b)/o.n:null})); };
+  if(!S.sort.aud) S.sort.aud={k:"kmOut",d:-1}; if(!S.sort.adg) S.sort.adg={k:"w",d:-1}; if(!S.sort.aorg) S.sort.aorg={k:"w",d:-1};
+  const pct={f:P,band:[.01,.05],hb:false};
+  el.innerHTML=`<div class="callout"><div><b>${nf.format(off.length)} of ${nf.format(pts.length)} clusters</b> (${pts.length?(off.length/pts.length*100).toFixed(1):0}%) were uploaded more than 1.5 km outside the union council they were recorded for, and not inside a neighbouring UC of the same tehsil. Monitor names stay in the Excel workbook; this page shows designation, organisation and day.</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>By designation</h3></div></div><div class="tw tall" id="a1">${tableHTML([{k:"_k",t:"Designation",l:1,fn:r=>`<span title="${esc(r._k)}">${esc(r._k.length>34?r._k.slice(0,32)+"…":r._k)}</span>`,sv:r=>r._k},{k:"n",t:"Clusters"},{k:"b",t:"Borderline"},{k:"w",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:pct,bg:1},{k:"op",t:"Off target %",ind:{f:P,band:[.03,.1],hb:false}}],grp("designation"),{id:"adg"})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>By organisation</h3></div></div><div class="tw tall" id="a2">${tableHTML([{k:"_k",t:"Organisation",l:1},{k:"n",t:"Clusters"},{k:"b",t:"Borderline"},{k:"w",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:pct,bg:1},{k:"op",t:"Off target %",ind:{f:P,band:[.03,.1],hb:false}}],grp("org"),{id:"aorg"})}</div></div>
+  </div>
+  <div class="card"><div class="card-h"><div><h3>Clusters recorded away from their union council</h3><p>${esc(S.icm.camp)} · ${esc(scopeName())} · click a row to open the UC on the spot map</p></div></div><div class="tw tall" id="a3">${tableHTML([{k:"uc",t:"UC on the record",l:1,fn:r=>`<b>${esc(tc(r.uc))}</b><span class="sub">${esc(tc(r.tehsil))} · ${esc(tc(r.district))}</span>`,sv:r=>r.uc},{k:"designation",t:"Designation",l:1,fn:r=>`<span title="${esc(r.designation)}">${esc(r.designation.length>30?r.designation.slice(0,28)+"…":r.designation)}</span>`,sv:r=>r.designation},{k:"org",t:"Organisation",l:1},{k:"day",t:"Day",fn:r=>`<span class="tag">${esc(r.day)}</span>`,sv:r=>+r.day},{k:"kmOut",t:"Km out",fn:r=>`<b style="color:${SPOT_BAND[r.band].c}">${(r.kmOut||0).toFixed(1)}</b>`},{k:"band",t:"Verdict",fn:r=>`<span class="pill ${r.band===2?"fail":"watch"}">${SPOT_BAND[r.band].t}</span>`},{k:"standing",t:"Actually standing in",l:1,fn:r=>r.standing?`${esc(tc(r.standing))}<span class="sub">${esc(tc(r.standingD))}</span>`:`<span class="note">${esc(tc(r.standingD||"—"))}</span>`,sv:r=>r.standing||""}],off.map(r=>({...r,_k:r.district+"|"+r.uc})),{id:"aud",onRow:1})}</div></div>`;
+  wireTable($("#a1"),()=>render()); wireTable($("#a2"),()=>render());
+  wireTable($("#a3"),()=>render(),k=>{ S.page="icm/spot"; location.hash="#/icm/spot"; pickUC(k); });
+}
+
+/* =====================================================================
+   ICM TABLES
+   ===================================================================== */
+const ICM_TABLES=[["ucsum","UC summary"],["desuc","Designation-wise clusters by UC"],["ntc","NT comparative"],["tvc","TVBMC comparative"],["missed","Missed children details"],["day","Day-wise clusters"]];
+function pgIcmTables(el){
+  const t=S.icmTable, rer=()=>pgIcmTables(el);
+  el.innerHTML=`<div class="chips">${ICM_TABLES.map(([k,l])=>`<button class="chip" data-t="${k}" aria-pressed="${k===t}">${l}</button>`).join("")}</div><div id="tb"></div>`;
+  $$("[data-t]",el).forEach(b=>b.onclick=()=>{S.icmTable=b.dataset.t;render();});
+  const tb=$("#tb"), card=(h,p,body)=>`<div class="card"><div class="card-h"><div><h3>${h}</h3><p>${p}</p></div></div><div class="tw tall" id="tt">${body}</div></div>`;
+  const ucc={k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k.split("|")[1]};
+  if(t==="ucsum"){ const U=[...icmAgg(icmRows(),ucKey)].map(([k,m])=>({_k:k,...m})); if(!S.sort.ius) S.sort.ius={k:"recallPct",d:1};
+    tb.innerHTML=card("UC summary",`${esc(S.icm.camp)} · ${U.length} union councils`,tableHTML([ucc,{k:"clusters"},{k:"hh"},{k:"children"},{k:"vaccinated"},{k:"recallPct",bg:1},{k:"seenPct",bg:1},{k:"missed"},{k:"nt"},{k:"tv"},{k:"na"},{k:"ref"},{k:"guestPct"},{k:"ri"},{k:"vm"},{k:"ff"},{k:"ma"},{k:"pc"}],U,{id:"ius",onRow:1}));
+    wireTable($("#tt"),rer,pickUC); }
+  else if(t==="desuc"){ const rows=icmRows(); const des=[...new Set(rows.map(r=>r.designation))].map(d=>[d,rows.filter(r=>r.designation===d).length]).sort((a,b)=>b[1]-a[1]).slice(0,10).map(x=>x[0]);
+    const m=new Map(); for(const r of rows){ const k=ucKey(r); const o=m.get(k)||m.set(k,{_k:k,total:0}).get(k); o[r.designation]=(o[r.designation]||0)+1; o.total++; }
+    if(!S.sort.idu) S.sort.idu={k:"total",d:-1};
+    tb.innerHTML=card("Designation-wise clusters by union council",`${esc(S.icm.camp)} · the ten designations with most clusters`,tableHTML([ucc,...des.map(d=>({k:d,t:d.length>26?d.slice(0,24)+"…":d})),{k:"total",t:"All"}],[...m.values()],{id:"idu",onRow:1})); wireTable($("#tt"),rer,pickUC); }
+  else if(t==="ntc"||t==="tvc"){ const f=t==="ntc"?"nt":"tv", cs=D.icmCamps; const a=icmAgg(icmRows({camp:""}),r=>ucKey(r)+"#"+r.camp);
+    const m=new Map(); for(const [k,v] of a){ const [u,c]=k.split("#"); const o=m.get(u)||m.set(u,{_k:u,total:0}).get(u); o[c]=v[f]; o.total+=v[f]; }
+    const U=[...m.values()].filter(r=>r.total>0); const id="i"+f; if(!S.sort[id]) S.sort[id]={k:"total",d:-1};
+    tb.innerHTML=card(t==="ntc"?"NT (no team visited) — comparative":"TVBMC (team visited, missed child) — comparative",`${esc(scopeName())} · every round`,tableHTML([ucc,...cs.map(c=>({k:c,t:shortCamp(c)})),{k:"total",t:"All rounds"}],U,{id,onRow:1})); wireTable($("#tt"),rer,pickUC); }
+  else if(t==="missed"){ const U=[...icmAgg(icmRows(),ucKey)].map(([k,m])=>({_k:k,...m})).filter(r=>r.missed>0); if(!S.sort.imd) S.sort.imd={k:"missed",d:-1};
+    tb.innerHTML=card("Missed children details",`${esc(S.icm.camp)} · where the missed children were found`,tableHTML([ucc,{k:"children"},{k:"missed"},{k:"nt"},{k:"tv"},{k:"na"},{k:"ref"},{k:"recallPct",bg:1}],U,{id:"imd",onRow:1})); wireTable($("#tt"),rer,pickUC); }
+  else if(t==="day"){ const rows=icmRows({noDay:true}); const days=[...new Set(rows.map(r=>r.day))].sort((a,b)=>a-b);
+    const m=new Map(); for(const r of rows){ const k=ucKey(r); const o=m.get(k)||m.set(k,{_k:k,total:0}).get(k); o["d"+r.day]=(o["d"+r.day]||0)+1; o.total++; }
+    if(!S.sort.idy) S.sort.idy={k:"total",d:-1};
+    tb.innerHTML=card("Clusters by campaign day",`${esc(S.icm.camp)} · how monitoring was spread across the days`,tableHTML([ucc,...days.map(d=>({k:"d"+d,t:"Day "+d})),{k:"total",t:"All days"}],[...m.values()],{id:"idy",onRow:1})); wireTable($("#tt"),rer,pickUC); }
+}
+
+/* =====================================================================
+   COVERAGE vs ICM
+   ===================================================================== */
+const CMP_X=[{k:"hhcovPct",ref:.95},{k:"overallPct",ref:.95},{k:"sdc",ref:.395}], CMP_Y=[{k:"recallPct",ref:.9},{k:"seenPct",ref:.95}];
+function axisSel(id,label,list,cur){ return `<div class="fld"><label for="${id}">${label}</label><select id="${id}">${list.map(x=>`<option value="${x.k}"${x.k===cur?" selected":""}>${esc(IND[x.k].t)}</option>`).join("")}</select></div>`; }
+function pgCmp(el){
+  const camp=S.cmp.camp, ic=D.icmByKey[campKey(camp)];
+  const cov=covAgg(D.cov.filter(r=>r.camp===camp&&geoOK(r,true)),ucKey), icm=icmAgg(D.icm.filter(r=>r.camp===ic&&geoOK(r,true)),ucKey);
+  const xr=CMP_X.find(x=>x.k===S.cmp.x), yr=CMP_Y.find(y=>y.k===S.cmp.y), XI=IND[xr.k], YI=IND[yr.k];
+  const pts=[]; for(const [k,m] of cov){ const n=icm.get(k); if(!n) continue; const x=m[xr.k], y=n[yr.k]; if(x==null||y==null||!isFinite(x)||!isFinite(y)) continue; pts.push({_k:k,x,y,cl:n.clusters,m,n}); }
+  const disc=pts.filter(p=>p.x>=xr.ref&&p.y<yr.ref).sort((a,b)=>a.y-b.y);
+  const cT=one(covAgg(D.cov.filter(r=>r.camp===camp&&geoOK(r,true)))), iT=one(icmAgg(D.icm.filter(r=>r.camp===ic&&geoOK(r,true))));
+  el.innerHTML=`<div class="callout"><div>Admin-reported coverage from the coverage data set against what independent monitors found <b>in the same union councils</b>. UCs in the red corner report high coverage but fail the monitoring standard — the first place to send a supervisor.</div></div>
+  <div class="kband">${kpi(XI,cT?.[xr.k],null,null,XI.t+" (admin)")}${kpi(YI,iT?.[yr.k],null,null,YI.t+" (ICM)")}<div class="k"><span class="kn">UCs in both data sets</span><span class="kv">${nf.format(pts.length)}</span></div><div class="k"><span class="kn">Reported high, monitored low</span><span class="kv" style="color:${disc.length?"var(--fail)":"var(--pass)"}">${nf.format(disc.length)}</span><span class="ks">${pts.length?(disc.length/pts.length*100).toFixed(0)+"% of matched UCs":""}</span></div></div>
+  <div class="g-side">
+    <div class="card lift"><div class="card-h"><div><h3>Each dot is a union council</h3><p>Dot size = clusters monitored</p></div>
+      <div class="frow">${axisSel("cx","Across (admin)",CMP_X,xr.k)}${axisSel("cy","Up (ICM)",CMP_Y,yr.k)}</div></div>
+      <div class="card-b chart" id="sc"></div></div>
+    <div class="card"><div class="card-h"><div><h3>Reported high, monitored low</h3><p>${esc(XI.t)} ≥ ${fmt(xr.ref,{f:P})} but ${esc(YI.t)} &lt; ${fmt(yr.ref,{f:P,dp:0})}</p></div></div><div class="tw tall" id="dc">${tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)},{k:"x",t:"Admin",ind:XI},{k:"y",t:"ICM",ind:YI},{k:"cl",t:"Clusters"}],disc,{onRow:1})}</div></div>
+  </div>`;
+  $("#cx").onchange=e=>{S.cmp.x=e.target.value;render();}; $("#cy").onchange=e=>{S.cmp.y=e.target.value;render();};
+  wireTable($("#dc"),null,k=>{ S.icm.camp=ic; location.hash="#/icm/spot"; S.page="icm/spot"; pickUC(k); });
+  const host=$("#sc"); if(!pts.length){ host.innerHTML='<div class="empty">No union council appears in both data sets for this campaign.</div>'; return; }
+  const W=Math.max(300,host.clientWidth), H=Math.round(Math.min(480,Math.max(300,W*.66))), ml=48,mr=14,mt=12,mb=40, iw=W-ml-mr, ih=H-mt-mb;
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y); const tx=niceTicks(Math.min(...xs,xr.ref)-.02,Math.max(...xs,xr.ref)+.02,5), ty=niceTicks(Math.min(...ys,yr.ref)-.02,Math.min(1,Math.max(...ys,yr.ref)+.01),5);
+  const [xl,xh,yl,yh]=[tx[0],tx.at(-1),ty[0],ty.at(-1)], X=v=>ml+(v-xl)/(xh-xl)*iw, Y=v=>mt+ih-(v-yl)/(yh-yl)*ih, mc=Math.max(...pts.map(p=>p.cl))||1, R=c=>3.5+Math.sqrt(c/mc)*7;
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Admin coverage against ICM per UC"><rect x="${X(xr.ref)}" y="${Y(yr.ref)}" width="${X(xh)-X(xr.ref)}" height="${Y(yl)-Y(yr.ref)}" fill="var(--fail-soft)"/>`;
+  for(const t of tx) s+=`<line class="gl" x1="${X(t)}" x2="${X(t)}" y1="${mt}" y2="${mt+ih}"/><text x="${X(t)}" y="${H-mb+16}" text-anchor="middle">${Math.round(t*100)}%</text>`;
+  for(const t of ty) s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${ml-7}" y="${Y(t)+4}" text-anchor="end">${Math.round(t*100)}%</text>`;
+  s+=`<line class="ref" x1="${X(xr.ref)}" x2="${X(xr.ref)}" y1="${mt}" y2="${mt+ih}"/><line class="ref" x1="${ml}" x2="${W-mr}" y1="${Y(yr.ref)}" y2="${Y(yr.ref)}"/>`;
+  s+=`<text x="${W-mr-6}" y="${Y(yl)-8}" text-anchor="end" style="fill:var(--fail);font-weight:700;letter-spacing:.06em;font-size:10.5px">REPORTED HIGH · MONITORED LOW</text><text x="${ml+iw/2}" y="${H-4}" text-anchor="middle" style="fill:var(--ink-2);font-weight:600">${esc(XI.t)} (admin) →</text><text transform="translate(12 ${mt+ih/2}) rotate(-90)" text-anchor="middle" style="fill:var(--ink-2);font-weight:600">${esc(YI.t)} (ICM) →</text>`;
+  for(const p of [...pts].sort((a,b)=>b.cl-a.cl)){ const bad=p.x>=xr.ref&&p.y<yr.ref; s+=`<circle cx="${X(p.x)}" cy="${Y(Math.max(yl,p.y))}" r="${R(p.cl)}" fill="${bad?"var(--fail)":"var(--h3)"}" fill-opacity="${bad?.9:.42}" stroke="var(--surface)" stroke-width="1.4" data-k="${esc(p._k)}" style="cursor:pointer"/>`; }
+  host.innerHTML=s+"</svg>";
+  const svg=$("svg",host);
+  svg.addEventListener("mousemove",e=>{ const c=e.target.closest("circle"); if(!c){hideTip();return;} const p=pts.find(q=>q._k===c.dataset.k); const [d,u]=p._k.split("|");
+    showTip(e,`<h4>${esc(tc(u))}</h4><div class="w">${esc(tc(d))}</div>`+dlist([[XI.t+" (admin)",fmt(p.x,XI),1],[YI.t+" (ICM)",fmt(p.y,YI),1],["Clusters monitored",nf.format(p.cl)],["Still missed (admin)",fmt(p.m.still)],["Missed children (ICM)",fmt(p.n.missed)]])); });
+  svg.addEventListener("mouseleave",hideTip);
+  svg.addEventListener("click",e=>{ const c=e.target.closest("circle"); if(c){ S.icm.camp=ic; location.hash="#/icm/spot"; S.page="icm/spot"; pickUC(c.dataset.k); } });
+}
+
+/* =====================================================================
+   FOOTER, ROUTER, BOOT
+   ===================================================================== */
+function footer(keys){ return `<div class="card" style="padding:12px 16px"><details class="defs"><summary>How these indicators are calculated</summary><div class="defs-g">${keys.map(k=>IND[k]).map(i=>`<div><b>${esc(i.t)}</b><br>${esc(i.d||"")}${i.band?` · <span style="color:var(--pass)">on target ${bandText(i).pass}</span>`:""}</div>`).join("")}</div></details></div>`; }
+const RENDER={"cov/report":pgCovReport,"cov/maps":pgCovMaps,"cov/tables":pgCovTables,"cov/race":pgCovRace,"icm/dash":pgIcmDash,"icm/maps":pgIcmMaps,"icm/spot":pgIcmSpot,"icm/compare":pgIcmCompare,"icm/audit":pgIcmAudit,"icm/tables":pgIcmTables,"cmp":pgCmp};
+function render(){
+  cancelAnimationFrame(raceTimer); hideTip();
+  $$(".nav a").forEach(a=>a.toggleAttribute("aria-current",false)); const a=$(`.nav a[data-p="${S.page}"]`); a&&a.setAttribute("aria-current","page");
+  document.body.classList.remove("nav-open");
+  renderCtx(); const pg=$("#page"); pg.innerHTML="";
+  try{ RENDER[S.page](pg); }catch(err){ console.error(err); pg.innerHTML=`<div class="err"><b>This view could not be drawn.</b><br>${esc(err.message)}</div>`; }
+  saveHash();
+}
+function saveHash(){ try{ const q=new URLSearchParams(); const g=S.geo; if(g.district)q.set("d",g.district); if(g.tehsil)q.set("t",g.tehsil); if(g.uc)q.set("u",g.uc);
+  const P=PAGES[S.page]; if(P.ds==="cov")q.set("c",S.cov.camp); if(P.ds==="icm")q.set("c",S.icm.camp); if(P.ds==="cmp")q.set("c",S.cmp.camp);
+  const h="#/"+S.page+(q.toString()?"?"+q:""); if(location.hash!==h) history.replaceState(null,"",h); }catch(e){} }
+function readHash(){ const h=location.hash.slice(2); const [p,qs]=h.split("?"); if(RENDER[p]) S.page=p; const q=new URLSearchParams(qs||"");
+  const d=q.get("d"); if(d&&D.H[d]){ S.geo.district=d; const t=q.get("t"); if(t&&D.H[d][t]){ S.geo.tehsil=t; const u=q.get("u"); if(u&&D.H[d][t].has(u)) S.geo.uc=u; } }
+  const c=q.get("c"), ds=PAGES[S.page].ds; if(c){ if(ds==="cov"&&D.covCamps.includes(c)) S.cov.camp=c; if(ds==="icm"&&D.icmCamps.includes(c)) S.icm.camp=c; if(ds==="cmp"&&D.cmpCamps.includes(c)) S.cmp.camp=c; } }
+addEventListener("hashchange",()=>{ const p=location.hash.slice(2).split("?")[0]; if(RENDER[p]&&p!==S.page){ S.page=p; if(p==="cmp"){S.geo.tehsil="";S.geo.uc="";} render(); scrollTo({top:0}); } });
+let rzT=0,lastW=innerWidth; addEventListener("resize",()=>{ if(Math.abs(innerWidth-lastW)<60) return; lastW=innerWidth; clearTimeout(rzT); rzT=setTimeout(()=>D&&render(),250); });
+function railFoot(){ const f=t=>{ if(!t) return "—"; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
+  $("#rail-foot").innerHTML=`<span>Coverage data <b>${f(D.upd.cov)}</b></span><span>ICM data <b>${f(D.upd.icm)}</b></span><span style="margin-top:4px">Summary figures only — no names or household details. Cluster GPS rounded to ~100 m.</span>`; }
+load().then(()=>{ readHash(); railFoot(); render(); }).catch(err=>{ console.error(err);
+  $("#page").innerHTML=`<div class="err"><b>The data files could not be loaded.</b><br>${esc(err.message)}<br><br>This page reads <code>data/coverage.csv</code>, <code>data/icm.csv</code> and <code>data/geo.json</code> from the same folder. Open it from the website address, not by double-clicking the file.</div>`; });
+</script>
+
+</body>
+</html>
