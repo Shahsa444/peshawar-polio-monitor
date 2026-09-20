@@ -79,6 +79,9 @@ button,select,input{font:inherit;color:inherit}
 .main{min-width:0;display:flex;flex-direction:column}
 .ctx{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:color-mix(in srgb,var(--ground) 88%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .ctx-in{padding:14px clamp(16px,2.4vw,32px) 12px;display:flex;flex-direction:column;gap:10px}
+.sitebar{display:flex;align-items:baseline;gap:10px 14px;flex-wrap:wrap;padding-bottom:9px;border-bottom:1px solid var(--line)}
+.sitebar .sname{font-family:var(--display);font-weight:800;font-size:15.5px;letter-spacing:-.01em;color:var(--ink)}
+.sitebar .ssub{font-size:12px;color:var(--muted)}
 .ctx-top{display:flex;align-items:flex-end;gap:14px 24px;flex-wrap:wrap;justify-content:space-between}
 .ptitle h1{font-family:var(--display);font-weight:750;font-size:clamp(21px,2.1vw,27px);letter-spacing:-.02em;margin:0;line-height:1.05;text-wrap:balance}
 .ptitle p{margin:4px 0 0;color:var(--muted);font-size:12.5px}
@@ -303,6 +306,19 @@ details.defs summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
      data/icm.csv        one row per ICM cluster (no names, GPS ~100 m)
      data/geo.json       UC / tehsil / district outlines
    ===================================================================== */
+/* =====================================================================
+   ***  SETTINGS YOU CAN CHANGE YOURSELF  ***
+   Edit the text between the quotation marks, save the file, then run
+   publish.cmd (or press Ctrl+S in Excel). Change nothing else below.
+   ===================================================================== */
+const SITE = {
+  name: "Peshawar Division Coverage & Monitoring",   // big name on top of every page
+  sub:  "Khyber Pakhtunkhwa · Polio campaign coverage and independent monitoring",
+  short:"Polio Monitor",                             // name in the left menu
+  place:"Peshawar Division · KP"                     // small line under it
+};
+/* =================== end of settings =================== */
+
 const FILES={cov:"data/coverage.csv",icm:"data/icm.csv",geo:"data/geo.json",covUpd:"data/coverage.updated.txt",icmUpd:"data/icm.updated.txt"};
 const $=(s,r=document)=>r.querySelector(s), $$=(s,r=document)=>[...r.querySelectorAll(s)];
 const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
@@ -758,6 +774,7 @@ function renderCtx(){
   } else camps=chipRow(D.cmpCamps,S.cmp.camp,"cmp");
   const any=g.district||g.tehsil||g.uc||(ds==="cov"&&(S.cov.day||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.day||S.icm.designation||S.icm.org||S.icm.pop));
   $("#ctx").innerHTML=`<div class="ctx-in">
+    <div class="sitebar"><span class="sname">${esc(SITE.name)}</span><span class="ssub">${esc(SITE.sub)}</span></div>
     <div class="ctx-top">
       <div style="display:flex;gap:12px;align-items:flex-end;min-width:0">
         <button class="ibtn menu-btn" id="menu" aria-label="Open menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
@@ -1230,7 +1247,7 @@ addEventListener("hashchange",()=>{ const p=location.hash.slice(2).split("?")[0]
 let rzT=0,lastW=innerWidth; addEventListener("resize",()=>{ if(Math.abs(innerWidth-lastW)<60) return; lastW=innerWidth; clearTimeout(rzT); rzT=setTimeout(()=>D&&render(),250); });
 function railFoot(){ const f=t=>{ if(!t) return "—"; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
   $("#rail-foot").innerHTML=`<span>Coverage data <b>${f(D.upd.cov)}</b></span><span>ICM data <b>${f(D.upd.icm)}</b></span><span style="margin-top:4px">Summary figures only — no names or household details. Cluster GPS rounded to ~100 m.</span>`; }
-load().then(()=>{ readHash(); railFoot(); render(); }).catch(err=>{ console.error(err);
+load().then(()=>{ try{ $(".brand b").textContent=SITE.short; $(".brand small").textContent=SITE.place; document.title=SITE.name; }catch(e){} readHash(); railFoot(); render(); }).catch(err=>{ console.error(err);
   $("#page").innerHTML=`<div class="err"><b>The data files could not be loaded.</b><br>${esc(err.message)}<br><br>This page reads <code>data/coverage.csv</code>, <code>data/icm.csv</code> and <code>data/geo.json</code> from the same folder. Open it from the website address, not by double-clicking the file.</div>`; });
 </script>
 
