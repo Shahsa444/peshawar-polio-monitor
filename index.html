@@ -192,6 +192,9 @@ td .bar{display:inline-block;height:6px;border-radius:3px;vertical-align:middle;
 .ibtn svg{width:15px;height:15px}
 .mp-sum{padding:0 12px;font-size:11.5px;color:var(--muted);min-height:16px}
 .msvg{display:block;width:100%;height:auto}
+.card.maxed{position:fixed;inset:0;z-index:75;margin:0;border-radius:0;overflow:auto;background:var(--surface);padding-bottom:env(safe-area-inset-bottom,0px)}
+.card.maxed .msvg{height:calc(100dvh - 140px);width:100%}
+body.has-max{overflow:hidden}
 .msvg .u{stroke:var(--outline);stroke-width:.55;vector-effect:non-scaling-stroke;cursor:pointer}
 .msvg .u.o{cursor:pointer;opacity:.9}
 .msvg .u:hover{stroke:var(--ink);stroke-width:1.6}
@@ -417,7 +420,7 @@ const IND={
   msRec:{t:"MS% (of recorded)",f:P,band:[.05495,null],hb:false,d:"Total still-missed children ÷ recorded missed children"},
   mmpPct:{t:"MMP coverage %",f:P,band:[.85,.95],hb:true,d:"Mobile / migrant children covered ÷ registered MMP"},
   score:{t:"UC score %",f:P,band:[.6,.8],hb:true,d:"Six scored indicators out of 18: coverage, recorded missed, SDC, missed covered, refusals covered, still missed"},
-  wastage:{t:"Wastage %",f:P,band:[.05495,null],hb:false,d:"(OPV used − children vaccinated) ÷ OPV used"},
+  wastage:{t:"Wastage %",f:P,band:[0,.10],rng:true,hb:false,d:"(OPV used − children vaccinated) ÷ OPV used"},
   zeroPct:{t:"Zero HH %",f:P,band:[.01,.03],hb:false,d:"Houses with no children ÷ houses visited"},
   lockedPct:{t:"Locked HH %",f:P,band:[.02,.05],hb:false,d:"Locked houses ÷ houses visited"},
   refCov:{t:"Refusals covered %",f:P,band:[.7,.95],hb:true,d:"Covered refusals ÷ recorded refusals"},
@@ -455,10 +458,12 @@ const ICM_MAP_IND=["recallPct","seenPct","nt","tv","pc","ma","missed","clusters"
 /* ---------------- formatting & bands ---------------- */
 function fmt(v,ind){ if(v==null||!isFinite(v)) return "–"; if(ind&&ind.f===P) return (v*100).toFixed(ind.dp??1)+"%"; if(ind&&ind.f==="txt") return esc(v); return nf.format(Math.round(v)); }
 function bandOf(ind,v){ if(!ind||!ind.band||v==null||!isFinite(v)) return null; const [lo,hi]=ind.band;
+  if(ind.rng) return v>=lo&&v<=hi?"pass":"fail";
   if(ind.hb){ if(hi==null) return v>=lo?"pass":"fail"; return v>=hi?"pass":v>=lo?"watch":"fail"; }
   if(hi==null) return v<=lo?"pass":"fail"; return v<=lo?"pass":v<=hi?"watch":"fail"; }
 const BL={pass:"On target",watch:"Watch",fail:"Below standard"};
 function bandText(ind){ const [lo,hi]=ind.band, p=x=>(x*100).toFixed(x<.01?2:x<.1?1:0).replace(/\.0+$/,"")+"%";
+  if(ind.rng) return {pass:p(lo)+"–"+p(hi),fail:"< "+p(lo)+" or > "+p(hi)};
   if(ind.hb) return hi==null?{pass:"≥ "+p(lo),fail:"< "+p(lo)}:{pass:"≥ "+p(hi),watch:p(lo)+"–"+p(hi),fail:"< "+p(lo)};
   return hi==null?{pass:"≤ "+p(lo),fail:"> "+p(lo)}:{pass:"≤ "+p(lo),watch:p(lo)+"–"+p(hi),fail:"> "+p(hi)}; }
 const ICO={pass:'<svg viewBox="0 0 12 12"><path d="M2.5 6.2l2.3 2.3 4.7-5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -726,6 +731,17 @@ function panZoom(svg,host){
   ctl.innerHTML=`<button class="ibtn" aria-label="Zoom in"><svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="ibtn" aria-label="Zoom out"><svg viewBox="0 0 16 16"><path d="M3 8h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="ibtn" aria-label="Reset view"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 8a5 5 0 1 0 1.5-3.5M3 3v2.5h2.5"/></svg></button>`;
   const [bi,bo,br]=$$("button",ctl); bi.onclick=()=>zoomAt(1/1.4,vb[0]+vb[2]/2,vb[1]+vb[3]/2); bo.onclick=()=>zoomAt(1.4,vb[0]+vb[2]/2,vb[1]+vb[3]/2); br.onclick=()=>{vb=[...base];set();};
   host.style.position="relative"; host.appendChild(ctl);
+  /* full-screen button for maps that don't already open in a pop-up */
+  const card=host.closest(".card");
+  if(card&&!host.closest(".modal")&&!$('[aria-label="Open full screen"]',card)){
+    const fb=document.createElement("button"); fb.className="ibtn"; fb.setAttribute("aria-label","Full screen"); fb.title="Full screen (Esc to close)"; fb.innerHTML=EXPAND; ctl.prepend(fb);
+    const exit=()=>{ card.classList.remove("maxed"); document.body.classList.remove("has-max"); fb.innerHTML=EXPAND; fb.setAttribute("aria-label","Full screen"); document.removeEventListener("keydown",onKey); document.removeEventListener("fullscreenchange",onFs); if(document.fullscreenElement) document.exitFullscreen?.().catch(()=>{}); };
+    const onKey=e=>{ if(e.key==="Escape") exit(); };
+    const onFs=()=>{ if(!document.fullscreenElement) exit(); };
+    fb.onclick=()=>{ if(card.classList.contains("maxed")) return exit();
+      card.classList.add("maxed"); document.body.classList.add("has-max"); fb.innerHTML=X_ICON; fb.setAttribute("aria-label","Close full screen"); document.addEventListener("keydown",onKey);
+      const p=document.documentElement.requestFullscreen?.(); if(p&&p.then) p.then(()=>document.addEventListener("fullscreenchange",onFs)).catch(()=>{}); };
+  }
 }
 function openModal(html,after){ const m=$("#modal"), c=$("#modal-card"); c.innerHTML=html; m.hidden=false; after&&after(c); const close=()=>{m.hidden=true;c.innerHTML="";hideTip();};
   $("[data-close]",c)?.addEventListener("click",close); m.onclick=e=>{ if(e.target===m) close(); }; document.addEventListener("keydown",function k(e){ if(e.key==="Escape"){close();document.removeEventListener("keydown",k);} }); }
@@ -803,10 +819,14 @@ function chipRow(list,cur,ds){ return `<div class="chips" role="group" aria-labe
    CAMPAIGN REPORT (Dashboard sheet)
    ===================================================================== */
 function pgCovReport(el){
-  const camps=D.covCamps, cur=S.cov.camp, iC=camps.indexOf(cur), prevC=camps[iC-1];
-  const T=one(covAgg(covRows())), Pv=prevC?one(covAgg(covRows({camp:prevC}))):null;
+  const camps=D.covCamps, cur=S.cov.camp, iC=camps.indexOf(cur);
   const byCamp=covAgg(covRows({camp:""}),r=>r.camp);
-  const last3=camps.slice(Math.max(0,iC-2),iC+1);
+  /* only rounds actually conducted in the selected area (target or coverage reported) */
+  const held=c=>{ const a=byCamp.get(c); return !!a&&((a.neap||0)>0||(a.hhCov||0)>0); };
+  const done=camps.slice(0,iC+1).filter(c=>c===cur||held(c));
+  const prevC=done[done.indexOf(cur)-1];
+  const T=one(covAgg(covRows())), Pv=prevC?one(covAgg(covRows({camp:prevC}))):null;
+  const last3=done.slice(-3);
   const rc=S.cov.rankCamp||cur;
   const ucs=covAgg(covRows({camp:rc}),ucKey);
   const rowsFor=keys=>last3.map(c=>({_k:c,camp:c,...byCamp.get(c)}));
