@@ -99,6 +99,21 @@ select,.inp{appearance:none;-webkit-appearance:none;background:var(--surface);bo
 .inp{background-image:none;padding-right:10px}
 select.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background-color:var(--accent-soft)}
 select:disabled{opacity:.55}
+.ms{position:relative}
+.msb{appearance:none;background:var(--surface);border:1px solid var(--line-2);border-radius:8px;padding:7px 28px 7px 10px;font:inherit;font-size:12.5px;font-weight:500;width:100%;min-width:0;text-align:left;color:var(--ink);cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 14px) 54%,calc(100% - 9px) 54%;background-size:5px 5px;background-repeat:no-repeat}
+.msb.on{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent);background-color:var(--accent-soft)}
+.msb:disabled{opacity:.55;cursor:default}
+.msp{position:absolute;top:calc(100% + 4px);left:0;z-index:40;width:max(100%,270px);max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);padding:10px;display:flex;flex-direction:column;gap:6px}
+.msp[hidden]{display:none}
+.ms-act{display:flex;gap:12px;align-items:center}.ms-act .linkbtn{padding:2px 0}.ms-n{margin-left:auto}
+.ms-list{max-height:min(340px,55vh);overflow:auto;display:flex;flex-direction:column;margin:0 -4px}
+.ms-h{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:8px 6px 3px}
+.fld .ms-i{text-transform:none;letter-spacing:0;font-weight:500;color:var(--ink);display:flex;gap:8px;align-items:center;padding:6px;border-radius:6px;font-size:13px;cursor:pointer}.ms-i:hover{background:var(--accent-soft)}
+.ms-i input{accent-color:var(--accent);width:16px;height:16px;margin:0;flex:none}
+.ms-i[hidden],.ms-g[hidden]{display:none}
+.ms-foot{display:flex;justify-content:flex-end;border-top:1px solid var(--line);padding-top:8px}
+.ms-ok{border:0;border-radius:8px;background:var(--accent);color:var(--accent-ink);font:inherit;font-weight:700;font-size:12.5px;padding:7px 16px;cursor:pointer}
 .linkbtn{border:0;background:none;color:var(--accent);font-weight:700;font-size:12.5px;cursor:pointer;padding:7px 2px}
 
 .page{padding:18px clamp(16px,2.4vw,32px) 48px;display:flex;flex-direction:column;gap:18px}
@@ -497,7 +512,12 @@ function legendHTML(ind,br,vals){
 /* =====================================================================
    STATE
    ===================================================================== */
-const S={page:"cov/report",geo:{district:"",tehsil:"",uc:""},
+/* geography filter: several tehsils / UCs can be ticked at once.
+   .tehsil / .uc still read the single pick (or "" when none or several) so older code keeps working */
+function newGeo(){ return {district:"",tehsils:[],ucs:[],
+  get tehsil(){ return this.tehsils.length===1?this.tehsils[0]:""; }, set tehsil(v){ this.tehsils=v?[v]:[]; },
+  get uc(){ return this.ucs.length===1?this.ucs[0]:""; }, set uc(v){ this.ucs=v?[v]:[]; } }; }
+const S={page:"cov/report",geo:newGeo(),
   cov:{camp:"",day:"",tier:"",risk:"",rankCamp:""},icm:{camp:"",day:"",designation:"",org:"",pop:""},cmp:{camp:"",x:"hhcovPct",y:"recallPct"},
   covMaps:{n:9,all:"",panels:[]},icmMaps:{},spot:{color:"gps",sel:null},sort:{},covTable:"division",icmTable:"ucsum",race:{m:"still"},search:{}};
 let D=null;
@@ -592,7 +612,7 @@ const SPOT_BAND=[{k:0,t:"Right place",d:"inside its UC, a neighbouring UC of the
 /* =====================================================================
    FILTERING & AGGREGATION
    ===================================================================== */
-function geoOK(r,skipUC){ const g=S.geo; return (!g.district||r.district===g.district)&&(!g.tehsil||r.tehsil===g.tehsil)&&(skipUC||!g.uc||r.uc===g.uc); }
+function geoOK(r,skipUC){ const g=S.geo; return (!g.district||r.district===g.district)&&(!g.tehsils.length||g.tehsils.includes(r.tehsil))&&(skipUC||!g.ucs.length||g.ucs.includes(r.uc)); }
 /* o.camp: undefined = current campaign · "" = every campaign · name = that campaign
    o.geo: "full" (default) | "noUC" | "none" */
 function covRows(o={}){ const camp=o.camp===undefined?S.cov.camp:o.camp, c=S.cov;
@@ -609,7 +629,8 @@ function icmAgg(rows,keyFn=()=>"all"){ const out=new Map();
   const m=new Map(); for(const [k,s] of out) m.set(k,icmM(s)); return m; }
 const ucKey=r=>r.district+"|"+r.uc;
 const one=m=>m.get("all");
-function scopeName(){ const g=S.geo; return g.uc?tc(g.uc)+" UC":g.tehsil?tc(g.tehsil)+" tehsil":g.district?tc(g.district)+" district":"Peshawar Division"; }
+function scopeName(){ const g=S.geo, few=(a,w)=>a.length<=3?a.map(tc).join(", ")+" "+w+(a.length>1?"s":""):a.length+" "+w+"s";
+  return g.ucs.length?few(g.ucs,"UC"):g.tehsils.length?few(g.tehsils,"tehsil"):g.district?tc(g.district)+" district":"Peshawar Division"; }
 
 /* =====================================================================
    UI PIECES
@@ -685,12 +706,19 @@ function wireTable(el,rerender,onRow){
   if(onRow) $$("tr[data-k]",el).forEach(tr=>tr.onclick=()=>onRow(tr.dataset.k));
 }
 function ucLabel(k){ const [d,u]=k.split("|"); return `<b>${esc(tc(u))}</b><span class="sub">${esc(tc(D.tehOf.get(k)||""))} · ${esc(tc(d))}</span>`; }
-function pickUC(k){ const [d,u]=k.split("|"); if(S.geo.uc===u&&S.geo.district===d){S.geo.uc="";} else {S.geo.district=d;S.geo.tehsil=D.tehOf.get(k)||"";S.geo.uc=u;} hideTip(); render(); }
+/* click a UC on a map/table: picks it alone; hold Ctrl (or Shift) while clicking to add it to the UCs already ticked */
+let MULTI=false; addEventListener("pointerdown",e=>{MULTI=e.ctrlKey||e.metaKey||e.shiftKey;},true); addEventListener("keydown",e=>{ if(e.key==="Enter") MULTI=e.ctrlKey||e.metaKey||e.shiftKey; },true);
+function pickUC(k){ const [d,u]=k.split("|"), g=S.geo, t=D.tehOf.get(k)||"";
+  if(g.district===d&&g.ucs.includes(u)) g.ucs=g.ucs.filter(x=>x!==u);
+  else if(MULTI&&g.district===d){ g.ucs=[...g.ucs,u]; if(g.tehsils.length&&t&&!g.tehsils.includes(t)) g.tehsils=[...g.tehsils,t]; }
+  else { g.district=d; g.tehsil=t; g.uc=u; }
+  hideTip(); render(); }
 
 /* =====================================================================
    CHOROPLETH MAP  (UC outlines are defined once and reused with <use>)
    ===================================================================== */
-function scopeUCs(){ const g=S.geo; return D.U.filter(u=>(!g.district||u.district===g.district)&&(!g.tehsil||u.tehsil===g.tehsil)); }
+function scopeUCs(){ const g=S.geo; return D.U.filter(u=>(!g.district||u.district===g.district)&&(!g.tehsils.length||g.tehsils.includes(u.tehsil))); }
+const isPicked=u=>S.geo.district===u.district&&S.geo.ucs.includes(u.name);
 function extentOf(list){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; for(const u of list){x0=Math.min(x0,u.bb[0]);y0=Math.min(y0,u.bb[1]);x1=Math.max(x1,u.bb[2]);y1=Math.max(y1,u.bb[3]);}
   const p=Math.max(x1-x0,y1-y0)*.035; return [x0-p,y0-p,x1-x0+2*p,y1-y0+2*p]; }
 function mapSVG(vals,ind,o={}){
@@ -699,7 +727,7 @@ function mapSVG(vals,ind,o={}){
   const fs=Math.max(vb[2],vb[3])/(o.big?110:80);
   let s=`<svg class="msvg" viewBox="${vb.join(" ")}" data-vb="${vb.join(" ")}" role="img" aria-label="${esc(ind.t)} map">`;
   for(const u of D.U){ const b=u.bb; if(b[2]<vb[0]||b[0]>vb[0]+vb[2]||b[3]<vb[1]||b[1]>vb[1]+vb[3]) continue; const ins=set.has(u.i), v=vals.get(u.key)?.[ind.k];
-    s+=`<use href="#gu${u.i}" class="u${ins?"":" o"}${g.uc===u.name&&g.district===u.district?" sel":""}" fill="${ins?colorFor(ind,v,br):"var(--outside)"}" data-k="${esc(u.key)}"/>`; }
+    s+=`<use href="#gu${u.i}" class="u${ins?"":" o"}${isPicked(u)?" sel":""}" fill="${ins?colorFor(ind,v,br):"var(--outside)"}" data-k="${esc(u.key)}"/>`; }
   for(const t of D.T){ const b=t.bb; if(b[2]<vb[0]||b[0]>vb[0]+vb[2]||b[3]<vb[1]||b[1]>vb[1]+vb[3]) continue; s+=`<use href="#gt${t.i}" class="t"/>`; }
   for(const d of D.Di) s+=`<use href="#gd${d.i}" class="d"/>`;
   const labels=o.labels!==false&&inS.length&&inS.length<=(o.big?140:60);
@@ -769,11 +797,31 @@ const PAGES={
 function sel(id,label,arr,cur,all,lab=x=>tc(x),dis=false){
   return `<div class="fld"><label for="${id}">${label}</label><select id="${id}"${cur?' class="on"':""}${dis||!arr.length?" disabled":""}><option value="">${esc(all)}</option>${arr.map(v=>`<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(lab(v))}</option>`).join("")}</select></div>`;
 }
+/* tick-box dropdown for picking several tehsils / UCs */
+function msel(id,label,groups,cur,allTxt,off){ const items=groups.flatMap(g=>g.items), n=cur.length;
+  const txt=off||!n?allTxt:n===1?tc(cur[0]):n+" selected";
+  return `<div class="fld ms" id="${id}"><label>${label}</label><button type="button" class="msb${n?" on":""}"${off||!items.length?" disabled":""} aria-haspopup="true" aria-expanded="false" title="${esc(cur.map(tc).join(", "))}">${esc(txt)}</button>
+  <div class="msp" hidden>${items.length>10?`<input class="inp ms-q" type="search" placeholder="Search ${label.toLowerCase()}…" aria-label="Search">`:""}
+    <div class="ms-act"><button type="button" class="linkbtn" data-a="all">Select all</button><button type="button" class="linkbtn" data-a="none">Clear</button><span class="note ms-n"></span></div>
+    <div class="ms-list">${groups.map(g=>`<div class="ms-g">${g.h&&groups.length>1?`<div class="ms-h">${esc(tc(g.h))}</div>`:""}${g.items.map(v=>`<label class="ms-i"><input type="checkbox" value="${esc(v)}"${cur.includes(v)?" checked":""}><span>${esc(tc(v))}</span></label>`).join("")}</div>`).join("")}</div>
+    <div class="ms-foot"><button type="button" class="ms-ok">Apply</button></div></div></div>`; }
+function wireMsel(id,apply){ const w=$("#"+id); if(!w) return; const b=$(".msb",w), pnl=$(".msp",w), q=$(".ms-q",w), boxes=$$("input[type=checkbox]",w), cnt=$(".ms-n",w);
+  const start=boxes.filter(x=>x.checked).map(x=>x.value).join("\u0001");
+  const vals=()=>boxes.filter(x=>x.checked).map(x=>x.value), upd=()=>{ const k=vals().length; cnt.textContent=k?k+" ticked":""; };
+  const close=ok=>{ pnl.hidden=true; b.setAttribute("aria-expanded","false"); document.removeEventListener("pointerdown",out,true); document.removeEventListener("keydown",key);
+    if(ok&&vals().join("\u0001")!==start){ apply(vals()); render(); } };
+  const out=e=>{ if(!w.contains(e.target)) close(true); }, key=e=>{ if(e.key==="Escape") close(false); };
+  b.onclick=()=>{ if(!pnl.hidden) return close(true); $$(".msp").forEach(x=>x.hidden=true); pnl.hidden=false; b.setAttribute("aria-expanded","true"); upd(); document.addEventListener("pointerdown",out,true); document.addEventListener("keydown",key); q&&q.focus(); };
+  boxes.forEach(x=>x.onchange=upd);
+  q&&(q.oninput=()=>{ const s=q.value.trim().toLowerCase(); $$(".ms-i",w).forEach(l=>l.hidden=!!s&&!l.textContent.toLowerCase().includes(s)); $$(".ms-g",w).forEach(g=>g.hidden=!$$(".ms-i",g).some(l=>!l.hidden)); });
+  $$("[data-a]",w).forEach(a=>a.onclick=()=>{ boxes.forEach(x=>{ if(!x.closest(".ms-i").hidden) x.checked=a.dataset.a==="all"; }); upd(); });
+  $(".ms-ok",w).onclick=()=>close(true); }
 const DAYLAB=d=>({CD:"Campaign day ",CU:"Catch-up ",AC:"After catch-up ",LO:"Leftover "}[String(d).slice(0,2)]||d)+String(d).slice(2);
 const dayOrd=d=>({CD:0,CU:1,AC:2,LO:3}[String(d).slice(0,2)]??9)*10+(+String(d).slice(2)||0);
 function renderCtx(){
   const P=PAGES[S.page], ds=P.ds, g=S.geo;
-  const dists=Object.keys(D.H).sort(), tehs=g.district?Object.keys(D.H[g.district]||{}).sort():[], ucs=g.tehsil?[...(D.H[g.district]?.[g.tehsil]||[])].sort():[];
+  const dists=Object.keys(D.H).sort(), tehs=g.district?Object.keys(D.H[g.district]||{}).sort():[];
+  const ucGroups=(g.tehsils.length?g.tehsils:tehs).filter(t=>D.H[g.district]?.[t]).sort().map(t=>({h:t,items:[...D.H[g.district][t]].sort()}));
   let camps="", extra="";
   if(ds==="cov"){
     if(!P.noCamp) camps=chipRow(D.covCamps,S.cov.camp,"cov");
@@ -788,7 +836,7 @@ function renderCtx(){
       +sel("f-org","Organisation",u("org").sort(),S.icm.org,"All organisations",x=>x.length>30?x.slice(0,28)+"…":x)
       +sel("f-pop","Population",u("pop").sort(),S.icm.pop,"HRMP + non-HRMP",x=>x==="hrmp"?"HRMP":x==="nonhrmp"?"Non-HRMP":x);
   } else camps=chipRow(D.cmpCamps,S.cmp.camp,"cmp");
-  const any=g.district||g.tehsil||g.uc||(ds==="cov"&&(S.cov.day||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.day||S.icm.designation||S.icm.org||S.icm.pop));
+  const any=g.district||g.tehsils.length||g.ucs.length||(ds==="cov"&&(S.cov.day||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.day||S.icm.designation||S.icm.org||S.icm.pop));
   $("#ctx").innerHTML=`<div class="ctx-in">
     <div class="sitebar"><span class="sname">${esc(SITE.name)}</span><span class="ssub">${esc(SITE.sub)}</span></div>
     <div class="ctx-top">
@@ -800,17 +848,18 @@ function renderCtx(){
     </div>
     <div class="frow">
       ${sel("f-dist","District",dists,g.district,"All districts")}
-      ${ds==="cmp"?"":sel("f-teh","Tehsil",tehs,g.tehsil,g.district?"All tehsils":"Pick a district first")}
-      ${ds==="cmp"?"":sel("f-uc","Union council",ucs,g.uc,g.tehsil?"All UCs":"Pick a tehsil first")}
+      ${ds==="cmp"?"":msel("f-teh","Tehsil",[{items:tehs}],g.tehsils,g.district?"All tehsils":"Pick a district first",!g.district)}
+      ${ds==="cmp"?"":msel("f-uc","Union council",ucGroups,g.ucs,g.district?"All UCs":"Pick a district first",!g.district)}
       ${extra}
       ${any?'<button class="linkbtn" id="f-clear">Clear filters</button>':""}
     </div></div>`;
   const on=(id,fn)=>{const e=$("#"+id); if(e) e.onchange=ev=>{fn(ev.target.value); render();};};
-  on("f-dist",v=>{S.geo.district=v;S.geo.tehsil="";S.geo.uc="";}); on("f-teh",v=>{S.geo.tehsil=v;S.geo.uc="";}); on("f-uc",v=>S.geo.uc=v);
+  on("f-dist",v=>{S.geo.district=v;S.geo.tehsil="";S.geo.uc="";}); wireMsel("f-teh",v=>{ S.geo.tehsils=v; if(v.length){ const keep=new Set(v.flatMap(t=>[...(D.H[S.geo.district]?.[t]||[])])); S.geo.ucs=S.geo.ucs.filter(u=>keep.has(u)); } });
+  wireMsel("f-uc",v=>{ S.geo.ucs=v; });
   on("f-day",v=>S.cov.day=v); on("f-tier",v=>S.cov.tier=v); on("f-risk",v=>S.cov.risk=v);
   on("f-iday",v=>S.icm.day=v); on("f-des",v=>S.icm.designation=v); on("f-org",v=>S.icm.org=v); on("f-pop",v=>S.icm.pop=v);
   $$("[data-camp]").forEach(b=>b.onclick=()=>{ S[b.dataset.ds].camp=b.dataset.camp; if(b.dataset.ds==="cov") S.covMaps.all=""; render(); });
-  $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo={district:"",tehsil:"",uc:""}; if(ds==="cov") Object.assign(S.cov,{day:"",tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{day:"",designation:"",org:"",pop:""}); render();});
+  $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo=newGeo(); if(ds==="cov") Object.assign(S.cov,{day:"",tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{day:"",designation:"",org:"",pop:""}); render();});
   $("#menu").onclick=()=>document.body.classList.toggle("nav-open");
 }
 function chipRow(list,cur,ds){ return `<div class="chips" role="group" aria-label="Campaign">${list.map((c,i)=>`<button class="chip" data-ds="${ds}" data-camp="${esc(c)}" aria-pressed="${c===cur}">${esc(shortCamp(c))}${i===list.length-1?'<span class="lt">latest</span>':""}</button>`).join("")}</div>`; }
@@ -944,7 +993,7 @@ function pgCovTables(el){
     const q=(S.search.uc||"").toUpperCase(); if(q) U=U.filter(r=>r._k.includes(q)||r.teh.includes(q));
     const cols=[{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k.split("|")[1]},{k:"neap"},{k:"tsTarget"},{k:"hhCov"},{k:"hhcovPct",bg:1},{k:"hhOther"},{k:"overallPct",bg:1},{k:"sdc",bg:1},{k:"stillNA"},{k:"stillRef"},{k:"still"},{k:"msRec",bg:1},{k:"msTar",bg:1},{k:"reg"},{k:"mmpPct",bg:1},{k:"zeroPct",bg:1},{k:"lockedPct",bg:1},{k:"wastage",bg:1},{k:"score",bg:1},{k:"category",t:"Performance",fn:r=>r.category?`<span class="pill ${r.category==="Satisfactory"?"pass":r.category==="Poor performing"?"fail":"watch"}">${r.category}</span>`:"",sv:r=>r.score}];
     if(!S.sort["ucl"]) S.sort["ucl"]={k:t==="less"?"hhcovPct":"score",d:1};
-    tb.innerHTML=card(t==="less"?"UCs below 95% HH coverage":"UC level",`${esc(S.cov.camp)} · ${U.length} union councils · click a column to sort`,tableHTML(cols,U,{id:"ucl",onRow:1,cur:r=>r._k===S.geo.district+"|"+S.geo.uc}),`<input class="inp" id="ucq" type="search" placeholder="Search UC or tehsil" aria-label="Search" value="${esc(S.search.uc||"")}" style="width:220px">`);
+    tb.innerHTML=card(t==="less"?"UCs below 95% HH coverage":"UC level",`${esc(S.cov.camp)} · ${U.length} union councils · click a column to sort`,tableHTML(cols,U,{id:"ucl",onRow:1,cur:r=>isPicked({district:r._k.split("|")[0],name:r._k.split("|")[1]})}),`<input class="inp" id="ucq" type="search" placeholder="Search UC or tehsil" aria-label="Search" value="${esc(S.search.uc||"")}" style="width:220px">`);
     wireTable($("#tt"),rer,pickUC); const qi=$("#ucq"); qi.oninput=()=>{S.search.uc=qi.value; const p=qi.selectionStart; rer(); const n=$("#ucq"); n.focus(); n.setSelectionRange(p,p);};
   } else if(t==="afp"){
     const rows=covRows().filter(r=>r.v.afp>0).map(r=>({_k:r.district+"|"+r.uc,day:r.day,afp:r.v.afp}));
@@ -1083,8 +1132,8 @@ const SPOT_MODES={gps:{t:"GPS check",leg:SPOT_BAND.map(b=>[b.c,b.t,b.d])},
 function spotSVG(pts,vb,mode,o={}){
   const g=S.geo; const r=Math.max(vb[2],vb[3])/(o.small?260:380);
   let s=`<svg class="msvg spt" viewBox="${vb.join(" ")}" role="img" aria-label="Cluster positions">`;
-  for(const u of D.U){ const b=u.bb; if(b[2]<vb[0]||b[0]>vb[0]+vb[2]||b[3]<vb[1]||b[1]>vb[1]+vb[3]) continue; const ins=(!g.district||u.district===g.district)&&(!g.tehsil||u.tehsil===g.tehsil);
-    s+=`<use href="#gu${u.i}" class="u${ins?" in":""}${g.uc===u.name&&g.district===u.district?" fo":""}" data-k="${esc(u.key)}"/>`; }
+  for(const u of D.U){ const b=u.bb; if(b[2]<vb[0]||b[0]>vb[0]+vb[2]||b[3]<vb[1]||b[1]>vb[1]+vb[3]) continue; const ins=(!g.district||u.district===g.district)&&(!g.tehsils.length||g.tehsils.includes(u.tehsil));
+    s+=`<use href="#gu${u.i}" class="u${ins?" in":""}${isPicked(u)?" fo":""}" data-k="${esc(u.key)}"/>`; }
   for(const d of D.Di) s+=`<use href="#gd${d.i}" class="d"/>`;
   const order=[...pts].sort((a,b)=>(o.mode==="gps"?(a.band===2)-(b.band===2):0));
   for(const p of order){ const [x,y]=D.pj([p.lon,p.lat]); s+=`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(p.band===2&&mode==="gps"?r*1.5:r).toFixed(3)}" fill="${spotColor(p,mode)}" data-i="${p._i}"/>`; }
@@ -1097,11 +1146,11 @@ function pgIcmSpot(el){
   const rows=icmRows(), pts=rows.filter(r=>r.lat), mode=S.spot.color;
   const bad=rows.filter(r=>!r.lat).length, n=pts.length, cnt=b=>pts.filter(r=>r.band===b).length;
   const inS=scopeUCs(); let vb=extentOf(inS.length?inS:D.U);
-  if(S.geo.uc){ const u=D.ucByKey.get(S.geo.district+"|"+S.geo.uc); if(u){ const own=pts.filter(r=>r.uc===S.geo.uc); vb=extentOf([u,...own.map(p=>{const [x,y]=D.pj([p.lon,p.lat]);return {bb:[x,y,x,y]};})]); } }
+  if(S.geo.ucs.length){ const us=S.geo.ucs.map(n=>D.ucByKey.get(S.geo.district+"|"+n)).filter(Boolean); if(us.length){ const own=pts.filter(r=>S.geo.ucs.includes(r.uc)); vb=extentOf([...us,...own.map(p=>{const [x,y]=D.pj([p.lon,p.lat]);return {bb:[x,y,x,y]};})]); } }
   const wrong=pts.filter(r=>r.band===2||r.band===1).sort((a,b)=>(b.kmOut||0)-(a.kmOut||0));
   // every round, every district: UCs with no cluster
   const uni=new Map(); for(const r of D.cov) if(geoOK(r,true)) (uni.get(r.district)||uni.set(r.district,new Set()).get(r.district)).add(r.uc);
-  for(const u of D.U) if((!S.geo.district||u.district===S.geo.district)&&(!S.geo.tehsil||u.tehsil===S.geo.tehsil)) (uni.get(u.district)||uni.set(u.district,new Set()).get(u.district)).add(u.name);
+  for(const u of D.U) if((!S.geo.district||u.district===S.geo.district)&&(!S.geo.tehsils.length||S.geo.tehsils.includes(u.tehsil))) (uni.get(u.district)||uni.set(u.district,new Set()).get(u.district)).add(u.name);
   const worked=new Map(); for(const r of icmRows({geo:"noUC"})) (worked.get(r.district)||worked.set(r.district,new Set()).get(r.district)).add(r.uc);
   const cov=[...uni].sort().map(([d,s])=>{ const w=worked.get(d)||new Set(); const miss=[...s].filter(u=>!w.has(u)); return {_k:d,total:s.size,worked:[...s].filter(u=>w.has(u)).length,missed:miss.length,pct:s.size?miss.length/s.size:null,list:miss}; });
   const perUC=[...icmAgg(pts,ucKey)].map(([k,m])=>{ const a=pts.filter(r=>ucKey(r)===k); return {_k:k,clusters:a.length,right:a.filter(r=>r.band===0).length,border:a.filter(r=>r.band===1).length,wrongN:a.filter(r=>r.band===2).length,wp:a.length?a.filter(r=>r.band===2).length/a.length:null}; });
@@ -1257,11 +1306,11 @@ function render(){
   try{ RENDER[S.page](pg); }catch(err){ console.error(err); pg.innerHTML=`<div class="err"><b>This view could not be drawn.</b><br>${esc(err.message)}</div>`; }
   saveHash();
 }
-function saveHash(){ try{ const q=new URLSearchParams(); const g=S.geo; if(g.district)q.set("d",g.district); if(g.tehsil)q.set("t",g.tehsil); if(g.uc)q.set("u",g.uc);
+function saveHash(){ try{ const q=new URLSearchParams(); const g=S.geo; if(g.district)q.set("d",g.district); g.tehsils.forEach(t=>q.append("t",t)); g.ucs.forEach(u=>q.append("u",u));
   const P=PAGES[S.page]; if(P.ds==="cov")q.set("c",S.cov.camp); if(P.ds==="icm")q.set("c",S.icm.camp); if(P.ds==="cmp")q.set("c",S.cmp.camp);
   const h="#/"+S.page+(q.toString()?"?"+q:""); if(location.hash!==h) history.replaceState(null,"",h); }catch(e){} }
 function readHash(){ const h=location.hash.slice(2); const [p,qs]=h.split("?"); if(RENDER[p]) S.page=p; const q=new URLSearchParams(qs||"");
-  const d=q.get("d"); if(d&&D.H[d]){ S.geo.district=d; const t=q.get("t"); if(t&&D.H[d][t]){ S.geo.tehsil=t; const u=q.get("u"); if(u&&D.H[d][t].has(u)) S.geo.uc=u; } }
+  const d=q.get("d"); if(d&&D.H[d]){ S.geo.district=d; S.geo.tehsils=q.getAll("t").filter(t=>D.H[d][t]); const all=new Set(Object.values(D.H[d]).flatMap(s=>[...s])); S.geo.ucs=q.getAll("u").filter(u=>all.has(u)); }
   const c=q.get("c"), ds=PAGES[S.page].ds; if(c){ if(ds==="cov"&&D.covCamps.includes(c)) S.cov.camp=c; if(ds==="icm"&&D.icmCamps.includes(c)) S.icm.camp=c; if(ds==="cmp"&&D.cmpCamps.includes(c)) S.cmp.camp=c; } }
 addEventListener("hashchange",()=>{ const p=location.hash.slice(2).split("?")[0]; if(RENDER[p]&&p!==S.page){ S.page=p; if(p==="cmp"){S.geo.tehsil="";S.geo.uc="";} render(); scrollTo({top:0}); } });
 let rzT=0,lastW=innerWidth; addEventListener("resize",()=>{ if(Math.abs(innerWidth-lastW)<60) return; lastW=innerWidth; clearTimeout(rzT); rzT=setTimeout(()=>D&&render(),250); });
