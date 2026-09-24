@@ -1478,8 +1478,11 @@ async function satSpot(host,pts,mode,scopeU){
     L.circleMarker([p.lat,p.lon],{radius:big?7.5:5.5,color:"#FFFFFF",weight:1.7,fillColor:cssVar(spotColor(p,mode)),fillOpacity:.96})
       .bindTooltip(`<div class="tipin">${spotTipHTML(p)}</div>`,{className:"ltip",direction:"top",offset:[0,-6]}).addTo(dotL); }
   const stack=new Map(); for(const p of pts){ const k=p.lat+","+p.lon; stack.set(k,(stack.get(k)||0)+1); }
-  for(const [k,n] of stack) if(n>1){ const [la,lo]=k.split(",").map(Number); L.marker([la,lo],{interactive:false,keyboard:false,icon:L.divIcon({className:"stackn",html:`<span title="${n} clusters here">${n}</span>`,iconSize:[20,20],iconAnchor:[-3,22]})}).addTo(dotL); }
+  const stL=L.layerGroup();
+  for(const [k,n] of stack) if(n>1){ const [la,lo]=k.split(",").map(Number); L.marker([la,lo],{interactive:false,keyboard:false,icon:L.divIcon({className:"stackn",html:`<span title="${n} clusters here">${n}</span>`,iconSize:[20,20],iconAnchor:[-3,22]})}).addTo(stL); }
   ucL.addTo(map); dL.addTo(map); dotL.addTo(map);
+  const stShow=()=>{ const on=map.getZoom()>=13&&map.hasLayer(dotL); if(on&&!map.hasLayer(stL)) stL.addTo(map); if(!on&&map.hasLayer(stL)) map.removeLayer(stL); };
+  map.on("zoomend overlayadd overlayremove",stShow);
   L.control.layers({"Satellite":sat,"Streets":osm},{"Place names":lbl,"UC borders":ucL,"District borders":dL,"ICM clusters":dotL},{position:"topright"}).addTo(map);
   L.control.scale({imperial:false}).addTo(map);
   const Full=L.Control.extend({options:{position:"topleft"},onAdd(){ const b=L.DomUtil.create("button","lfull"); b.type="button"; b.title="Full screen (Esc to close)"; b.innerHTML=EXPAND; L.DomEvent.disableClickPropagation(b);
@@ -1491,6 +1494,7 @@ async function satSpot(host,pts,mode,scopeU){
   else if(S.spot.mon&&pts.length) pts.forEach(p=>b.extend([p.lat,p.lon]));
   else (scopeU.length?scopeU:D.Di).forEach(u=>b.extend(u.rings.flat().map(([lo,la])=>[la,lo])));
   if(b.isValid()) map.fitBounds(b,{padding:[24,24],maxZoom:17}); else map.setView([34.1,71.6],9);
+  stShow();
   SAT_RO=new ResizeObserver(()=>{ if(SAT===map&&el.isConnected) map.invalidateSize(); }); SAT_RO.observe(el);
 }
 /* drawing order: the dots that matter most go on top */
