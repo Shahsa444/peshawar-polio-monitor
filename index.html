@@ -1880,7 +1880,7 @@ function dermOpen(){
   </div>`,c=>{
     const upd=()=>{ const d=$("#dm-d",c).value, camp=$("#dm-c",c).value; const dd=d?dermDays(d,camp):[], pl=d?plannedDays(d):4, ic=D.icmByKey[campKey(camp)];
       const idays=d&&ic?[...new Set(D.icm.filter(r=>r.camp===ic&&r.district===d).map(r=>+r.day))].sort((a,b)=>a-b):[];
-      const done=Math.max(dd.length,idays.at(-1)||0); let sel=+(c.dataset.day||0); if(!sel||sel>Math.max(pl,done)) sel=Math.max(1,done);
+      const done=Math.max(dd.length,idays.at(-1)||0); let sel=+(c.dataset.day||0); if(!sel||sel>Math.max(pl,done)) sel=Math.max(1,dd.length||done);
       c.dataset.day=sel;
       $("#dm-info",c).innerHTML=d?`<b>${esc(tc(d))}</b> runs a <b>${pl}-day</b> campaign. Days with data in ${esc(camp)}: ${dd.length?dd.map((x,i)=>`Day ${i+1} <span class="note">(${esc(DAYLAB(x))})</span>`).join(", "):"none yet"}${idays.length?` · ICM days ${idays.join(", ")}`:""}`:"Pick the district this deck is for.";
       $("#dm-days",c).innerHTML=Array.from({length:Math.max(pl,done)},(_,i)=>i+1).map(i=>`<button type="button" class="chip" data-dd="${i}" aria-pressed="${i===sel}"${i>done?" disabled title=\"No data for this day yet\"":""}>Day ${i}</button>`).join("");
