@@ -1887,7 +1887,7 @@ function dermOpen(){
       $$("[data-dd]",c).forEach(b=>b.onclick=()=>{ c.dataset.day=b.dataset.dd; upd(); });
       $("#dm-up-t",c).textContent=sel===1?"Day 1":`Days 1–${sel} together`; $("#dm-only-t",c).textContent=`Day ${sel} only`;
       $("#dm-go",c).disabled=!d||!done; };
-    $("#dm-d",c).onchange=upd; $("#dm-c",c).onchange=()=>{ c.dataset.day=""; upd(); }; upd();
+    $("#dm-d",c).onchange=()=>{ c.dataset.day=""; upd(); }; $("#dm-c",c).onchange=()=>{ c.dataset.day=""; upd(); }; upd();
     $("#dm-go",c).onclick=async()=>{ const btn=$("#dm-go",c), msg=$("#dm-msg",c);
       const o={district:$("#dm-d",c).value,camp:$("#dm-c",c).value,day:+c.dataset.day,mode:$("input[name=dm-m]:checked",c).value,date:$("#dm-dt",c).value,
         cov:$("#dm-s1",c).checked,blocks:$("#dm-s2",c).checked,icm:$("#dm-s3",c).checked};
