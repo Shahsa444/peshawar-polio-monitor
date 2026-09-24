@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Peshawar Division Polio Monitor</title>
-<meta name="description" content="Campaign coverage, independent monitoring and cluster GPS checks for Peshawar Division, Khyber Pakhtunkhwa">
+<meta name="description" content="Online dashboard for Peshawar Division, all districts: polio campaign coverage and intra-campaign monitoring (ICM) findings for Peshawar Division, Khyber Pakhtunkhwa">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
@@ -137,7 +137,7 @@ select:disabled{opacity:.55}
 @media (max-width:760px){.g2,.g3,.g4{grid-template-columns:minmax(0,1fr)}}
 
 /* KPI band */
-.kband{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.kband{display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
 .k{padding:13px 16px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:5px;min-width:0}
 .k:last-child{border-right:0}
 .k .kn{font-size:11.5px;font-weight:600;color:var(--ink-2);line-height:1.25}
@@ -274,6 +274,145 @@ details.defs summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
   .menu-btn{display:grid}
   .k .kv{font-size:23px}
 }
+/* ============ branding bar ============ */
+.sitebar{align-items:center!important;flex-wrap:nowrap!important}
+.sitebar .lg{height:44px;width:auto;background:#fff;border-radius:9px;padding:3px 5px;border:1px solid var(--line);flex:none}
+.sitebar .lg-who{height:40px;padding:5px 8px}
+.sb-t{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1 1 auto}
+.sb-r{display:flex;align-items:center;gap:10px;flex:none}
+.pbtn{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line-2);background:var(--surface);border-radius:8px;padding:6px 10px;font-size:12px;font-weight:650;color:var(--ink-2);cursor:pointer}
+.pbtn svg{width:15px;height:15px}.pbtn:hover{border-color:var(--accent);color:var(--ink)}
+.rf-site{color:var(--rail-ink);line-height:1.4;padding:8px 10px;margin:0 -4px;border-radius:9px;background:linear-gradient(135deg,rgba(196,168,255,.16),rgba(127,209,185,.12))}
+.rf-site b{color:#fff}
+@media (max-width:760px){.ctx{position:static}.sitebar .sname{font-size:14px;line-height:1.2}.sitebar .ssub{display:none}.pbtn span{display:none}.sitebar .lg{height:34px}.sitebar .lg-who{height:30px}}
+
+/* ============ hero ============ */
+.hero{position:relative;overflow:hidden;border-radius:18px;color:#fff;display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);min-height:250px;
+  background:linear-gradient(115deg,rgba(23,17,43,.92) 0%,rgba(58,31,110,.86) 52%,rgba(106,61,189,.70) 100%),linear-gradient(115deg,#17112B,#3A1F6E 55%,#6A3DBD);box-shadow:var(--shadow)}
+.hero-bg{position:absolute;inset:0;pointer-events:none}
+.orb{position:absolute;border-radius:50%;filter:blur(40px);opacity:.5;animation:float 14s ease-in-out infinite alternate}
+.o1{width:280px;height:280px;background:#7FD1B9;left:-80px;bottom:-140px}
+.o2{width:220px;height:220px;background:#F0709A;right:20%;top:-120px;animation-duration:17s}
+.o3{width:180px;height:180px;background:#C4A8FF;right:-40px;bottom:-60px;animation-duration:12s}
+@keyframes float{to{transform:translate(40px,-24px) scale(1.12)}}
+.hero-txt{position:relative;padding:24px 26px 20px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.hero-eb .live{display:inline-flex;align-items:center;gap:8px;font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:5px 11px;border-radius:999px}
+.live i{width:8px;height:8px;border-radius:50%;background:#7FD1B9;box-shadow:0 0 0 0 rgba(127,209,185,.7);animation:ping 1.8s infinite}
+@keyframes ping{70%{box-shadow:0 0 0 9px rgba(127,209,185,0)}100%{box-shadow:0 0 0 0 rgba(127,209,185,0)}}
+.hero h2{font-family:var(--display);font-weight:800;font-size:clamp(22px,2.4vw,32px);letter-spacing:-.02em;line-height:1.05;margin:6px 0 0;text-wrap:balance}
+.hero p{margin:0;color:rgba(255,255,255,.78);font-size:13px;max-width:56ch}
+.hstats{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:10px;margin-top:10px}
+.hs{background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);border-radius:12px;padding:10px 12px;backdrop-filter:blur(6px)}
+.hs b{display:block;font-family:var(--display);font-weight:780;font-size:24px;letter-spacing:-.02em;font-variant-numeric:tabular-nums;line-height:1.05}
+.hs span{font-size:11.5px;color:rgba(255,255,255,.75)}
+.hero-art{position:relative;min-height:220px}
+.hmap{position:absolute;inset:14px 18px 44px 0;width:calc(100% - 18px);height:calc(100% - 58px)}
+.hmap .hd{fill:rgba(255,255,255,.07);stroke:rgba(255,255,255,.85);stroke-width:1.4;stroke-dasharray:2400;stroke-dashoffset:0;animation:draw 2.4s ease-out both}
+.hmap .hd.off{stroke:rgba(255,255,255,.35);fill:rgba(255,255,255,.02)}
+@keyframes draw{from{stroke-dashoffset:2400;fill:rgba(255,255,255,0)}}
+.hdot{animation:pop .6s cubic-bezier(.2,1.4,.4,1) both}
+.hdot.off{opacity:.45}
+.hdot text{fill:#fff;font-family:var(--body);font-weight:650;paint-order:stroke;stroke:rgba(23,17,43,.75);stroke-width:.6px;stroke-linejoin:round}
+.hdot .pulse{transform-box:fill-box;transform-origin:center;animation:pulse 2.2s ease-out infinite;opacity:.55}
+@keyframes pulse{0%{transform:scale(.6);opacity:.7}100%{transform:scale(2.4);opacity:0}}
+@keyframes pop{from{opacity:0;transform:translateY(6px)}}
+.dropper{position:absolute;right:16px;top:8px;width:54px;height:auto;filter:drop-shadow(0 6px 14px rgba(0,0,0,.3));animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(5px) rotate(-3deg)}}
+.drop{animation:fall 2.4s ease-in infinite;opacity:0}
+.drop.d2{animation-delay:1.2s}
+@keyframes fall{0%{transform:translateY(-6px) scale(.5);opacity:0}15%{opacity:1;transform:translateY(0) scale(1)}100%{transform:translateY(46px) scale(.8);opacity:0}}
+.ticker{grid-column:1/-1;position:relative;overflow:hidden;border-top:1px solid rgba(255,255,255,.14);background:rgba(10,7,22,.35);mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent)}
+.tk-in{display:flex;width:max-content;animation:scroll var(--dur,40s) linear infinite}
+.ticker:hover .tk-in{animation-play-state:paused}
+.tk-g{display:flex}
+.tk{display:inline-flex;align-items:center;gap:8px;padding:9px 22px 9px 0;font-size:12.5px;white-space:nowrap;color:rgba(255,255,255,.86)}
+.tk b{color:#fff}.tk i{width:8px;height:8px;border-radius:50%;flex:none}
+@keyframes scroll{to{transform:translateX(-50%)}}
+@media (max-width:900px){.hero{grid-template-columns:minmax(0,1fr)}.hero-art{min-height:190px;order:-1}.hmap{inset:8px 70px 8px 8px;width:calc(100% - 78px);height:calc(100% - 16px)}}
+
+/* ============ gauges, donuts, bars, rings ============ */
+.gauges.gx{grid-template-columns:repeat(auto-fit,minmax(168px,1fr))}
+.gauges.gx .gauge+.gauge{border-left:0}
+.gauges.gx .gauge{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.gauge .gp{margin-top:5px;display:flex;flex-direction:column;align-items:center;gap:3px}
+.garc{stroke-dasharray:100;stroke-dashoffset:0;animation:sweep 1.3s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sweep{from{stroke-dashoffset:100}}
+.needle{transform-box:view-box;transform-origin:120px 104px;animation:needle 1.3s cubic-bezier(.2,.9,.25,1.15) both}
+@keyframes needle{from{transform:rotate(-90deg)}to{transform:rotate(var(--a))}}
+.dwrap{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center}
+.donut{width:160px;height:160px;flex:none}
+.dseg{animation:dseg 1.1s cubic-bezier(.3,.7,.2,1) both}
+@keyframes dseg{from{stroke-dasharray:0 400}}
+.dn-v{font-family:var(--display);font-weight:780;font-size:20px;fill:var(--ink)}
+.dn-l{font-size:10.5px;fill:var(--muted);font-family:var(--body)}
+.dleg{display:flex;flex-direction:column;gap:6px;flex:1 1 170px;min-width:0}
+.dl-r{display:grid;grid-template-columns:10px minmax(0,1fr) auto 44px;gap:8px;align-items:center;font-size:12px}
+.dl-r i{width:10px;height:10px;border-radius:3px}.dl-r span{color:var(--ink-2);line-height:1.25}.dl-r b{font-variant-numeric:tabular-nums}.dl-r em{font-style:normal;color:var(--muted);text-align:right;font-variant-numeric:tabular-nums}
+.hbars{display:flex;flex-direction:column;gap:7px}
+.hb{display:grid;grid-template-columns:minmax(80px,120px) minmax(0,1fr) auto;gap:10px;align-items:center;font-size:12.5px;border-radius:8px;padding:2px 4px;margin:0 -4px}
+.hb.click{cursor:pointer}.hb.click:hover{background:var(--accent-soft)}
+.hb-l{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.hb-l small{display:block;font-weight:500;color:var(--muted);font-size:10.5px}
+.hb-t{position:relative;height:12px;border-radius:6px;background:var(--sunk)}
+.hb-t i{position:absolute;left:0;top:0;bottom:0;border-radius:6px;transform-origin:left;animation:growX .9s cubic-bezier(.2,.8,.2,1) both}
+.hb-t b{position:absolute;top:-3px;bottom:-3px;width:0;border-left:2px dashed var(--ink-2);opacity:.6}
+.hb-v{font-weight:700;font-variant-numeric:tabular-nums;white-space:nowrap}
+@keyframes growX{from{transform:scaleX(0)}}
+.chart path.bar{transform-box:fill-box;transform-origin:50% 100%;animation:growY .8s cubic-bezier(.2,.8,.2,1) both}
+@keyframes growY{from{transform:scaleY(0)}}
+.scards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.sc{display:flex;gap:12px;align-items:center;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px;animation:rise .5s ease both}
+.sc.click{cursor:pointer;transition:transform .15s,box-shadow .15s,border-color .15s}.sc.click:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--accent)}
+.ring{width:74px;height:74px;flex:none}.ring text{font-family:var(--display);font-weight:760;font-size:14px;fill:var(--ink)}
+.rseg{animation:dseg 1.2s cubic-bezier(.3,.7,.2,1) both}
+.sc-b{display:flex;flex-direction:column;gap:2px;min-width:0;font-size:12px;color:var(--muted)}
+.sc-b b{font-family:var(--display);font-size:15px;color:var(--ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sc-b em{font-style:normal;font-weight:700;color:var(--ink);font-variant-numeric:tabular-nums}
+.page.enter>*{animation:rise .5s cubic-bezier(.2,.8,.2,1) both}
+.page.enter>*:nth-child(2){animation-delay:.05s}.page.enter>*:nth-child(3){animation-delay:.1s}.page.enter>*:nth-child(4){animation-delay:.15s}.page.enter>*:nth-child(n+5){animation-delay:.2s}
+@keyframes rise{from{opacity:0;transform:translateY(10px)}}
+
+/* ============ downloads ============ */
+.card.has-dl{position:relative}.card.has-dl>.dlb{position:absolute;top:10px;right:10px;z-index:3}
+.dlb{margin-left:auto}
+.mp-h .dlb{margin-left:0}
+.dl-menu{position:fixed;z-index:95;background:var(--surface);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;min-width:240px}
+.dl-menu button{display:flex;gap:10px;align-items:center;text-align:left;border:0;background:none;padding:8px 10px;border-radius:8px;cursor:pointer}
+.dl-menu button:hover,.dl-menu button:focus-visible{background:var(--accent-soft)}
+.dl-menu svg{width:16px;height:16px;flex:none;color:var(--accent)}
+.dl-menu b{display:block;font-size:13px}.dl-menu small{display:block;font-size:11.5px;color:var(--muted)}
+.dl-cap{padding:8px 16px 12px;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line-2);border-top-color:var(--accent);display:inline-block;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ============ satellite map & same-spot ============ */
+.satw{padding:0}
+.lmap{height:clamp(440px,68vh,780px);border-radius:0 0 12px 12px;overflow:hidden;background:#0d0b14;position:relative}
+.card.maxed .lmap{height:calc(100dvh - 120px);border-radius:0}
+.lmap-msg{position:absolute;inset:0;display:grid;place-items:center;color:#d9d2ee;font-size:13px;gap:8px;grid-auto-flow:column;align-content:center;justify-content:center}
+.leaflet-container{font-family:var(--body)}
+.lfull{width:34px;height:34px;display:grid;place-items:center;background:#fff;border:2px solid rgba(0,0,0,.2);border-radius:6px;cursor:pointer;color:#222;background-clip:padding-box}
+.lfull svg{width:16px;height:16px}
+.leaflet-tooltip.ltip{background:var(--surface);color:var(--ink);border:1px solid var(--line-2);border-radius:12px;box-shadow:var(--shadow);padding:10px 12px;font-size:12.5px;min-width:200px;max-width:300px;white-space:normal}
+.ltip h4{margin:0;font-family:var(--display);font-size:15px;font-weight:700}.ltip .w{color:var(--muted);font-size:12px;margin:2px 0 8px}
+.ltip dl{display:grid;grid-template-columns:1fr auto;gap:3px 14px;margin:0}.ltip dt{color:var(--ink-2)}.ltip dd{margin:0;text-align:right;font-weight:600}
+.stackn span{display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:10px;background:#17112B;color:#fff;font:700 11px/1 var(--body);border:1.5px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.monbar{margin:0 12px 8px;padding:8px 12px;border-radius:10px;background:var(--fail-soft);font-size:12.5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.monbar .linkbtn{padding:0 2px}
+.mono{font-family:var(--mono);font-weight:600;letter-spacing:.02em}
+
+/* ============ print / PDF ============ */
+@media print{
+  @page{size:A4 landscape;margin:10mm}
+  body{background:#fff}
+  .rail,.menu-btn,.frow,.chips,.dlb,.pbtn,.zoomctl,.ticker,.hero-bg,.dropper,.seg,.leaflet-control-container,#f-clear{display:none!important}
+  .shell{display:block}.ctx{position:static;backdrop-filter:none;background:#fff}
+  .card,.kband,.hero,.sc{break-inside:avoid;box-shadow:none!important}
+  .tw,.tw.tall{max-height:none!important;overflow:visible!important}
+  *{animation:none!important;transition:none!important}
+  .hero{background:#2a1a55!important;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  .g2,.g3{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
 </head>
@@ -293,7 +432,7 @@ details.defs summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
         <a href="#/cov/tables" data-p="cov/tables"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3.5" width="14" height="13" rx="2"/><path d="M3 8h14M3 12.3h14M8 3.5v13"/></svg>Report tables</a>
         <a href="#/cov/race" data-p="cov/race"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3.5 5h11M3.5 10h7M3.5 15h9.5"/><circle cx="16" cy="10" r="1.3" fill="currentColor"/></svg>Still-missed race</a>
       </div>
-      <div class="nav-g"><div class="nav-h"><i class="icm"></i>Independent monitoring</div>
+      <div class="nav-g"><div class="nav-h"><i class="icm"></i>Intra-Campaign Monitoring Findings (ICM)</div>
         <a href="#/icm/dash" data-p="icm/dash"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="6" height="6" rx="1.5"/><rect x="11" y="3" width="6" height="6" rx="1.5"/><rect x="3" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5"/></svg>ICM dashboard</a>
         <a href="#/icm/maps" data-p="icm/maps"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5.5 7.5 3.5l5 2 4.5-2v11l-4.5 2-5-2L3 16.5z"/><path d="M7.5 3.5v11M12.5 5.5v11"/></svg>ICM maps</a>
         <a href="#/icm/spot" data-p="icm/spot"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="6" cy="7" r="1.6" fill="currentColor"/><circle cx="12.5" cy="5.5" r="1.6" fill="currentColor"/><circle cx="9.5" cy="12" r="1.6" fill="currentColor"/><circle cx="14.5" cy="14" r="1.6"/><path d="M3 17h14"/></svg>Cluster spot map</a>
@@ -331,7 +470,7 @@ details.defs summary{cursor:pointer;font-weight:700;color:var(--ink-2)}
    ===================================================================== */
 const SITE = {
   name: "Peshawar Division Coverage & Monitoring",   // big name on top of every page
-  sub:  "Khyber Pakhtunkhwa · Polio campaign coverage and independent monitoring",
+  sub:  "Online dashboard · Peshawar Division, all districts · Campaign coverage and monitoring",
   short:"Polio Monitor",                             // name in the left menu
   place:"Peshawar Division · KP"                     // small line under it
 };
@@ -519,7 +658,7 @@ function newGeo(){ return {district:"",tehsils:[],ucs:[],
   get uc(){ return this.ucs.length===1?this.ucs[0]:""; }, set uc(v){ this.ucs=v?[v]:[]; } }; }
 const S={page:"cov/report",geo:newGeo(),
   cov:{camp:"",day:"",tier:"",risk:"",rankCamp:""},icm:{camp:"",day:"",designation:"",org:"",pop:""},cmp:{camp:"",x:"hhcovPct",y:"recallPct"},
-  covMaps:{n:9,all:"",panels:[]},icmMaps:{},spot:{color:"gps",sel:null},sort:{},covTable:"division",icmTable:"ucsum",race:{m:"still"},search:{}};
+  covMaps:{n:9,all:"",panels:[]},icmMaps:{},spot:{color:"gps",sel:null,base:"map",mon:""},sort:{},covTable:"division",icmTable:"ucsum",race:{m:"still"},search:{}};
 let D=null;
 
 async function load(){
@@ -540,7 +679,7 @@ async function load(){
   const icm=[];
   for(const r of ir){
     const t=k=>(ii[k]==null?"":(r[ii[k]]??"").trim());
-    const o={camp:t("campaign"),district:up(t("district")),tehsil:up(t("tehsil")),uc:up(t("uc")),day:t("day"),designation:t("designation"),org:t("org"),pop:t("pop").toLowerCase(),lat:+t("lat")||null,lon:+t("lon")||null};
+    const o={camp:t("campaign"),district:up(t("district")),tehsil:up(t("tehsil")),uc:up(t("uc")),day:t("day"),designation:t("designation"),org:t("org"),pop:t("pop").toLowerCase(),lat:+t("lat")||null,lon:+t("lon")||null,mon:t("mon"),sd:t("sd")===""?null:+t("sd")};
     if(!o.camp||!o.uc) continue;
     const v={clusters:1}; for(const k of ICM_F){ if(k==="clusters") continue; const x=ii[k]==null?"":r[ii[k]]; v[k]=x?(+x||0):0; }
     o.v=v; icm.push(o);
@@ -561,7 +700,7 @@ async function load(){
   }
   U.forEach((u,i)=>u.i=i); T.forEach((u,i)=>u.i=i); Di.forEach((u,i)=>u.i=i);
   $("#geo-defs").innerHTML=U.map(u=>`<path id="gu${u.i}" d="${u.d}" vector-effect="non-scaling-stroke"/>`).join("")+T.map(t=>`<path id="gt${t.i}" d="${t.d}" vector-effect="non-scaling-stroke"/>`).join("")+Di.map(t=>`<path id="gd${t.i}" d="${t.d}" vector-effect="non-scaling-stroke"/>`).join("");
-  D={cov,icm,U,T,Di,upd:{cov:cu,icm:iu},pj,kx};
+  D={cov,icm,U,T,Di,upd:{cov:cu,icm:iu},pj,kx,hasMon:icm.some(r=>r.mon)};
   D.ucByKey=new Map(U.map(u=>[u.key,u]));
   D.covCamps=[...new Set(cov.map(r=>r.camp))].sort((a,b)=>campRank(a)-campRank(b));
   D.icmCamps=[...new Set(icm.map(r=>r.camp))].sort((a,b)=>campRank(a)-campRank(b));
@@ -672,7 +811,7 @@ function barsSVG(el,pts,ind,o={}){
   if(ind.band) for(const b of ind.band.filter(x=>x!=null)) s+=`<line class="ref" x1="${ml}" x2="${W-mr}" y1="${y(b)}" y2="${y(b)}"/>`;
   pts.forEach((p,i)=>{ const cx=ml+step*i+step/2; if(p.v!=null&&isFinite(p.v)){ const top=y(Math.max(0,p.v)), h=Math.max(1,y(0)-top), r=Math.min(4,h), b=bandOf(ind,p.v);
       const fill=b?`var(--${b})`:(p.hl?"var(--accent)":"var(--h2)");
-      s+=`<path d="M${cx-bw/2} ${y(0)}V${top+r}q0 -${r} ${r} -${r}H${cx+bw/2-r}q${r} 0 ${r} ${r}V${y(0)}Z" fill="${fill}" opacity="${p.hl||o.all?1:.5}"><title>${esc(p.label)}: ${fmt(p.v,ind)}</title></path><text class="vl" x="${cx}" y="${top-6}" text-anchor="middle">${fmt(p.v,ind)}</text>`; }
+      s+=`<path class="bar" style="animation-delay:${i*70}ms" d="M${cx-bw/2} ${y(0)}V${top+r}q0 -${r} ${r} -${r}H${cx+bw/2-r}q${r} 0 ${r} ${r}V${y(0)}Z" fill="${fill}" opacity="${p.hl||o.all?1:.5}"><title>${esc(p.label)}: ${fmt(p.v,ind)}</title></path><text class="vl" x="${cx}" y="${top-6}" text-anchor="middle">${fmt(p.v,ind)}</text>`; }
     s+=`<text x="${cx}" y="${H-mb+16}" text-anchor="middle" style="${p.hl?"fill:var(--ink);font-weight:700":""}">${esc(step<110?tinyCamp(p.label):shortCamp(p.label))}</text>`; });
   el.innerHTML=s+`<line x1="${ml}" x2="${W-mr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line-2)"/></svg>`;
 }
@@ -684,7 +823,7 @@ function groupSVG(el,cats,series,o={}){
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img">`;
   for(const t of tk) s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${y(t)}" y2="${y(t)}"/><text x="${ml-7}" y="${y(t)+4}" text-anchor="end">${nf.format(t)}</text>`;
   cats.forEach((c,i)=>{ const x0=ml+step*i+step/2-gw/2; series.forEach((se,j)=>{ const v=se.vals[i]; if(v==null) return; const x=x0+j*(bw+3), top=y(v), h=Math.max(1,y(0)-top), r=Math.min(3,h);
-      s+=`<path d="M${x} ${y(0)}V${top+r}q0 -${r} ${r} -${r}H${x+bw-r}q${r} 0 ${r} ${r}V${y(0)}Z" fill="${se.color}"><title>${esc(se.name)} · ${esc(c)}: ${nf.format(v)}</title></path><text class="vl" x="${x+bw/2}" y="${top-5}" text-anchor="middle" style="font-size:10.5px">${nf.format(v)}</text>`; });
+      s+=`<path class="bar" style="animation-delay:${(i*2+j)*50}ms" d="M${x} ${y(0)}V${top+r}q0 -${r} ${r} -${r}H${x+bw-r}q${r} 0 ${r} ${r}V${y(0)}Z" fill="${se.color}"><title>${esc(se.name)} · ${esc(c)}: ${nf.format(v)}</title></path><text class="vl" x="${x+bw/2}" y="${top-5}" text-anchor="middle" style="font-size:10.5px">${nf.format(v)}</text>`; });
     s+=`<text x="${ml+step*i+step/2}" y="${H-mb+16}" text-anchor="middle">${esc(step<110?tinyCamp(c):shortCamp(c))}</text>`; });
   el.innerHTML=s+`<line x1="${ml}" x2="${W-mr}" y1="${y(0)}" y2="${y(0)}" stroke="var(--line-2)"/></svg><div class="legend" style="margin-top:6px">${series.map(se=>`<span class="lg"><span class="sw" style="background:${se.color}"></span>${esc(se.name)}</span>`).join("")}</div>`;
 }
@@ -786,13 +925,13 @@ const PAGES={
   "cov/maps":{eb:"Campaign coverage",t:"UC maps",ds:"cov"},
   "cov/tables":{eb:"Campaign coverage",t:"Report tables",ds:"cov"},
   "cov/race":{eb:"Campaign coverage",t:"Still-missed children, round by round",ds:"cov",noCamp:true},
-  "icm/dash":{eb:"Independent monitoring",t:"ICM dashboard",ds:"icm"},
-  "icm/maps":{eb:"Independent monitoring",t:"ICM maps",ds:"icm"},
-  "icm/spot":{eb:"Independent monitoring",t:"Cluster spot map",ds:"icm"},
-  "icm/compare":{eb:"Independent monitoring",t:"Cluster spots — last three rounds",ds:"icm",noCamp:true},
-  "icm/audit":{eb:"Independent monitoring",t:"GPS audit",ds:"icm"},
-  "icm/tables":{eb:"Independent monitoring",t:"ICM tables",ds:"icm"},
-  "cmp":{eb:"Cross-check",t:"Coverage vs independent monitoring",ds:"cmp"}
+  "icm/dash":{eb:"Intra-Campaign Monitoring Findings (ICM)",t:"ICM dashboard",ds:"icm"},
+  "icm/maps":{eb:"Intra-Campaign Monitoring Findings (ICM)",t:"ICM maps",ds:"icm"},
+  "icm/spot":{eb:"Intra-Campaign Monitoring Findings (ICM)",t:"Cluster spot map",ds:"icm"},
+  "icm/compare":{eb:"Intra-Campaign Monitoring Findings (ICM)",t:"Cluster spots — last three rounds",ds:"icm",noCamp:true},
+  "icm/audit":{eb:"Intra-Campaign Monitoring Findings (ICM)",t:"GPS audit",ds:"icm"},
+  "icm/tables":{eb:"Intra-Campaign Monitoring Findings (ICM)",t:"ICM tables",ds:"icm"},
+  "cmp":{eb:"Cross-check",t:"Coverage vs ICM findings",ds:"cmp"}
 };
 function sel(id,label,arr,cur,all,lab=x=>tc(x),dis=false){
   return `<div class="fld"><label for="${id}">${label}</label><select id="${id}"${cur?' class="on"':""}${dis||!arr.length?" disabled":""}><option value="">${esc(all)}</option>${arr.map(v=>`<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(lab(v))}</option>`).join("")}</select></div>`;
@@ -838,7 +977,7 @@ function renderCtx(){
   } else camps=chipRow(D.cmpCamps,S.cmp.camp,"cmp");
   const any=g.district||g.tehsils.length||g.ucs.length||(ds==="cov"&&(S.cov.day||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.day||S.icm.designation||S.icm.org||S.icm.pop));
   $("#ctx").innerHTML=`<div class="ctx-in">
-    <div class="sitebar"><span class="sname">${esc(SITE.name)}</span><span class="ssub">${esc(SITE.sub)}</span></div>
+    ${sitebarHTML()}
     <div class="ctx-top">
       <div style="display:flex;gap:12px;align-items:flex-end;min-width:0">
         <button class="ibtn menu-btn" id="menu" aria-label="Open menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
@@ -880,11 +1019,9 @@ function pgCovReport(el){
   const ucs=covAgg(covRows({camp:rc}),ucKey);
   const rowsFor=keys=>last3.map(c=>({_k:c,camp:c,...byCamp.get(c)}));
   const campCol={k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`};
-  el.innerHTML=`
-  <div class="g-side">
+  el.innerHTML=`${covHero(T)}
     <div class="kband">${kpi(IND.neap,T?.neap,Pv?.neap,prevC)}${kpi(IND.hhCov,T?.hhCov,Pv?.hhCov,prevC)}${kpi(IND.sdc,T?.sdc,Pv?.sdc,prevC)}${kpi(IND.still,T?.still,Pv?.still,prevC)}${kpi(IND.msTar,T?.msTar,Pv?.msTar,prevC)}${kpi(IND.mmpPct,T?.mmpPct,Pv?.mmpPct,prevC)}${kpi(IND.score,T?.score,Pv?.score,prevC)}${kpi(IND.wastage,T?.wastage,Pv?.wastage,prevC)}</div>
-    <div class="card"><div class="gauges">${gauge(T?.overallPct,IND.overallPct,"Total coverage")}${gauge(T?.hhcovPct,IND.hhcovPct,"HH coverage")}</div></div>
-  </div>
+  ${covGlanceHTML(T)}
   <div class="sec-h"><h2>Round on round</h2><p>${esc(last3.join(" · "))} · ${esc(scopeName())}</p></div>
   <div class="g2">
     <div class="card"><div class="card-h"><div><h3>Total coverage comparison</h3><p>Target and every child vaccinated, in and out of house</p></div></div><div class="tw">${tableHTML([campCol,{k:"neap",t:"Total target"},{k:"hhOther",t:"Total coverage"},{k:"overallPct",t:"Total coverage %",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
@@ -919,6 +1056,7 @@ function pgCovReport(el){
   $("#rk4").innerHTML=tableHTML([ucc,{k:"neap",t:"HH target"},{k:"covStill"},{k:"targetGap",t:"Difference"}],top(U.filter(r=>r.neap>0),r=>Math.abs(r.targetGap),10),{rank:1,onRow:1});
   $$("#rk1,#rk2,#rk3,#rk4").forEach(t=>wireTable(t,null,pickUC));
   $("#rank-camp").onchange=e=>{S.cov.rankCamp=e.target.value;render();};
+  wireScoreCards();
 }
 
 /* =====================================================================
@@ -1060,6 +1198,331 @@ function pgCovRace(el){
 }
 </script>
 <script>
+/* =====================================================================
+   EXTRAS — hero banners, gauges & charts, animation, downloads,
+            satellite spot map, same-spot (monitor) checks
+   ===================================================================== */
+const LIB={h2c:"https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js",
+  lfJs:"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js",
+  lfCss:"https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"};
+const _ld={};
+function loadScript(u){ return _ld[u]??=new Promise((ok,no)=>{ const s=document.createElement("script"); s.src=u; s.onload=()=>ok(); s.onerror=()=>{ delete _ld[u]; no(new Error("Could not load "+u)); }; document.head.appendChild(s); }); }
+function loadCSS(u){ return _ld[u]??=new Promise(ok=>{ const l=document.createElement("link"); l.rel="stylesheet"; l.href=u; l.onload=()=>ok(); l.onerror=()=>ok(); document.head.appendChild(l); }); }
+const RM=matchMedia("(prefers-reduced-motion: reduce)");
+function cssVar(c){ const m=/^var\((--[\w-]+)\)$/.exec(String(c||"").trim()); return m?getComputedStyle(document.documentElement).getPropertyValue(m[1]).trim():c; }
+const clamp01=x=>Math.max(0,Math.min(1,x));
+
+/* ---------------- branding ---------------- */
+function sitebarHTML(){
+  return `<div class="sitebar">
+    <img class="lg lg-kp" src="assets/logo-kp.png" alt="Government of Khyber Pakhtunkhwa" title="Government of Khyber Pakhtunkhwa" onerror="this.remove()">
+    <div class="sb-t"><span class="sname">${esc(SITE.name)}</span><span class="ssub">${esc(SITE.sub)}</span></div>
+    <div class="sb-r"><button type="button" class="pbtn" id="prt" title="Print this page or save it as PDF"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4.5 6V2.5h7V6M4.5 11.5H3A1 1 0 0 1 2 10.5V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 9.5h7v4h-7z"/></svg><span>Print / PDF</span></button>
+      <img class="lg lg-who" src="assets/logo-who.svg" alt="World Health Organization" title="World Health Organization" onerror="this.remove()"></div>
+  </div>`; }
+
+/* ---------------- hero banner (front pages) ---------------- */
+const DROPPER=`<svg class="dropper" viewBox="0 0 80 150" aria-hidden="true">
+  <defs><linearGradient id="bulbG" x1="0" x2="1"><stop offset="0" stop-color="#E7DAFF"/><stop offset="1" stop-color="#A987EE"/></linearGradient>
+  <linearGradient id="opvG" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#FFB3CB"/><stop offset="1" stop-color="#F0709A"/></linearGradient></defs>
+  <rect x="21" y="4" width="38" height="44" rx="17" fill="url(#bulbG)"/>
+  <rect x="17" y="44" width="46" height="10" rx="4" fill="#fff" opacity=".9"/>
+  <path d="M29 54h22l-7 62a4 4 0 0 1-8 0z" fill="#fff" opacity=".28" stroke="#fff" stroke-opacity=".7" stroke-width="1.4"/>
+  <path d="M32.4 80h15.2l-3.6 36a4 4 0 0 1-8 0z" fill="url(#opvG)"/>
+  <path class="drop d1" d="M40 122c0 0-6 8-6 12a6 6 0 0 0 12 0c0-4-6-12-6-12z" fill="url(#opvG)"/>
+  <path class="drop d2" d="M40 122c0 0-6 8-6 12a6 6 0 0 0 12 0c0-4-6-12-6-12z" fill="url(#opvG)"/>
+</svg>`;
+function heroHTML(o){
+  const vb=extentOf(D.Di), fs=Math.max(vb[2],vb[3])/26;
+  let map=`<svg class="hmap" viewBox="${vb.join(" ")}" aria-hidden="true">`;
+  D.Di.forEach((d,i)=>{ const on=!S.geo.district||S.geo.district===d.district; map+=`<use href="#gd${d.i}" class="hd${on?"":" off"}" style="animation-delay:${(i*.18).toFixed(2)}s"/>`; });
+  D.Di.forEach((d,i)=>{ const v=o.vals?.get(d.district), b=o.ind?bandOf(o.ind,v):null, c=b?`var(--${b})`:"#C4A8FF";
+    const on=!S.geo.district||S.geo.district===d.district;
+    map+=`<g class="hdot${on?"":" off"}" style="animation-delay:${(.4+i*.25).toFixed(2)}s"><circle class="pulse" cx="${d.c[0]}" cy="${d.c[1]}" r="${fs*.55}" fill="${c}"/><circle cx="${d.c[0]}" cy="${d.c[1]}" r="${fs*.34}" fill="${c}" stroke="#fff" stroke-width="${fs*.09}"/>`
+      +`<text x="${d.c[0]}" y="${d.c[1]-fs*.7}" text-anchor="middle" font-size="${fs*.78}"><title>${esc(tc(d.district))}${v!=null&&isFinite(v)?": "+fmt(v,o.ind):""}</title>${esc(tc(d.district))}</text></g>`; });
+  map+="</svg>";
+  const tick=(o.ticker||[]).filter(Boolean);
+  const tk=tick.length?`<div class="ticker" aria-label="Key findings"><div class="tk-in" style="--dur:${Math.max(24,tick.length*7)}s">${[0,1].map(k=>`<div class="tk-g"${k?' aria-hidden="true"':""}>${tick.map(t=>`<span class="tk"><i style="background:${t.c||"#C4A8FF"}"></i>${t.h}</span>`).join("")}</div>`).join("")}</div></div>`:"";
+  return `<section class="hero" aria-label="${esc(o.title)}">
+    <div class="hero-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
+    <div class="hero-txt">
+      <div class="hero-eb"><span class="live"><i></i>${esc(o.eyebrow)}</span></div>
+      <h2>${esc(o.title)}</h2><p>${esc(o.sub)}</p>
+      <div class="hstats">${o.stats.map(s=>`<div class="hs"><b class="cu">${s.v}</b><span>${esc(s.l)}</span></div>`).join("")}</div>
+    </div>
+    <div class="hero-art">${map}${DROPPER}</div>
+    ${tk}
+  </section>`;
+}
+
+/* ---------------- charts ---------------- */
+/* semicircle gauge that understands every band type; needle + arc animate in */
+function gauge2(v,ind,label,o={}){
+  const max=o.max??1, W=240,H=150,cx=120,cy=104,R=84,sw=15;
+  const ang=x=>Math.PI*(1-clamp01(x/max)), pt=(x,r)=>[cx+r*Math.cos(ang(x)),cy-r*Math.sin(ang(x))];
+  const arcD=(x0,x1,r=R)=>{ const [a0,b0]=pt(x0,r),[a1,b1]=pt(x1,r); return `M${a0.toFixed(2)} ${b0.toFixed(2)}A${r} ${r} 0 0 1 ${a1.toFixed(2)} ${b1.toFixed(2)}`; };
+  const b=bandOf(ind,v), cuts=[...new Set([0,...(ind.band||[]).filter(x=>x!=null&&x>0&&x<max),max])].sort((a,c)=>a-c);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(label)}: ${fmt(v,ind)}">`;
+  for(let i=0;i<cuts.length-1;i++){ const mid=(cuts[i]+cuts[i+1])/2, z=bandOf(ind,mid)||"grey"; s+=`<path d="${arcD(cuts[i],cuts[i+1])}" stroke="var(--${z})" stroke-width="${sw}" fill="none" opacity=".2"/>`; }
+  for(const t of cuts.slice(1,-1).concat(max>1&&!cuts.some(c=>Math.abs(c-1)<.08)?[1]:[])){ const [tx,ty]=pt(t,R+sw/2+11); s+=`<text x="${tx.toFixed(1)}" y="${(ty+3).toFixed(1)}" text-anchor="middle" font-size="9.5" fill="var(--muted)" font-family="var(--body)">${+(t*100).toFixed(1)}%</text>`; }
+  if(v!=null&&isFinite(v)){
+    s+=`<path class="garc" pathLength="100" d="${arcD(0,Math.min(Math.max(v,0),max)||.0001)}" stroke="var(--${b||"accent"})" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`;
+    const deg=-90+180*clamp01(v/max);
+    s+=`<g class="needle" style="--a:${deg.toFixed(1)}deg" transform="rotate(${deg.toFixed(1)} ${cx} ${cy})"><path d="M${cx-4} ${cy}L${cx} ${cy-R+24}L${cx+4} ${cy}Z" fill="var(--ink)"/><circle cx="${cx}" cy="${cy}" r="7" fill="var(--ink)"/><circle cx="${cx}" cy="${cy}" r="3" fill="var(--surface)"/></g>`;
+  }
+  s+=`<text class="cu" x="${cx}" y="${cy+38}" text-anchor="middle" font-family="var(--display)" font-weight="760" font-size="26" letter-spacing="-.5" fill="var(--${b||"ink"})">${fmt(v,ind)}</text></svg>`;
+  return `<div class="gauge">${s}<div class="gl">${esc(label)}</div><div class="gp">${pill(b)}${ind.band?`<span class="note">target ${esc(bandText(ind).pass)}</span>`:""}</div></div>`;
+}
+function donutHTML(parts,o={}){
+  const P2=parts.map(p=>({...p,v:Math.max(0,p.v||0)})), tot=P2.reduce((a,p)=>a+p.v,0), R=62,C=2*Math.PI*R; let off=0;
+  let s=`<svg class="donut" viewBox="0 0 160 160" role="img" aria-label="${esc(o.label||"")}"><circle cx="80" cy="80" r="${R}" fill="none" stroke="var(--sunk)" stroke-width="22"/>`;
+  P2.forEach((p,i)=>{ const len=tot?p.v/tot*C:0; if(len>.2) s+=`<circle class="dseg" cx="80" cy="80" r="${R}" fill="none" stroke="${p.c}" stroke-width="22" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 80 80)" style="animation-delay:${(i*.12).toFixed(2)}s"><title>${esc(p.l)}: ${nf.format(Math.round(p.v))}</title></circle>`; off+=len; });
+  s+=`<text class="cu dn-v" x="80" y="80" text-anchor="middle">${nf.format(Math.round(tot))}</text><text class="dn-l" x="80" y="99" text-anchor="middle">${esc(o.center||"total")}</text></svg>`;
+  return `<div class="dwrap">${s}<div class="dleg">${P2.map(p=>`<div class="dl-r"><i style="background:${p.c}"></i><span>${esc(p.l)}</span><b>${nf.format(Math.round(p.v))}</b><em>${tot?(p.v/tot*100).toFixed(1)+"%":"–"}</em></div>`).join("")}</div></div>`;
+}
+/* horizontal bars (HTML) — rows: {k,label,v,txt,sub} */
+function hbarsHTML(rows,ind,o={}){
+  const vs=rows.map(r=>r.v).filter(v=>v!=null&&isFinite(v)); if(!vs.length) return '<div class="empty">No data for this selection.</div>';
+  const refs=(ind.band||[]).filter(x=>x!=null&&x>0), max=o.max??Math.max(...vs,...refs,ind.f===P?1:1)*1.04;
+  return `<div class="hbars">${rows.map((r,i)=>{ const b=bandOf(ind,r.v), w=r.v!=null&&isFinite(r.v)?clamp01(r.v/max)*100:0;
+    return `<div class="hb${o.click?" click":""}"${o.click?` role="button" tabindex="0" data-k="${esc(r.k)}"`:""}><span class="hb-l" title="${esc(r.label)}">${esc(r.label)}${r.sub?`<small>${esc(r.sub)}</small>`:""}</span>
+      <span class="hb-t"><i style="width:${w.toFixed(1)}%;background:${r.c||(b?`var(--${b})`:"var(--h3)")};animation-delay:${i*70}ms"></i>${refs.filter(x=>x<=max).map(x=>`<b style="left:${(x/max*100).toFixed(1)}%" title="${fmt(x,ind)}"></b>`).join("")}</span>
+      <span class="hb-v">${r.txt??fmt(r.v,ind)}</span></div>`; }).join("")}</div>`;
+}
+function ringSVG(v,ind,o={}){ const R=31,C=2*Math.PI*R, f=v!=null&&isFinite(v)?clamp01(v/(o.max||1)):0, b=bandOf(ind,v);
+  return `<svg class="ring" viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="40" r="${R}" fill="none" stroke="var(--sunk)" stroke-width="8"/><circle class="rseg" cx="40" cy="40" r="${R}" fill="none" stroke="var(--${b||"accent"})" stroke-width="8" stroke-linecap="round" stroke-dasharray="${(f*C).toFixed(2)} ${C.toFixed(2)}" transform="rotate(-90 40 40)"/><text class="cu" x="40" y="45" text-anchor="middle">${fmt(v,ind)}</text></svg>`; }
+function wireClick(el,fn){ if(!el) return; $$("[data-k]",el).forEach(x=>{ x.onclick=()=>fn(x.dataset.k); x.onkeydown=e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); fn(x.dataset.k); } }; }); }
+
+/* area scorecards under the gauges: districts → tehsils → picked UCs */
+function areaLevel(){ const g=S.geo; return g.ucs.length?"uc":g.district?"tehsil":"district"; }
+function scoreCardsHTML(){
+  const lv=areaLevel(), key=lv==="uc"?ucKey:lv==="tehsil"?r=>r.tehsil:r=>r.district;
+  const m=covAgg(covRows(),key); const list=[...m].filter(([k,x])=>k&&(x.neap>0||x.hhCov>0)).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))).slice(0,24);
+  if(!list.length) return "";
+  const lab=k=>lv==="uc"?tc(k.split("|")[1]):tc(k);
+  return `<div class="sec-h"><h2>${lv==="district"?"Districts":lv==="tehsil"?"Tehsils of "+esc(tc(S.geo.district)):"Selected union councils"} at a glance</h2><p>${esc(S.cov.camp)} · ring = HH coverage %${lv!=="uc"?" · click a card to filter":""}</p></div>
+  <div class="scards" id="scards">${list.map(([k,x],i)=>`<div class="sc${lv!=="uc"?" click":""}"${lv!=="uc"?` role="button" tabindex="0" data-k="${esc(k)}"`:""} style="animation-delay:${i*60}ms">${ringSVG(x.hhcovPct,IND.hhcovPct,{max:1.1})}
+    <div class="sc-b"><b>${esc(lab(k))}</b><span>SDC <em style="color:var(--${bandOf(IND.sdc,x.sdc)||"ink"})">${fmt(x.sdc,IND.sdc)}</em></span><span>Still missed <em>${fmt(x.still,IND.still)}</em></span><span>MS% <em style="color:var(--${bandOf(IND.msTar,x.msTar)||"ink"})">${fmt(x.msTar,IND.msTar)}</em></span></div></div>`).join("")}</div>`;
+}
+function wireScoreCards(){ wireClick($("#scards"),k=>{ const lv=areaLevel(); if(lv==="district"){ S.geo.district=k; S.geo.tehsils=[]; S.geo.ucs=[]; } else if(lv==="tehsil"){ S.geo.tehsils=[k]; S.geo.ucs=[]; } render(); }); }
+
+/* campaign coverage — extra "at a glance" block */
+function covGlanceHTML(T){
+  if(!T) return "";
+  const cov=[{l:"Houses, campaign days",v:T.hh059+T.cd,c:"var(--h3)"},{l:"Catch-up days",v:T.cu,c:"var(--h2)"},{l:"After catch-up",v:T.ac,c:"var(--h1)"},{l:"Leftover coverage",v:T.loc+T.ccna+T.ccref,c:"#7FD1B9"},{l:"Outside houses (school, transit, fixed, guests, streets)",v:T.other,c:"#F3C969"}];
+  const miss=[{l:"Still NA (not available)",v:T.stillNA,c:"var(--b3)"},{l:"Still refusals",v:T.stillRef,c:"var(--b4)"},{l:"Still leftover",v:T.stillLO,c:"var(--b1)"}];
+  const days=covAgg(covRows(),r=>r.day,{noDay:true}); let cum=0;
+  const drows=[...days].filter(([d])=>d).sort((a,b)=>dayOrd(a[0])-dayOrd(b[0])).map(([d,m])=>{ cum+=m.hhCov; return {k:d,label:DAYLAB(d),v:T.neap?cum/T.neap:null,txt:`+${nf.format(m.hhCov)} · ${T.neap?(cum/T.neap*100).toFixed(1)+"%":"–"}`}; });
+  return `<div class="card lift"><div class="card-h"><div><h3>Performance at a glance</h3><p>${esc(scopeName())} · ${esc(S.cov.camp)}${S.cov.day?" · "+esc(DAYLAB(S.cov.day)):""}</p></div></div>
+    <div class="gauges gx">${gauge2(T.overallPct,IND.overallPct,"Total coverage",{max:1.2})}${gauge2(T.hhcovPct,IND.hhcovPct,"HH coverage",{max:1.2})}${gauge2(T.sdc,IND.sdc,"Same-day coverage",{max:1})}${gauge2(T.mmpPct,IND.mmpPct,"MMP coverage",{max:1.2})}${gauge2(T.score,IND.score,"UC score",{max:1})}${gauge2(T.wastage,IND.wastage,"Wastage",{max:.2})}</div></div>
+  <div class="g3">
+    <div class="card"><div class="card-h"><div><h3>Where children were vaccinated</h3><p>Every child counted in the total coverage</p></div></div><div class="card-b">${donutHTML(cov,{center:"children",label:"Where children were vaccinated"})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Children still missed</h3><p>Recorded but not yet covered</p></div></div><div class="card-b">${donutHTML(miss,{center:"still missed",label:"Children still missed"})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Campaign progress, day by day</h3><p>Children covered each day · running % of NEAP target</p></div></div><div class="card-b">${hbarsHTML(drows,{f:P,band:[.95,null],hb:true},{max:1.05})}</div></div>
+  </div>
+  ${scoreCardsHTML()}`;
+}
+function covHero(T){
+  const byD=covAgg(covRows({geo:"none"}),r=>r.district); const vals=new Map([...byD].map(([k,m])=>[k,m.hhcovPct]));
+  const ucs=new Set(covRows().map(ucKey)).size;
+  const tick=[...byD].sort().map(([d,m])=>({c:`var(--${bandOf(IND.hhcovPct,m.hhcovPct)||"grey"})`,h:`<b>${esc(tc(d))}</b> HH coverage ${fmt(m.hhcovPct,IND.hhcovPct)} · SDC ${fmt(m.sdc,IND.sdc)} · still missed ${fmt(m.still,IND.still)}`}));
+  const worst=[...byD].filter(([,m])=>m.hhcovPct!=null).sort((a,b)=>a[1].hhcovPct-b[1].hhcovPct)[0]; if(worst) tick.push({c:"var(--fail)",h:`<b>Needs attention:</b> ${esc(tc(worst[0]))} has the lowest HH coverage (${fmt(worst[1].hhcovPct,IND.hhcovPct)})`});
+  return heroHTML({eyebrow:`${S.cov.camp} · live from the coverage workbook`,title:"Every child, every house, every round",sub:`Polio campaign coverage for ${scopeName()} — updated automatically when the Excel workbook is saved.`,
+    stats:[{v:fmt(T?.hhOther),l:"children vaccinated"},{v:fmt(T?.hhcovPct,IND.hhcovPct),l:"HH coverage"},{v:fmt(T?.still),l:"still missed"},{v:nf.format(ucs),l:"union councils reporting"}],
+    ind:IND.hhcovPct,vals,ticker:tick});
+}
+function icmHero(T){
+  const byD=icmAgg(icmRows({geo:"none"}),r=>r.district); const vals=new Map([...byD].map(([k,m])=>[k,m.recallPct]));
+  const tick=[...byD].sort().map(([d,m])=>({c:`var(--${bandOf(IND.recallPct,m.recallPct)||"grey"})`,h:`<b>${esc(tc(d))}</b> recall ${fmt(m.recallPct,IND.recallPct)} · seen ${fmt(m.seenPct,IND.seenPct)} · NT ${fmt(m.nt)} · TVBMC ${fmt(m.tv)}`}));
+  const same=icmRows().filter(r=>r.sd!=null&&r.sd<30).length; if(D.hasMon&&same) tick.push({c:"var(--fail)",h:`<b>${nf.format(same)} clusters</b> uploaded within 30 m of another cluster by the same monitor — see the Cluster spot map`});
+  return heroHTML({eyebrow:`${S.icm.camp} · Intra-Campaign Monitoring`,title:"What the monitors found in the field",sub:`ICM findings for ${scopeName()} — cluster by cluster, with GPS checks on every upload.`,
+    stats:[{v:fmt(T?.clusters),l:"clusters monitored"},{v:fmt(T?.children),l:"children checked"},{v:fmt(T?.recallPct,IND.recallPct),l:"recall coverage"},{v:fmt(T?.missed),l:"missed children found"}],
+    ind:IND.recallPct,vals,ticker:tick});
+}
+function icmGlanceHTML(T){
+  if(!T) return "";
+  const byD=icmAgg(icmRows({geo:S.geo.district?"noUC":"none"}),r=>S.geo.district?r.tehsil:r.district);
+  const rows=[...byD].filter(([k])=>k).sort((a,b)=>(a[1].recallPct??2)-(b[1].recallPct??2)).map(([k,m])=>({k,label:tc(k),v:m.recallPct,sub:nf.format(m.clusters)+" clusters"}));
+  return `<div class="g3">
+    <div class="card lift"><div class="card-h"><div><h3>Monitoring gauges</h3><p>${esc(scopeName())} · ${esc(S.icm.camp)}</p></div></div><div class="gauges">${gauge2(T.recallPct,IND.recallPct,"Recall coverage",{max:1})}${gauge2(T.seenPct,IND.seenPct,"Seen finger-marked",{max:1})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Why children were missed</h3><p>Findings in checked houses</p></div></div><div class="card-b">${donutHTML([{l:"NT — no team visited",v:T.nt,c:"var(--b4)"},{l:"TVBMC — team visited, child missed",v:T.tv,c:"var(--b2)"},{l:"NA — not available",v:T.na,c:"var(--h2)"},{l:"Refusals",v:T.ref,c:"var(--h4)"}],{center:"findings",label:"Why children were missed"})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Recall coverage by ${S.geo.district?"tehsil":"district"}</h3><p>Lowest first · line = 90% pass mark${S.geo.district?"":" · click to filter"}</p></div></div><div class="card-b" id="icmhb">${hbarsHTML(rows,IND.recallPct,{max:1,click:!S.geo.district})}</div></div>
+  </div>`;
+}
+function cmpHero(camp,ic,cT,iT,disc){
+  const byD=icmAgg(D.icm.filter(r=>r.camp===ic),r=>r.district);
+  return heroHTML({eyebrow:`${camp} · cross-check`,title:"Reported coverage, checked in the field",sub:`Admin coverage for ${scopeName()} set against what ICM monitors found in the same union councils.`,
+    stats:[{v:fmt(cT?.overallPct,IND.overallPct),l:"reported total coverage"},{v:fmt(iT?.recallPct,IND.recallPct),l:"ICM recall coverage"},{v:nf.format(disc),l:"UCs reported high, monitored low"}],
+    ind:IND.recallPct,vals:new Map([...byD].map(([k,m])=>[k,m.recallPct])),ticker:[...byD].sort().map(([d,m])=>({c:`var(--${bandOf(IND.recallPct,m.recallPct)||"grey"})`,h:`<b>${esc(tc(d))}</b> ICM recall ${fmt(m.recallPct,IND.recallPct)} from ${nf.format(m.clusters)} clusters`}))});
+}
+
+/* ---------------- count-up animation ---------------- */
+function countUp(root){
+  if(RM.matches) return;
+  const items=[];
+  for(const e of $$(".kv, .cu",root)){ if(e.dataset.cu||e.children.length) continue; e.dataset.cu="1";
+    const m=/^([^\d−-]*)(-?[\d,]*\.?\d+)(.*)$/.exec(e.textContent); if(!m) continue; const num=+m[2].replace(/,/g,""); if(!isFinite(num)||num===0) continue;
+    items.push({e,pre:m[1],suf:m[3],num,dec:(m[2].split(".")[1]||"").length,comma:m[2].includes(",")}); }
+  if(!items.length) return; const t0=performance.now(), dur=1200;
+  const step=now=>{ const p=Math.min(1,(now-t0)/dur), k=1-Math.pow(1-p,3);
+    for(const it of items){ if(!it.e.isConnected) continue; const v=it.num*k; it.e.textContent=it.pre+(it.comma?v.toLocaleString("en-US",{minimumFractionDigits:it.dec,maximumFractionDigits:it.dec}):v.toFixed(it.dec))+it.suf; }
+    if(p<1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+
+/* ---------------- downloads: CSV + PNG on every card ---------------- */
+const DL_ICON='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 2.5v8M4.6 7.3 8 10.7l3.4-3.4M3 13.5h10"/></svg>';
+function addDownloads(root){
+  if(!root) return;
+  for(const card of $$(".card",root)){
+    if($(".dlb",card)||card.closest(".modal")||$("details.defs",card)) continue;
+    const hasT=!!$("table",card), hasV=!!$("svg:not(.ibtn svg):not(button svg), .hbars, .lmap",card); if(!hasT&&!hasV) continue;
+    const b=document.createElement("button"); b.type="button"; b.className="ibtn dlb"; b.title="Download"; b.setAttribute("aria-label","Download "+(hasT?"this table":"this chart")); b.innerHTML=DL_ICON;
+    const h=$(":scope > .card-h, :scope > .mp-h",card); if(h) h.appendChild(b); else { card.classList.add("has-dl"); card.appendChild(b); }
+    b.onclick=e=>{ e.stopPropagation(); dlMenu(b,card); };
+  }
+}
+function cardTitle(card){ const h=$("h3",card); if(h&&h.textContent.trim()) return h.textContent.trim(); const s=$(".ind-sel",card); return s?s.options[s.selectedIndex]?.text||"map":"chart"; }
+function ctxCamp(){ const ds=PAGES[S.page]?.ds; return ds==="cov"?S.cov.camp:ds==="icm"?S.icm.camp:ds==="cmp"?S.cmp.camp:""; }
+const slug=s=>String(s||"").normalize("NFKD").replace(/[^\w\s-]/g,"").trim().replace(/\s+/g,"-").slice(0,60);
+function fileBase(card){ return [cardTitle(card),ctxCamp(),scopeName()].filter(Boolean).map(slug).join("_"); }
+function saveBlob(blob,name){ const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); },1500); }
+function dlMenu(btn,card){
+  $$(".dl-menu").forEach(m=>m.remove());
+  const hasT=!!$("table",card), m=document.createElement("div"); m.className="dl-menu"; m.setAttribute("role","menu");
+  m.innerHTML=(hasT?`<button role="menuitem" data-a="csv">${DL_ICON}<span><b>Table as CSV</b><small>Opens in Excel</small></span></button>`:"")
+    +`<button role="menuitem" data-a="png">${DL_ICON}<span><b>${hasT?"Table":"Chart"} as image</b><small>PNG picture for slides or WhatsApp</small></span></button>`
+    +`<button role="menuitem" data-a="print">${DL_ICON}<span><b>Whole page as PDF</b><small>Print → Save as PDF</small></span></button>`;
+  document.body.appendChild(m);
+  const r=btn.getBoundingClientRect(); m.style.top=(r.bottom+6)+"px"; m.style.left=Math.max(8,Math.min(innerWidth-m.offsetWidth-8,r.right-m.offsetWidth))+"px";
+  const y0=scrollY, close=()=>{ m.remove(); document.removeEventListener("pointerdown",out,true); removeEventListener("scroll",onScroll,true); };
+  const out=e=>{ if(!m.contains(e.target)) close(); }, onScroll=()=>{ if(Math.abs(scrollY-y0)>40) close(); };
+  setTimeout(()=>{ document.addEventListener("pointerdown",out,true); addEventListener("scroll",onScroll,true); },0);
+  $$("button",m).forEach(x=>x.onclick=async()=>{ const a=x.dataset.a; close();
+    if(a==="csv") saveBlob(new Blob([tableCSV(card)],{type:"text/csv;charset=utf-8"}),fileBase(card)+".csv");
+    else if(a==="png") cardPNG(card,btn);
+    else window.print(); });
+  $("button",m)?.focus();
+}
+function cellText(c){ const n=c.cloneNode(true);
+  n.querySelectorAll("[title]").forEach(e=>{ if(/…$/.test(e.textContent)) e.textContent=e.getAttribute("title"); });
+  n.querySelectorAll(".sub").forEach(e=>e.prepend(" — ")); n.querySelectorAll(".pill,br").forEach(e=>e.before(" "));
+  let s=n.textContent.replace(/[▲▼↑↓⇅]/g,"").replace(/\s+/g," ").trim();
+  if(/^[−-]?[\d,]+(\.\d+)?%?$/.test(s)) s=s.replace(/,/g,"").replace("−","-"); return s; }
+function tableCSV(card){
+  const q=s=>/[",\n]/.test(s)?`"${s.replace(/"/g,'""')}"`:s, out=[`${q(cardTitle(card))}`,`${q([ctxCamp(),scopeName()].filter(Boolean).join(" · "))}`,""];
+  for(const t of $$("table",card)){ for(const tr of $$("tr",t)) out.push([...tr.children].map(c=>q(cellText(c))).join(",")); out.push(""); }
+  out.push(q(`Source: ${SITE.name} — downloaded ${new Date().toLocaleString("en-GB")}`));
+  return "﻿"+out.join("\r\n");
+}
+function inlineSVG(svg,doc,win){
+  for(const u of [...svg.querySelectorAll("use")]){ const id=(u.getAttribute("href")||u.getAttribute("xlink:href")||"").replace(/^#/,""), ref=id&&doc.getElementById(id);
+    if(!ref){ u.remove(); continue; } const n=ref.cloneNode(true); n.removeAttribute("id"); for(const a of [...u.attributes]) if(!/href$/.test(a.name)) n.setAttribute(a.name,a.value); u.replaceWith(n); }
+  const props=["fill","fill-opacity","stroke","stroke-width","stroke-opacity","stroke-dasharray","stroke-dashoffset","stroke-linecap","stroke-linejoin","opacity","font-family","font-size","font-weight","letter-spacing","paint-order","visibility","display","vector-effect"];
+  for(const el of [svg,...svg.querySelectorAll("*")]){ if(el.tagName==="title"||el.tagName==="defs"||el.closest("defs")) continue; const cs=win.getComputedStyle(el);
+    el.setAttribute("style",props.map(p=>`${p}:${cs.getPropertyValue(p)}`).join(";")); }
+  const r=svg.getBoundingClientRect(); if(r.width){ svg.setAttribute("width",r.width); svg.setAttribute("height",r.height); }
+}
+async function cardPNG(card,btn){
+  const old=btn.innerHTML; btn.innerHTML='<span class="spin"></span>'; btn.disabled=true;
+  try{
+    await loadScript(LIB.h2c);
+    const id="dl"+Date.now(); card.dataset.dlid=id;
+    const tws=$$(".tw",card), extra=tws.reduce((a,t)=>a+Math.max(0,t.scrollHeight-t.clientHeight),0), w=Math.ceil(Math.max(card.offsetWidth,...tws.map(t=>t.scrollWidth+34)));
+    let cloneH=0;
+    const canvas=await html2canvas(card,{scale:2,useCORS:true,logging:false,backgroundColor:cssVar("var(--surface)"),width:w,height:card.offsetHeight+extra+120,windowWidth:Math.max(innerWidth,w+320),
+      onclone:doc=>{ const c=doc.querySelector(`[data-dlid="${id}"]`); if(!c) return;
+        const st=doc.createElement("style"); st.textContent="*{animation:none!important;transition:none!important} thead th,tbody td.l:first-child,thead th.l:first-child{position:static!important}"; doc.head.appendChild(st);
+        c.style.width=w+"px"; c.style.maxWidth="none"; c.style.height="auto"; c.style.alignSelf="start"; c.style.boxShadow="none"; c.classList.remove("maxed");
+        $$(".dlb,.zoomctl,.leaflet-control-container",c).forEach(e=>e.remove());
+        $$(".tw",c).forEach(t=>{ t.style.maxHeight="none"; t.style.overflow="visible"; });
+        const cap=doc.createElement("div"); cap.className="dl-cap"; cap.textContent=`${SITE.name} · ${[ctxCamp(),scopeName()].filter(Boolean).join(" · ")} · ${new Date().toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"})}`; c.appendChild(cap);
+        for(const s of $$("svg",c)) inlineSVG(s,doc,doc.defaultView);
+        cloneH=Math.ceil(c.getBoundingClientRect().height); } });
+    delete card.dataset.dlid;
+    let out=canvas; if(cloneH&&cloneH*2<canvas.height){ out=document.createElement("canvas"); out.width=canvas.width; out.height=cloneH*2+2; out.getContext("2d").drawImage(canvas,0,0); }
+    await new Promise(ok=>out.toBlob(b=>{ saveBlob(b,fileBase(card)+".png"); ok(); },"image/png"));
+  }catch(e){ console.error(e); alert("The picture could not be made: "+e.message); }
+  finally{ btn.innerHTML=old; btn.disabled=false; }
+}
+
+/* ---------------- satellite spot map (Esri World Imagery) ---------------- */
+let SAT=null, SAT_RO=null;
+function killSat(){ if(SAT_RO){ SAT_RO.disconnect(); SAT_RO=null; } if(SAT){ try{ SAT.remove(); }catch(e){} SAT=null; } }
+function spotTipHTML(r){ const m=r.v, chk=m.a1+m.a2, vac=m.a1c+m.a2c;
+  return `<h4>${esc(tc(r.uc))}</h4><div class="w">${esc(tc(r.tehsil))} · ${esc(tc(r.district))} · ${esc(shortCamp(r.camp))} · day ${esc(r.day)}</div>`+dlist([["GPS check",`<span style="color:${SPOT_BAND[r.band]?.c}">${SPOT_BAND[r.band]?.t||"No reading"}</span>`,1],
+    ...(r.sd!=null?[["Nearest other cluster, same monitor, same day",`<span style="color:var(--${r.sd<30?"fail":r.sd<100?"watch":"pass"})">${nf.format(r.sd)} m</span>`,r.sd<30]]:[]),
+    ...(r.kmOut>0?[["Distance outside its UC",r.kmOut.toFixed(1)+" km"]]:[]),...(r.band>0&&r.band<3?[["Actually standing in",r.standing?tc(r.standing)+" ("+tc(r.standingD)+")":tc(r.standingD||"—")]]:[]),
+    ...(r.mon?[["Monitor code",esc(r.mon)]]:[]),["Designation",esc(r.designation)],["Organisation",esc(r.org)],["Children checked",nf.format(chk)],["Recall %",chk?fmt(vac/chk,IND.recallPct):"–"],["NT / TVBMC",m.nt+" / "+m.tv]]); }
+async function satSpot(host,pts,mode,scopeU){
+  host.innerHTML=`<div class="lmap"><div class="lmap-msg"><span class="spin"></span>Loading satellite imagery…</div></div>`;
+  try{ await loadCSS(LIB.lfCss); await loadScript(LIB.lfJs); }
+  catch(e){ host.innerHTML='<div class="empty">The satellite map could not load — check the internet connection and try again.</div>'; return; }
+  if(!host.isConnected) return;
+  killSat();
+  const el=$(".lmap",host); el.innerHTML="";
+  const map=SAT=L.map(el,{preferCanvas:true,zoomSnap:.5,zoomDelta:.5,wheelPxPerZoomLevel:90});
+  const sat=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",{maxZoom:20,maxNativeZoom:18,crossOrigin:"anonymous",attribution:"Imagery © Esri, Maxar, Earthstar Geographics, GIS User Community"}).addTo(map);
+  const osm=L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:20,maxNativeZoom:19,crossOrigin:"anonymous",attribution:"© OpenStreetMap contributors"});
+  map.createPane("labels"); map.getPane("labels").style.zIndex=350; map.getPane("labels").style.pointerEvents="none";
+  const lbl=L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}",{pane:"labels",maxZoom:20,maxNativeZoom:18,crossOrigin:"anonymous"}).addTo(map);
+  const ll=r=>r.map(([lo,la])=>[la,lo]);
+  const list=scopeU.length?scopeU:D.U, ucL=L.layerGroup(), dL=L.layerGroup(), dotL=L.layerGroup();
+  for(const u of list){ const pk=isPicked(u);
+    L.polygon(u.rings.map(ll),{color:pk?"#FFE14D":"#FFFFFF",weight:pk?3:1.1,opacity:pk?1:.8,fillColor:"#FFE14D",fillOpacity:pk?.07:0})
+      .bindTooltip(`<b>${esc(tc(u.name))}</b><br>${esc(tc(u.tehsil))} · ${esc(tc(u.district))}<br><span style="opacity:.75">click to focus this UC</span>`,{sticky:true,className:"ltip"})
+      .on("click",()=>pickUC(u.key)).addTo(ucL); }
+  for(const d of D.Di) L.polygon(d.rings.map(ll),{color:"#FFC53D",weight:2.6,fill:false,interactive:false}).addTo(dL);
+  const order=[...pts].sort((a,b)=>spotRank(a,mode)-spotRank(b,mode));
+  for(const p of order){ const big=spotRank(p,mode)>=2;
+    L.circleMarker([p.lat,p.lon],{radius:big?7.5:5.5,color:"#FFFFFF",weight:1.7,fillColor:cssVar(spotColor(p,mode)),fillOpacity:.96})
+      .bindTooltip(`<div class="tipin">${spotTipHTML(p)}</div>`,{className:"ltip",direction:"top",offset:[0,-6]}).addTo(dotL); }
+  const stack=new Map(); for(const p of pts){ const k=p.lat+","+p.lon; stack.set(k,(stack.get(k)||0)+1); }
+  for(const [k,n] of stack) if(n>1){ const [la,lo]=k.split(",").map(Number); L.marker([la,lo],{interactive:false,keyboard:false,icon:L.divIcon({className:"stackn",html:`<span title="${n} clusters here">${n}</span>`,iconSize:[20,20],iconAnchor:[-3,22]})}).addTo(dotL); }
+  ucL.addTo(map); dL.addTo(map); dotL.addTo(map);
+  L.control.layers({"Satellite":sat,"Streets":osm},{"Place names":lbl,"UC borders":ucL,"District borders":dL,"ICM clusters":dotL},{position:"topright"}).addTo(map);
+  L.control.scale({imperial:false}).addTo(map);
+  const Full=L.Control.extend({options:{position:"topleft"},onAdd(){ const b=L.DomUtil.create("button","lfull"); b.type="button"; b.title="Full screen (Esc to close)"; b.innerHTML=EXPAND; L.DomEvent.disableClickPropagation(b);
+    const card=host.closest(".card"); const set=on=>{ card.classList.toggle("maxed",on); document.body.classList.toggle("has-max",on); b.innerHTML=on?X_ICON:EXPAND; setTimeout(()=>map.invalidateSize(),80); };
+    b.onclick=()=>set(!card.classList.contains("maxed")); document.addEventListener("keydown",function k(e){ if(!b.isConnected){ document.removeEventListener("keydown",k); return; } if(e.key==="Escape"&&card.classList.contains("maxed")) set(false); }); return b; }});
+  new Full().addTo(map);
+  const b=L.latLngBounds([]);
+  const picked=list.filter(isPicked); if(picked.length){ picked.forEach(u=>b.extend(u.rings.flat().map(([lo,la])=>[la,lo]))); pts.filter(p=>S.geo.ucs.includes(p.uc)).forEach(p=>b.extend([p.lat,p.lon])); }
+  else if(S.spot.mon&&pts.length) pts.forEach(p=>b.extend([p.lat,p.lon]));
+  else (scopeU.length?scopeU:D.Di).forEach(u=>b.extend(u.rings.flat().map(([lo,la])=>[la,lo])));
+  if(b.isValid()) map.fitBounds(b,{padding:[24,24],maxZoom:17}); else map.setView([34.1,71.6],9);
+  SAT_RO=new ResizeObserver(()=>{ if(SAT===map&&el.isConnected) map.invalidateSize(); }); SAT_RO.observe(el);
+}
+/* drawing order: the dots that matter most go on top */
+function spotRank(p,mode){ if(mode==="same") return p.sd==null?0:p.sd<30?3:p.sd<100?2:1; if(mode==="gps") return p.band===2?3:p.band===1?2:1; return 1; }
+
+/* ---------------- same-spot check (one monitor, several clusters, one place) ---------------- */
+function sameSpotRows(rows){
+  const by=new Map();
+  for(const r of rows){ if(!r.mon) continue; const o=by.get(r.mon)||by.set(r.mon,{_k:r.mon,designation:r.designation,org:r.org,district:r.district,ucs:new Set(),days:new Set(),n:0,same:0,close:0}).get(r.mon);
+    o.n++; o.ucs.add(tc(r.uc)); if(r.sd!=null&&r.sd<30){ o.same++; o.days.add(r.day); } else if(r.sd!=null&&r.sd<100) o.close++; }
+  return [...by.values()].filter(o=>o.same>0).map(o=>({...o,ucl:[...o.ucs].sort().join(", "),dayl:[...o.days].sort((a,b)=>a-b).join(", "),sp:o.n?o.same/o.n:null}));
+}
+function sameSpotCard(rows,id="ssp"){
+  if(!D.hasMon) return `<div class="card"><div class="card-h"><div><h3>Same-spot uploads by monitor</h3><p>Appears after the ICM workbook is next saved</p></div></div><div class="card-b"><div class="empty">This check needs the updated ICM export. Save the ICM workbook once and it will fill in.</div></div></div>`;
+  const list=sameSpotRows(rows); if(!S.sort[id]) S.sort[id]={k:"same",d:-1};
+  const tot=rows.filter(r=>r.sd!=null&&r.sd<30).length;
+  return `<div class="card"><div class="card-h"><div><h3>Same-spot uploads by monitor</h3><p>${nf.format(list.length)} monitors · ${nf.format(tot)} clusters uploaded within 30 m of another cluster by the same monitor on the same day · click a monitor to see only their clusters on the map</p></div></div>
+    <div class="tw tall" id="${id}">${tableHTML([{k:"_k",t:"Monitor code",l:1,fn:r=>`<b class="mono">${esc(r._k)}</b>`,sv:r=>r._k},{k:"designation",t:"Designation",l:1,fn:r=>`<span title="${esc(r.designation)}">${esc(r.designation.length>26?r.designation.slice(0,24)+"…":r.designation)}</span>`,sv:r=>r.designation},{k:"org",t:"Org",l:1},{k:"district",t:"District",l:1,fn:r=>esc(tc(r.district)),sv:r=>r.district},{k:"ucl",t:"Union council(s)",l:1,fn:r=>`<span title="${esc(r.ucl)}">${esc(r.ucl.length>40?r.ucl.slice(0,38)+"…":r.ucl)}</span>`,sv:r=>r.ucl},{k:"dayl",t:"Days",l:1},{k:"n",t:"Clusters",ind:{f:N}},{k:"same",t:"Same spot",ind:{f:N}},{k:"sp",t:"Same-spot %",ind:{f:P,band:[.25,.5],hb:false},bg:1}],list,{id,onRow:1})}</div>
+    <div class="card-b note" style="padding-top:10px">Codes replace monitor names on this public site; the programme keeps the code-to-name list offline. Distances are measured on the exact phone GPS before positions are rounded for publishing.</div></div>`;
+}
+function wireSameSpot(id="ssp"){ wireTable($("#"+id),()=>render(),k=>{ S.spot.mon=S.spot.mon===k?"":k; if(S.page!=="icm/spot"){ S.page="icm/spot"; location.hash="#/icm/spot"; } render(); setTimeout(()=>$("#spot")?.scrollIntoView({behavior:RM.matches?"auto":"smooth",block:"center"}),60); }); }
+
+/* ---------------- after every render ---------------- */
+function afterRender(pg){
+  const p=$("#prt"); if(p) p.onclick=()=>window.print();
+  addDownloads(pg); countUp(pg); countUp($("#ctx"));
+  pg.classList.remove("enter"); void pg.offsetWidth; if(!RM.matches) pg.classList.add("enter");
+}
+(function(){ let t=0; const pg=document.getElementById("page"); if(!pg) return;
+  new MutationObserver(()=>{ clearTimeout(t); t=setTimeout(()=>{ addDownloads(pg); countUp(pg); },120); }).observe(pg,{childList:true,subtree:true}); })();
+</script>
+<script>
 "use strict";
 /* =====================================================================
    ICM DASHBOARD
@@ -1076,8 +1539,9 @@ function pgIcmDash(el){
   low.sort((a,b)=>a.recallPct-b.recallPct); low=low.slice(0,12);
   const ntv=U.filter(r=>r.ntTv>0).sort((a,b)=>b.ntTv-a.ntTv).slice(0,12);
   const ucc={k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)};
-  el.innerHTML=`
+  el.innerHTML=`${icmHero(T)}
   <div class="kband">${kpi(IND.clusters,T?.clusters,Pv?.clusters,prevC,"Clusters taken")}${kpi(IND.hh,T?.hh,Pv?.hh,prevC)}${kpi(IND.recallPct,T?.recallPct,Pv?.recallPct,prevC)}${kpi(IND.seenPct,T?.seenPct,Pv?.seenPct,prevC)}${kpi(IND.missed,T?.missed,Pv?.missed,prevC)}${kpi(IND.nt,T?.nt,Pv?.nt,prevC)}${kpi(IND.tv,T?.tv,Pv?.tv,prevC)}${kpi(IND.pc,T?.pc,Pv?.pc,prevC)}</div>
+  ${icmGlanceHTML(T)}
   <div class="sec-h"><h2>All rounds</h2><p>${esc(scopeName())} · the selected round is highlighted</p></div>
   <div class="g3">
     <div class="card"><div class="card-h"><div><h3>ICM coverage</h3></div></div><div class="tw">${tableHTML([campCol,{k:"clusters"},{k:"hh"},{k:"children"},{k:"vaccinated"},{k:"recallPct",bg:1},{k:"seenPct",bg:1}],R,{cur:r=>r.camp===cur})}</div></div>
@@ -1102,6 +1566,7 @@ function pgIcmDash(el){
   groupSVG($("#c3"),camps,[{name:"NT",color:"var(--b3)",vals:camps.map(c=>byC.get(c)?.nt??null)},{name:"TVBMC",color:"var(--h3)",vals:camps.map(c=>byC.get(c)?.tv??null)}]);
   wireTable($("#dt"),null,k=>{S.geo.district=S.geo.district===k?"":k;S.geo.tehsil="";S.geo.uc="";render();});
   wireTable($("#des"),()=>render()); wireTable($("#lw"),null,pickUC); wireTable($("#nt"),null,pickUC);
+  wireClick($("#icmhb"),k=>{ S.geo.district=k; S.geo.tehsils=[]; S.geo.ucs=[]; render(); });
 }
 
 /* =====================================================================
@@ -1124,11 +1589,13 @@ function pgIcmMaps(el){
    CLUSTER SPOT MAP
    ===================================================================== */
 function spotColor(r,mode){ if(mode==="gps") return SPOT_BAND[r.band]?.c||"var(--grey)";
+  if(mode==="same") return r.sd==null?"var(--grey)":r.sd<30?"var(--fail)":r.sd<100?"var(--watch)":"var(--pass)";
   const m=r.v, chk=m.a1+m.a2, vac=m.a1c+m.a2c; if(mode==="missed") return m.nt>0?"var(--fail)":(m.tv>0?"var(--watch)":"var(--pass)");
   const p=chk?vac/chk:null; return p==null?"var(--grey)":p>=.9?"var(--pass)":p>=.8?"var(--watch)":"var(--fail)"; }
 const SPOT_MODES={gps:{t:"GPS check",leg:SPOT_BAND.map(b=>[b.c,b.t,b.d])},
   recall:{t:"Cluster recall %",leg:[["var(--pass)","≥ 90%",""],["var(--watch)","80–90%",""],["var(--fail)","< 80%",""],["var(--grey)","No children checked",""]]},
-  missed:{t:"NT / TVBMC found",leg:[["var(--pass)","None",""],["var(--watch)","TVBMC only",""],["var(--fail)","NT found",""]]}};
+  missed:{t:"NT / TVBMC found",leg:[["var(--pass)","None",""],["var(--watch)","TVBMC only",""],["var(--fail)","NT found",""]]},
+  same:{t:"Same-spot check",leg:[["var(--fail)","Same spot","within 30 m of another cluster by the same monitor, same day"],["var(--watch)","Very close","30–100 m"],["var(--pass)","Separate","more than 100 m apart"],["var(--grey)","Only cluster that day","nothing to compare"]]}};
 function spotSVG(pts,vb,mode,o={}){
   const g=S.geo; const r=Math.max(vb[2],vb[3])/(o.small?260:380);
   let s=`<svg class="msvg spt" viewBox="${vb.join(" ")}" role="img" aria-label="Cluster positions">`;
@@ -1139,11 +1606,15 @@ function spotSVG(pts,vb,mode,o={}){
   for(const p of order){ const [x,y]=D.pj([p.lon,p.lat]); s+=`<circle cx="${x.toFixed(2)}" cy="${y.toFixed(2)}" r="${(p.band===2&&mode==="gps"?r*1.5:r).toFixed(3)}" fill="${spotColor(p,mode)}" data-i="${p._i}"/>`; }
   return s+"</svg>";
 }
-function spotTip(e,r){ const m=r.v, chk=m.a1+m.a2, vac=m.a1c+m.a2c;
+function spotTip(e,r){ showTip(e,spotTipHTML(r)); }
+function spotTipOld(e,r){ const m=r.v, chk=m.a1+m.a2, vac=m.a1c+m.a2c;
   showTip(e,`<h4>${esc(tc(r.uc))}</h4><div class="w">${esc(tc(r.tehsil))} · ${esc(tc(r.district))} · ${esc(shortCamp(r.camp))} · day ${esc(r.day)}</div>`+dlist([["GPS check",`<span style="color:${SPOT_BAND[r.band]?.c}">${SPOT_BAND[r.band]?.t||"No reading"}</span>`,1],...(r.kmOut>0?[["Distance outside its UC",r.kmOut.toFixed(1)+" km"]]:[]),...(r.band>0&&r.band<3?[["Actually standing in",r.standing?tc(r.standing)+" ("+tc(r.standingD)+")":tc(r.standingD||"—")]]:[]),["Designation",esc(r.designation)],["Organisation",esc(r.org)],["Children checked",nf.format(chk)],["Recall %",chk?fmt(vac/chk,IND.recallPct):"–"],["NT / TVBMC",m.nt+" / "+m.tv]])); }
 function pgIcmSpot(el){
   D.icm.forEach((r,i)=>r._i=i);
-  const rows=icmRows(), pts=rows.filter(r=>r.lat), mode=S.spot.color;
+  if(S.spot.color==="same"&&!D.hasMon) S.spot.color="gps";
+  const rows=icmRows(), allPts=rows.filter(r=>r.lat), mode=S.spot.color, sat=S.spot.base==="sat";
+  if(S.spot.mon&&!allPts.some(r=>r.mon===S.spot.mon)) S.spot.mon="";
+  const pts=S.spot.mon?allPts.filter(r=>r.mon===S.spot.mon):allPts, same=allPts.filter(r=>r.sd!=null&&r.sd<30).length;
   const bad=rows.filter(r=>!r.lat).length, n=pts.length, cnt=b=>pts.filter(r=>r.band===b).length;
   const inS=scopeUCs(); let vb=extentOf(inS.length?inS:D.U);
   if(S.geo.ucs.length){ const us=S.geo.ucs.map(n=>D.ucByKey.get(S.geo.district+"|"+n)).filter(Boolean); if(us.length){ const own=pts.filter(r=>S.geo.ucs.includes(r.uc)); vb=extentOf([...us,...own.map(p=>{const [x,y]=D.pj([p.lon,p.lat]);return {bb:[x,y,x,y]};})]); } }
@@ -1159,31 +1630,40 @@ function pgIcmSpot(el){
   <div class="kband">
     <div class="k"><span class="kn">Clusters plotted</span><span class="kv">${nf.format(n)}</span><span class="ks">${bad?nf.format(bad)+" with a broken GPS reading":"all readings usable"}</span></div>
     ${SPOT_BAND.slice(0,3).map(b=>`<div class="k"><span class="kn"><span class="dot" style="background:${b.c};display:inline-block;margin-right:6px"></span>${b.t}</span><span class="kv">${nf.format(cnt(b.k))}</span><span class="ks">${n?(cnt(b.k)/n*100).toFixed(1)+"%":"–"} · ${esc(b.d)}</span></div>`).join("")}
+    ${D.hasMon?`<div class="k"><span class="kn"><span class="dot" style="background:var(--fail);display:inline-block;margin-right:6px"></span>Same-spot uploads</span><span class="kv">${nf.format(same)}</span><span class="ks">${allPts.length?(same/allPts.length*100).toFixed(1)+"%":"–"} · within 30 m of another cluster by the same monitor, same day</span></div>`:""}
     <div class="k"><span class="kn">UCs without a cluster</span><span class="kv">${nf.format(cov.reduce((a,r)=>a+r.missed,0))}</span><span class="ks">of ${nf.format(cov.reduce((a,r)=>a+r.total,0))} union councils in scope</span></div>
   </div>
   <div class="g-side">
-    <div class="card lift mp"><div class="mp-h"><h3>Where every ICM cluster was uploaded from</h3><div class="seg" role="group" aria-label="Colour dots by">${Object.entries(SPOT_MODES).map(([k,m])=>`<button data-mode="${k}" aria-pressed="${k===mode}">${m.t}</button>`).join("")}</div></div>
-      <div class="mp-sum">${esc(S.icm.camp)} · ${esc(scopeName())} · scroll to zoom, drag to move, click a UC to focus</div>
-      <div class="mwrap" id="spot">${spotSVG(pts,vb,mode)}</div>
+    <div class="card lift mp"><div class="mp-h"><h3>Where every ICM cluster was uploaded from</h3><div class="seg" role="group" aria-label="Background"><button data-base="map" aria-pressed="${!sat}">Map</button><button data-base="sat" aria-pressed="${sat}">Satellite</button></div><div class="seg" role="group" aria-label="Colour dots by">${Object.entries(SPOT_MODES).filter(([k])=>k!=="same"||D.hasMon).map(([k,m])=>`<button data-mode="${k}" aria-pressed="${k===mode}">${m.t}</button>`).join("")}</div></div>
+      <div class="mp-sum">${esc(S.icm.camp)} · ${esc(scopeName())} · ${sat?"satellite imagery © Esri · zoom in to see houses, fields and hills · dots placed to about 100 m":"scroll to zoom, drag to move, click a UC to focus"}</div>
+      ${S.spot.mon?`<div class="monbar">Showing only monitor <b class="mono">${esc(S.spot.mon)}</b> · ${nf.format(pts.length)} clusters <button class="linkbtn" id="monclr">Show all monitors</button></div>`:""}
+      <div class="mwrap${sat?" satw":""}" id="spot">${sat?"":spotSVG(pts,vb,mode)}</div>
       <div class="legend">${SPOT_MODES[mode].leg.map(([c,t,d])=>`<span class="lg"><span class="dot" style="background:${c}"></span><b>${t}</b>${d?` <span class="note">${esc(d)}</span>`:""}</span>`).join("")}</div></div>
     <div class="card"><div class="card-h"><div><h3>How a dot gets its colour</h3></div></div><div class="card-b" style="font-size:12.5px;color:var(--ink-2);display:flex;flex-direction:column;gap:8px">
       <p style="margin:0">Each cluster's GPS reading is tested against the outline of the union council it was recorded for. Standing in a neighbouring UC of the same tehsil is normal boundary work and counts as the right place.</p>
       <p style="margin:0">Where a UC has no outline on file, its centre is the median of every cluster ever recorded there, and the distance is measured from that point.</p>
       <p style="margin:0">A red dot does not prove the monitor was elsewhere — phone GPS can be off by a few hundred metres — but more than 5 km is worth a call.</p>
+      ${D.hasMon?`<p style="margin:0"><b>Same-spot check:</b> each cluster should be a different place. When one monitor uploads two clusters on the same day from within 30 m of each other, the forms were probably filled in one place — the red dots in “Same-spot check” and the monitor table below show where.</p>`:""}
+      <p style="margin:0"><b>Satellite:</b> switch the map to satellite imagery to see whether clusters sit on houses or on empty fields and hillsides, and which populated areas have no cluster at all.</p>
       <p class="note" style="margin:0">Positions are rounded to about 100 m for privacy. Monitor names are not published.</p></div></div>
   </div>
+  ${sameSpotCard(allPts)}
   <div class="g2">
     <div class="card"><div class="card-h"><div><h3>Uploaded from the wrong place</h3><p>${wrong.filter(r=>r.band===2).length} more than 5 km out · ${wrong.filter(r=>r.band===1).length} borderline · furthest first</p></div></div><div class="tw tall" id="wr">${tableHTML([{k:"uc",t:"UC on the record",l:1,fn:r=>`<b>${esc(tc(r.uc))}</b><span class="sub">${esc(tc(r.tehsil))} · ${esc(tc(r.district))}</span>`},{k:"designation",t:"Designation",l:1,fn:r=>`<span title="${esc(r.designation)}">${esc(r.designation.length>30?r.designation.slice(0,28)+"…":r.designation)}</span>`,sv:r=>r.designation},{k:"day",t:"Day",fn:r=>`<span class="tag">${esc(r.day)}</span>`},{k:"kmOut",t:"Km out",fn:r=>`<b style="color:${SPOT_BAND[r.band].c}">${(r.kmOut||0).toFixed(1)}</b>`},{k:"standing",t:"Actually standing in",l:1,fn:r=>r.standing?`${esc(tc(r.standing))}<span class="sub">${esc(tc(r.standingD))}</span>`:`<span class="note">${esc(tc(r.standingD||"—"))}</span>`}],wrong.slice(0,400).map(r=>({...r,_k:r.district+"|"+r.uc})),{onRow:1})}</div></div>
     <div class="card"><div class="card-h"><div><h3>Every district: UCs left without a single ICM cluster</h3><p>${esc(S.icm.camp)}${S.icm.day?" · day "+esc(S.icm.day):""}${S.icm.designation?" · "+esc(S.icm.designation):""}</p></div></div><div class="tw tall">${tableHTML([{k:"_k",t:"District",l:1,fn:r=>`<b>${esc(tc(r._k))}</b>`},{k:"total",t:"Union councils"},{k:"worked",t:"Worked"},{k:"missed",t:"Missed"},{k:"pct",t:"Missed %",ind:{f:P,band:[.05,.15],hb:false}},{k:"list",t:"Union councils missed",l:1,fn:r=>`<span style="white-space:normal;display:block;min-width:220px">${r.list.slice(0,12).map(u=>esc(tc(u))).join(", ")||'<span class="note">none</span>'}${r.list.length>12?` <span class="note">and ${r.list.length-12} more</span>`:""}</span>`}],cov)}</div></div>
   </div>
   <div class="card"><div class="card-h"><div><h3>GPS check by union council</h3><p>Click a column to sort · click a UC to focus the map</p></div></div><div class="tw tall" id="pu">${tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k},{k:"clusters"},{k:"right",t:"Right place"},{k:"border",t:"Borderline"},{k:"wrongN",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:{f:P,band:[.02,.1],hb:false}}],perUC,{id:"puc",onRow:1})}</div></div>`;
+  $$("[data-mode]",el).forEach(b=>b.onclick=()=>{S.spot.color=b.dataset.mode;render();});
+  $$("[data-base]",el).forEach(b=>b.onclick=()=>{S.spot.base=b.dataset.base;render();});
+  $("#monclr")&&($("#monclr").onclick=()=>{S.spot.mon="";render();});
+  wireTable($("#wr"),null,pickUC); wireTable($("#pu"),()=>render(),pickUC); wireSameSpot();
+  if(sat){ satSpot($("#spot"),pts,mode,inS); return; }
+  killSat();
   const host=$("#spot"), svg=$("svg",host);
   svg.addEventListener("mousemove",e=>{ const c=e.target.closest("circle"); if(c){ spotTip(e,D.icm[+c.dataset.i]); return; } const u=e.target.closest("use.u"); if(u){ const [d,n]=u.dataset.k.split("|"); const a=pts.filter(r=>r.district===d&&r.uc===n); showTip(e,`<h4>${esc(tc(n))}</h4><div class="w">${esc(tc(D.tehOf.get(u.dataset.k)||""))} · ${esc(tc(d))}</div>`+dlist([["Clusters recorded here",nf.format(a.length)],["Wrong place",nf.format(a.filter(r=>r.band===2).length)]])); return; } hideTip(); });
   svg.addEventListener("mouseleave",hideTip);
   svg.addEventListener("click",e=>{ if(svg.dataset.dragged) return; const u=e.target.closest("use.u"); if(u) pickUC(u.dataset.k); });
   panZoom(svg,host);
-  $$("[data-mode]",el).forEach(b=>b.onclick=()=>{S.spot.color=b.dataset.mode;render();});
-  wireTable($("#wr"),null,pickUC); wireTable($("#pu"),()=>render(),pickUC);
 }
 
 /* =====================================================================
@@ -1215,12 +1695,13 @@ function pgIcmAudit(el){
   if(!S.sort.aud) S.sort.aud={k:"kmOut",d:-1}; if(!S.sort.adg) S.sort.adg={k:"w",d:-1}; if(!S.sort.aorg) S.sort.aorg={k:"w",d:-1};
   const pct={f:P,band:[.01,.05],hb:false};
   el.innerHTML=`<div class="callout"><div><b>${nf.format(off.length)} of ${nf.format(pts.length)} clusters</b> (${pts.length?(off.length/pts.length*100).toFixed(1):0}%) were uploaded more than 1.5 km outside the union council they were recorded for, and not inside a neighbouring UC of the same tehsil. Monitor names stay in the Excel workbook; this page shows designation, organisation and day.</div></div>
+  ${sameSpotCard(pts,"ssp2")}
   <div class="g2">
     <div class="card"><div class="card-h"><div><h3>By designation</h3></div></div><div class="tw tall" id="a1">${tableHTML([{k:"_k",t:"Designation",l:1,fn:r=>`<span title="${esc(r._k)}">${esc(r._k.length>34?r._k.slice(0,32)+"…":r._k)}</span>`,sv:r=>r._k},{k:"n",t:"Clusters"},{k:"b",t:"Borderline"},{k:"w",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:pct,bg:1},{k:"op",t:"Off target %",ind:{f:P,band:[.03,.1],hb:false}}],grp("designation"),{id:"adg"})}</div></div>
     <div class="card"><div class="card-h"><div><h3>By organisation</h3></div></div><div class="tw tall" id="a2">${tableHTML([{k:"_k",t:"Organisation",l:1},{k:"n",t:"Clusters"},{k:"b",t:"Borderline"},{k:"w",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:pct,bg:1},{k:"op",t:"Off target %",ind:{f:P,band:[.03,.1],hb:false}}],grp("org"),{id:"aorg"})}</div></div>
   </div>
   <div class="card"><div class="card-h"><div><h3>Clusters recorded away from their union council</h3><p>${esc(S.icm.camp)} · ${esc(scopeName())} · click a row to open the UC on the spot map</p></div></div><div class="tw tall" id="a3">${tableHTML([{k:"uc",t:"UC on the record",l:1,fn:r=>`<b>${esc(tc(r.uc))}</b><span class="sub">${esc(tc(r.tehsil))} · ${esc(tc(r.district))}</span>`,sv:r=>r.uc},{k:"designation",t:"Designation",l:1,fn:r=>`<span title="${esc(r.designation)}">${esc(r.designation.length>30?r.designation.slice(0,28)+"…":r.designation)}</span>`,sv:r=>r.designation},{k:"org",t:"Organisation",l:1},{k:"day",t:"Day",fn:r=>`<span class="tag">${esc(r.day)}</span>`,sv:r=>+r.day},{k:"kmOut",t:"Km out",fn:r=>`<b style="color:${SPOT_BAND[r.band].c}">${(r.kmOut||0).toFixed(1)}</b>`},{k:"band",t:"Verdict",fn:r=>`<span class="pill ${r.band===2?"fail":"watch"}">${SPOT_BAND[r.band].t}</span>`},{k:"standing",t:"Actually standing in",l:1,fn:r=>r.standing?`${esc(tc(r.standing))}<span class="sub">${esc(tc(r.standingD))}</span>`:`<span class="note">${esc(tc(r.standingD||"—"))}</span>`,sv:r=>r.standing||""}],off.map(r=>({...r,_k:r.district+"|"+r.uc})),{id:"aud",onRow:1})}</div></div>`;
-  wireTable($("#a1"),()=>render()); wireTable($("#a2"),()=>render());
+  wireTable($("#a1"),()=>render()); wireTable($("#a2"),()=>render()); wireSameSpot("ssp2");
   wireTable($("#a3"),()=>render(),k=>{ S.page="icm/spot"; location.hash="#/icm/spot"; pickUC(k); });
 }
 
@@ -1265,8 +1746,9 @@ function pgCmp(el){
   const pts=[]; for(const [k,m] of cov){ const n=icm.get(k); if(!n) continue; const x=m[xr.k], y=n[yr.k]; if(x==null||y==null||!isFinite(x)||!isFinite(y)) continue; pts.push({_k:k,x,y,cl:n.clusters,m,n}); }
   const disc=pts.filter(p=>p.x>=xr.ref&&p.y<yr.ref).sort((a,b)=>a.y-b.y);
   const cT=one(covAgg(D.cov.filter(r=>r.camp===camp&&geoOK(r,true)))), iT=one(icmAgg(D.icm.filter(r=>r.camp===ic&&geoOK(r,true))));
-  el.innerHTML=`<div class="callout"><div>Admin-reported coverage from the coverage data set against what independent monitors found <b>in the same union councils</b>. UCs in the red corner report high coverage but fail the monitoring standard — the first place to send a supervisor.</div></div>
+  el.innerHTML=`${cmpHero(camp,ic,cT,iT,disc.length)}<div class="callout"><div>Admin-reported coverage from the coverage data set against what ICM monitors found <b>in the same union councils</b>. UCs in the red corner report high coverage but fail the monitoring standard — the first place to send a supervisor.</div></div>
   <div class="kband">${kpi(XI,cT?.[xr.k],null,null,XI.t+" (admin)")}${kpi(YI,iT?.[yr.k],null,null,YI.t+" (ICM)")}<div class="k"><span class="kn">UCs in both data sets</span><span class="kv">${nf.format(pts.length)}</span></div><div class="k"><span class="kn">Reported high, monitored low</span><span class="kv" style="color:${disc.length?"var(--fail)":"var(--pass)"}">${nf.format(disc.length)}</span><span class="ks">${pts.length?(disc.length/pts.length*100).toFixed(0)+"% of matched UCs":""}</span></div></div>
+  <div class="card lift"><div class="card-h"><div><h3>Reported vs monitored</h3><p>${esc(scopeName())} · ${esc(camp)}</p></div></div><div class="gauges gx">${gauge2(cT?.[xr.k],XI,XI.t+" (admin)",{max:1.2})}${gauge2(iT?.[yr.k],YI,YI.t+" (ICM)",{max:1})}${xr.k==="overallPct"?gauge2(cT?.hhcovPct,IND.hhcovPct,"HH coverage (admin)",{max:1.2}):gauge2(cT?.overallPct,IND.overallPct,"Total coverage (admin)",{max:1.2})}${gauge2(iT?.seenPct,IND.seenPct,"Seen finger-marked (ICM)",{max:1})}</div></div>
   <div class="g-side">
     <div class="card lift"><div class="card-h"><div><h3>Each dot is a union council</h3><p>Dot size = clusters monitored</p></div>
       <div class="frow">${axisSel("cx","Across (admin)",CMP_X,xr.k)}${axisSel("cy","Up (ICM)",CMP_Y,yr.k)}</div></div>
@@ -1302,8 +1784,8 @@ function render(){
   cancelAnimationFrame(raceTimer); hideTip();
   $$(".nav a").forEach(a=>a.toggleAttribute("aria-current",false)); const a=$(`.nav a[data-p="${S.page}"]`); a&&a.setAttribute("aria-current","page");
   document.body.classList.remove("nav-open");
-  renderCtx(); const pg=$("#page"); pg.innerHTML="";
-  try{ RENDER[S.page](pg); }catch(err){ console.error(err); pg.innerHTML=`<div class="err"><b>This view could not be drawn.</b><br>${esc(err.message)}</div>`; }
+  killSat(); renderCtx(); const pg=$("#page"); pg.innerHTML="";
+  try{ RENDER[S.page](pg); try{ afterRender(pg); }catch(e){ console.error(e); } }catch(err){ console.error(err); pg.innerHTML=`<div class="err"><b>This view could not be drawn.</b><br>${esc(err.message)}</div>`; }
   saveHash();
 }
 function saveHash(){ try{ const q=new URLSearchParams(); const g=S.geo; if(g.district)q.set("d",g.district); g.tehsils.forEach(t=>q.append("t",t)); g.ucs.forEach(u=>q.append("u",u));
@@ -1315,7 +1797,7 @@ function readHash(){ const h=location.hash.slice(2); const [p,qs]=h.split("?"); 
 addEventListener("hashchange",()=>{ const p=location.hash.slice(2).split("?")[0]; if(RENDER[p]&&p!==S.page){ S.page=p; if(p==="cmp"){S.geo.tehsil="";S.geo.uc="";} render(); scrollTo({top:0}); } });
 let rzT=0,lastW=innerWidth; addEventListener("resize",()=>{ if(Math.abs(innerWidth-lastW)<60) return; lastW=innerWidth; clearTimeout(rzT); rzT=setTimeout(()=>D&&render(),250); });
 function railFoot(){ const f=t=>{ if(!t) return "—"; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
-  $("#rail-foot").innerHTML=`<span>Coverage data <b>${f(D.upd.cov)}</b></span><span>ICM data <b>${f(D.upd.icm)}</b></span><span style="margin-top:4px">Summary figures only — no names or household details. Cluster GPS rounded to ~100 m.</span>`; }
+  $("#rail-foot").innerHTML=`<span>Coverage data <b>${f(D.upd.cov)}</b></span><span>ICM data <b>${f(D.upd.icm)}</b></span><span class="rf-site"><b>Online Dashboard</b> — Peshawar Division, all districts · Campaign Coverages and Monitoring</span><span style="margin-top:4px">Summary figures only — no names or household details. Cluster GPS rounded to ~100 m.</span>`; }
 load().then(()=>{ try{ $(".brand b").textContent=SITE.short; $(".brand small").textContent=SITE.place; document.title=SITE.name; }catch(e){} readHash(); railFoot(); render(); }).catch(err=>{ console.error(err);
   $("#page").innerHTML=`<div class="err"><b>The data files could not be loaded.</b><br>${esc(err.message)}<br><br>This page reads <code>data/coverage.csv</code>, <code>data/icm.csv</code> and <code>data/geo.json</code> from the same folder. Open it from the website address, not by double-clicking the file.</div>`; });
 </script>
