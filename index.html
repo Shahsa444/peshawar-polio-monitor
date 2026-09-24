@@ -607,6 +607,35 @@ th.on{color:var(--accent-2)}
 @media (max-width:760px){.sitebar{flex-wrap:wrap!important;gap:8px 10px}.sb-t{order:3;flex-basis:100%}.sb-r{margin-left:auto}
   .gauges.gx,.gauges{grid-template-columns:repeat(2,minmax(0,1fr))!important;padding:4px 8px 10px}.gval{font-size:26px}
   .kband{grid-template-columns:repeat(2,minmax(0,1fr))}}
+/* ---------- extra motion ---------- */
+#topbar{position:fixed;left:0;top:0;height:3px;width:0;z-index:120;background:linear-gradient(90deg,#22D3EE,#8B6CFF,#F472B6);box-shadow:0 0 12px #8B6CFF;pointer-events:none;opacity:0}
+#topbar.go{animation:topbar 1.1s cubic-bezier(.2,.8,.2,1) forwards}
+@keyframes topbar{0%{width:0;opacity:1}70%{width:85%;opacity:1}100%{width:100%;opacity:0}}
+.hcv{position:absolute;inset:0;width:100%;height:100%;opacity:.9}
+.hero h2.typing::after{content:"";display:inline-block;width:3px;height:.9em;margin-left:4px;vertical-align:-2px;background:#7EE7F7;box-shadow:0 0 10px #22D3EE;animation:caret .8s steps(1) infinite}
+@keyframes caret{50%{opacity:0}}
+.card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;transition:opacity .35s;background:radial-gradient(420px circle at var(--mx,50%) var(--my,50%),color-mix(in srgb,var(--accent) 14%,transparent),transparent 60%)}
+.card:hover::after{opacity:1}
+.k,.sc,.gauges .gauge,.hs{transition:transform .25s ease-out,box-shadow .35s,border-color .35s;will-change:transform}
+.tilting{transition:transform .08s linear,box-shadow .35s,border-color .35s}
+.ripple{position:absolute;border-radius:50%;pointer-events:none;background:radial-gradient(circle,rgba(255,255,255,.45),rgba(139,108,255,.15) 45%,transparent 70%);transform:scale(0);animation:ripple .7s ease-out forwards;z-index:0}
+@keyframes ripple{to{transform:scale(1);opacity:0}}
+.tprime{color:#fff!important;border:0!important;background:linear-gradient(110deg,#6C4DFF,#8B6CFF 45%,#22D3EE)!important;background-size:200% 100%!important;animation:shine 5s linear infinite;box-shadow:0 8px 24px -8px rgba(139,108,255,.9)}
+.tprime:hover{box-shadow:0 10px 30px -6px rgba(34,211,238,.8)!important}
+.modal .card:has(.derm){width:min(780px,100%);background:color-mix(in srgb,var(--surface) 96%,transparent)}
+.derm{display:flex;flex-direction:column;gap:14px;padding-top:4px}
+.dm-info{font-size:12.5px;color:var(--ink-2);padding:10px 12px;border-radius:12px;background:var(--accent-soft);border:1px solid var(--line)}
+.dm-l{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.dm-opts{display:grid;gap:8px}
+.dm-o{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line-2);border-radius:12px;cursor:pointer;background:var(--glass);transition:all .2s}
+.dm-o:hover{border-color:var(--accent)}
+.dm-o:has(input:checked){border-color:var(--accent-2);box-shadow:0 0 0 1px var(--accent-2),0 0 22px -8px var(--accent-2)}
+.dm-o input{accent-color:var(--accent);margin-top:3px}
+.dm-o b{display:block;font-size:13.5px}.dm-o small{display:block;color:var(--muted);font-size:12px;margin-top:2px}
+.dm-chk{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px}.dm-chk input{accent-color:var(--accent);margin-right:6px}
+.dm-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}
+.dm-go{padding:10px 20px;font-size:14px}.dm-go.busy{opacity:.75;cursor:progress}.dm-go:disabled{opacity:.5}
+.chip:disabled{opacity:.35;cursor:not-allowed}
 /* ---------- reveal on scroll ---------- */
 .rv{opacity:0;transform:translateY(28px) scale(.985);filter:blur(4px);transition:opacity .8s cubic-bezier(.2,.8,.2,1),transform .8s cubic-bezier(.2,.8,.2,1),filter .8s}
 .rv.in{opacity:1;transform:none;filter:none}
@@ -629,7 +658,7 @@ th.on{color:var(--accent-2)}
   <aside class="rail" id="rail" aria-label="Sections">
     <div class="brand">
       <svg viewBox="0 0 36 36" aria-hidden="true"><defs><linearGradient id="brandG" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#6C4DFF"/><stop offset="1" stop-color="#22D3EE"/></linearGradient></defs><rect width="36" height="36" rx="10" fill="url(#brandG)"/><path d="M13.5 29V15.5a4.5 4.5 0 0 1 9 0V29" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M13.5 18h9" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><circle cx="18" cy="10.6" r="2.6" fill="#C4A8FF"/></svg>
-      <div><b>Polio Monitor</b><small>Peshawar Division · KP</small></div>
+      <div><b>ERU Peshawar Dashboard</b><small>Peshawar Division · KP</small></div>
     </div>
     <nav class="nav">
       <div class="nav-g"><div class="nav-h"><i></i>Campaign coverage</div>
@@ -677,7 +706,7 @@ th.on{color:var(--accent-2)}
 const SITE = {
   name: "Peshawar Division Coverage & Monitoring",   // big name on top of every page
   sub:  "Online dashboard · Peshawar Division, all districts · Campaign coverage and monitoring",
-  short:"Polio Monitor",                             // name in the left menu
+  short:"ERU Peshawar Dashboard",                           // name in the left menu
   place:"Peshawar Division · KP"                     // small line under it
 };
 /* =================== end of settings =================== */
@@ -861,7 +890,7 @@ function newGeo(){ return {district:"",tehsils:[],ucs:[],
   get tehsil(){ return this.tehsils.length===1?this.tehsils[0]:""; }, set tehsil(v){ this.tehsils=v?[v]:[]; },
   get uc(){ return this.ucs.length===1?this.ucs[0]:""; }, set uc(v){ this.ucs=v?[v]:[]; } }; }
 const S={page:"cov/report",geo:newGeo(),
-  cov:{camp:"",day:"",tier:"",risk:"",rankCamp:""},icm:{camp:"",day:"",designation:"",org:"",pop:""},cmp:{camp:"",x:"hhcovPct",y:"recallPct"},
+  cov:{camp:"",days:[],tier:"",risk:"",rankCamp:""},icm:{camp:"",days:[],designation:"",org:"",pop:""},cmp:{camp:"",x:"hhcovPct",y:"recallPct"},
   covMaps:{n:9,all:"",panels:[]},icmMaps:{},spot:{color:"gps",sel:null,base:"map",mon:""},sort:{},covTable:"division",icmTable:"ucsum",race:{m:"still"},search:{}};
 let D=null;
 
@@ -961,12 +990,12 @@ function geoOK(r,skipUC){ const g=S.geo; return (!g.district||r.district===g.dis
 function covRows(o={}){ const camp=o.camp===undefined?S.cov.camp:o.camp, c=S.cov;
   return D.cov.filter(r=>(!camp||r.camp===camp)&&(o.geo==="none"||geoOK(r,o.geo==="noUC"))&&(!c.tier||r.tier===c.tier)&&(!c.risk||r.risk===c.risk)&&(!o.campOnly||r.camp_)); }
 /* The day filter applies to every figure except the NEAP target — same rule as the workbook */
-function covAgg(rows,keyFn=()=>"all",o={}){ const out=new Map(), day=o.noDay?"":S.cov.day;
+function covAgg(rows,keyFn=()=>"all",o={}){ const out=new Map(), days=o.noDay?[]:S.cov.days;
   for(const r of rows){ const k=keyFn(r); let s=out.get(k); if(!s){s=Object.fromEntries(COV_F.map(f=>[f,0])); out.set(k,s);}
-    if(!day||r.day===day){ for(const f of COV_F) if(f!=="neap") s[f]+=r.v[f]; } s.neap+=r.v.neap; }
+    if(!days.length||days.includes(r.day)){ for(const f of COV_F) if(f!=="neap") s[f]+=r.v[f]; } s.neap+=r.v.neap; }
   const m=new Map(); for(const [k,s] of out) m.set(k,covM(s)); return m; }
 function icmRows(o={}){ const camp=o.camp===undefined?S.icm.camp:o.camp, c=S.icm;
-  return D.icm.filter(r=>(!camp||r.camp===camp)&&(o.geo==="none"||geoOK(r,o.geo==="noUC"))&&(o.noDay||!c.day||r.day===c.day)&&(!c.designation||r.designation===c.designation)&&(!c.org||r.org===c.org)&&(!c.pop||r.pop===c.pop)); }
+  return D.icm.filter(r=>(!camp||r.camp===camp)&&(o.geo==="none"||geoOK(r,o.geo==="noUC"))&&(o.noDay||!c.days.length||c.days.includes(r.day))&&(!c.designation||r.designation===c.designation)&&(!c.org||r.org===c.org)&&(!c.pop||r.pop===c.pop)); }
 function icmAgg(rows,keyFn=()=>"all"){ const out=new Map();
   for(const r of rows){ const k=keyFn(r); let s=out.get(k); if(!s){s=Object.fromEntries(ICM_F.map(f=>[f,0])); out.set(k,s);} for(const f of ICM_F) s[f]+=r.v[f]; }
   const m=new Map(); for(const [k,s] of out) m.set(k,icmM(s)); return m; }
@@ -1141,12 +1170,12 @@ function sel(id,label,arr,cur,all,lab=x=>tc(x),dis=false){
   return `<div class="fld"><label for="${id}">${label}</label><select id="${id}"${cur?' class="on"':""}${dis||!arr.length?" disabled":""}><option value="">${esc(all)}</option>${arr.map(v=>`<option value="${esc(v)}"${String(v)===String(cur)?" selected":""}>${esc(lab(v))}</option>`).join("")}</select></div>`;
 }
 /* tick-box dropdown for picking several tehsils / UCs */
-function msel(id,label,groups,cur,allTxt,off){ const items=groups.flatMap(g=>g.items), n=cur.length;
-  const txt=off||!n?allTxt:n===1?tc(cur[0]):n+" selected";
-  return `<div class="fld ms" id="${id}"><label>${label}</label><button type="button" class="msb${n?" on":""}"${off||!items.length?" disabled":""} aria-haspopup="true" aria-expanded="false" title="${esc(cur.map(tc).join(", "))}">${esc(txt)}</button>
+function msel(id,label,groups,cur,allTxt,off,lab=tc){ const items=groups.flatMap(g=>g.items), n=cur.length;
+  const txt=off||!n?allTxt:n<=2?cur.map(lab).join(" + "):n+" selected";
+  return `<div class="fld ms" id="${id}"><label>${label}</label><button type="button" class="msb${n?" on":""}"${off||!items.length?" disabled":""} aria-haspopup="true" aria-expanded="false" title="${esc(cur.map(lab).join(", "))}">${esc(txt)}</button>
   <div class="msp" hidden>${items.length>10?`<input class="inp ms-q" type="search" placeholder="Search ${label.toLowerCase()}…" aria-label="Search">`:""}
     <div class="ms-act"><button type="button" class="linkbtn" data-a="all">Select all</button><button type="button" class="linkbtn" data-a="none">Clear</button><span class="note ms-n"></span></div>
-    <div class="ms-list">${groups.map(g=>`<div class="ms-g">${g.h&&groups.length>1?`<div class="ms-h">${esc(tc(g.h))}</div>`:""}${g.items.map(v=>`<label class="ms-i"><input type="checkbox" value="${esc(v)}"${cur.includes(v)?" checked":""}><span>${esc(tc(v))}</span></label>`).join("")}</div>`).join("")}</div>
+    <div class="ms-list">${groups.map(g=>`<div class="ms-g">${g.h&&groups.length>1?`<div class="ms-h">${esc(tc(g.h))}</div>`:""}${g.items.map(v=>`<label class="ms-i"><input type="checkbox" value="${esc(v)}"${cur.includes(v)?" checked":""}><span>${esc(lab(v))}</span></label>`).join("")}</div>`).join("")}</div>
     <div class="ms-foot"><button type="button" class="ms-ok">Apply</button></div></div></div>`; }
 function wireMsel(id,apply){ const w=$("#"+id); if(!w) return; const b=$(".msb",w), pnl=$(".msp",w), q=$(".ms-q",w), boxes=$$("input[type=checkbox]",w), cnt=$(".ms-n",w);
   const start=boxes.filter(x=>x.checked).map(x=>x.value).join("\u0001");
@@ -1169,17 +1198,17 @@ function renderCtx(){
   if(ds==="cov"){
     if(!P.noCamp) camps=chipRow(D.covCamps,S.cov.camp,"cov");
     const rows=D.cov.filter(r=>r.camp===S.cov.camp), u=k=>[...new Set(rows.map(r=>r[k]).filter(Boolean))];
-    extra=sel("f-day","Day",u("day").sort((a,b)=>dayOrd(a)-dayOrd(b)),S.cov.day,"All days",DAYLAB,P.noCamp)
+    extra=msel("f-day","Day",[{items:u("day").sort((a,b)=>dayOrd(a)-dayOrd(b))}],S.cov.days,"All days",!!P.noCamp,DAYLAB)
       +sel("f-tier","Tier",u("tier").sort(),S.cov.tier,"All tiers",x=>"Tier "+x)+sel("f-risk","Risk category",u("risk").sort(),S.cov.risk,"All categories",x=>x);
   } else if(ds==="icm"){
     if(!P.noCamp) camps=chipRow(D.icmCamps,S.icm.camp,"icm");
     const rows=D.icm.filter(r=>P.noCamp||r.camp===S.icm.camp), u=k=>[...new Set(rows.map(r=>r[k]).filter(Boolean))];
-    extra=sel("f-iday","Day",u("day").sort((a,b)=>a-b),S.icm.day,"All days",x=>"Day "+x)
+    extra=msel("f-iday","Day",[{items:u("day").sort((a,b)=>a-b)}],S.icm.days,"All days",false,x=>"Day "+x)
       +sel("f-des","Designation",u("designation").sort(),S.icm.designation,"All designations",x=>x.length>30?x.slice(0,28)+"…":x)
       +sel("f-org","Organisation",u("org").sort(),S.icm.org,"All organisations",x=>x.length>30?x.slice(0,28)+"…":x)
       +sel("f-pop","Population",u("pop").sort(),S.icm.pop,"HRMP + non-HRMP",x=>x==="hrmp"?"HRMP":x==="nonhrmp"?"Non-HRMP":x);
   } else camps=chipRow(D.cmpCamps,S.cmp.camp,"cmp");
-  const any=g.district||g.tehsils.length||g.ucs.length||(ds==="cov"&&(S.cov.day||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.day||S.icm.designation||S.icm.org||S.icm.pop));
+  const any=g.district||g.tehsils.length||g.ucs.length||(ds==="cov"&&(S.cov.days.length||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.days.length||S.icm.designation||S.icm.org||S.icm.pop));
   $("#ctx").innerHTML=`<div class="ctx-in">
     ${sitebarHTML()}
     <div class="ctx-top">
@@ -1199,10 +1228,10 @@ function renderCtx(){
   const on=(id,fn)=>{const e=$("#"+id); if(e) e.onchange=ev=>{fn(ev.target.value); render();};};
   on("f-dist",v=>{S.geo.district=v;S.geo.tehsil="";S.geo.uc="";}); wireMsel("f-teh",v=>{ S.geo.tehsils=v; if(v.length){ const keep=new Set(v.flatMap(t=>[...(D.H[S.geo.district]?.[t]||[])])); S.geo.ucs=S.geo.ucs.filter(u=>keep.has(u)); } });
   wireMsel("f-uc",v=>{ S.geo.ucs=v; });
-  on("f-day",v=>S.cov.day=v); on("f-tier",v=>S.cov.tier=v); on("f-risk",v=>S.cov.risk=v);
-  on("f-iday",v=>S.icm.day=v); on("f-des",v=>S.icm.designation=v); on("f-org",v=>S.icm.org=v); on("f-pop",v=>S.icm.pop=v);
+  wireMsel("f-day",v=>{S.cov.days=v;}); on("f-tier",v=>S.cov.tier=v); on("f-risk",v=>S.cov.risk=v);
+  wireMsel("f-iday",v=>{S.icm.days=v;}); on("f-des",v=>S.icm.designation=v); on("f-org",v=>S.icm.org=v); on("f-pop",v=>S.icm.pop=v);
   $$("[data-camp]").forEach(b=>b.onclick=()=>{ S[b.dataset.ds].camp=b.dataset.camp; if(b.dataset.ds==="cov") S.covMaps.all=""; render(); });
-  $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo=newGeo(); if(ds==="cov") Object.assign(S.cov,{day:"",tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{day:"",designation:"",org:"",pop:""}); render();});
+  $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo=newGeo(); if(ds==="cov") Object.assign(S.cov,{days:[],tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{days:[],designation:"",org:"",pop:""}); render();});
   $("#menu").onclick=()=>document.body.classList.toggle("nav-open");
 }
 function chipRow(list,cur,ds){ return `<div class="chips" role="group" aria-label="Campaign">${list.map((c,i)=>`<button class="chip" data-ds="${ds}" data-camp="${esc(c)}" aria-pressed="${c===cur}">${esc(shortCamp(c))}${i===list.length-1?'<span class="lt">latest</span>':""}</button>`).join("")}</div>`; }
@@ -1235,7 +1264,7 @@ function pgCovReport(el){
     <div class="card"><div class="card-h"><div><h3>HH plan / visited</h3><p>Houses planned against houses visited</p></div></div><div class="tw">${tableHTML([campCol,{k:"hhplan"},{k:"hhvisit"},{k:"diffHH"},{k:"zeroPct",bg:1},{k:"lockedPct",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
     <div class="card"><div class="card-h"><div><h3>MMP and quality</h3><p>Mobile / migrant population, AFP and vaccine use</p></div></div><div class="tw">${tableHTML([campCol,{k:"reg"},{k:"mob"},{k:"mmpPct",bg:1},{k:"zerod"},{k:"afp"},{k:"wastage",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
   </div>
-  <div class="sec-h"><h2>Every round</h2><p>${esc(scopeName())}${S.cov.day?" · "+esc(DAYLAB(S.cov.day)):""}</p></div>
+  <div class="sec-h"><h2>Every round</h2><p>${esc(scopeName())}${S.cov.days.length?" · "+esc(S.cov.days.map(DAYLAB).join(" + ")):""}</p></div>
   <div class="g3">
     <div class="card"><div class="card-h"><div><h3>Total coverage %</h3></div></div><div class="card-b chart" id="ch1"></div></div>
     <div class="card"><div class="card-h"><div><h3>HH coverage %</h3></div></div><div class="card-b chart" id="ch2"></div></div>
@@ -1428,6 +1457,7 @@ function sitebarHTML(){
     <img class="logo logo-kp" src="assets/logo-kp.png" alt="Government of Khyber Pakhtunkhwa" title="Government of Khyber Pakhtunkhwa" onerror="this.remove()">
     <div class="sb-t"><span class="sname">${esc(SITE.name)}</span><span class="ssub"><span class="livep"><i></i>LIVE</span>${esc(SITE.sub)}${ut&&!isNaN(ut)?` · updated ${ut.toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})}`:""}</span></div>
     <div class="sb-r">
+      <button type="button" class="tbtn tprime" id="derm-btn" title="Download the District Evening Review Meeting PowerPoint"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="2" y="2.5" width="12" height="8.5" rx="1.5"/><path d="M8 11v2.5M5.5 13.5h5M5 8.5V7M8 8.5V5M11 8.5V6"/></svg><span>ERM PPT</span></button>
       <button type="button" class="tbtn" id="tg-motion" aria-pressed="${MOTION.on}" title="Animations on / off"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M8 1.8v2.4M8 11.8v2.4M1.8 8h2.4M11.8 8h2.4M3.6 3.6l1.7 1.7M10.7 10.7l1.7 1.7M3.6 12.4l1.7-1.7M10.7 5.3l1.7-1.7"/></svg><span>Motion</span></button>
       <button type="button" class="tbtn" id="tg-theme" title="Switch light / dark"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">${dark?'<circle cx="8" cy="8" r="3.2"/><path d="M8 1.5v1.6M8 12.9v1.6M1.5 8h1.6M12.9 8h1.6M3.4 3.4l1.1 1.1M11.5 11.5l1.1 1.1M3.4 12.6l1.1-1.1M11.5 4.5l1.1-1.1"/>':'<path d="M13 9.6A5.5 5.5 0 0 1 6.4 3a5.5 5.5 0 1 0 6.6 6.6z"/>'}</svg><span>${dark?"Light":"Dark"}</span></button>
       <button type="button" class="tbtn" id="prt" title="Print this page or save it as PDF"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><path d="M4.5 6V2.5h7V6M4.5 11.5H3A1 1 0 0 1 2 10.5V7a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v3.5a1 1 0 0 1-1 1h-1.5"/><path d="M4.5 9.5h7v4h-7z"/></svg><span>PDF</span></button>
@@ -1435,6 +1465,7 @@ function sitebarHTML(){
   </div>`; }
 function wireSitebar(){
   const p=$("#prt"); if(p) p.onclick=()=>window.print();
+  const dm=$("#derm-btn"); if(dm) dm.onclick=()=>dermOpen();
   const m=$("#tg-motion"); if(m) m.onclick=()=>{ try{ localStorage.setItem("pdm-motion",MOTION.on?"off":"on"); }catch(e){} applyPrefs(); render(); };
   const t=$("#tg-theme"); if(t) t.onclick=()=>{ const d=document.documentElement.dataset.theme!=="light"; try{ localStorage.setItem("pdm-theme",d?"light":"dark"); }catch(e){} applyPrefs(); render(); };
 }
@@ -1462,7 +1493,7 @@ function heroHTML(o){
   const tick=(o.ticker||[]).filter(Boolean);
   const tk=tick.length?`<div class="ticker" aria-label="Key findings"><div class="tk-in" style="--dur:${Math.max(24,tick.length*7)}s">${[0,1].map(k=>`<div class="tk-g"${k?' aria-hidden="true"':""}>${tick.map(t=>`<span class="tk"><i style="background:${t.c||"#C4A8FF"}"></i>${t.h}</span>`).join("")}</div>`).join("")}</div></div>`:"";
   return `<section class="hero" aria-label="${esc(o.title)}">
-    <div class="hero-bg" aria-hidden="true"><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
+    <div class="hero-bg" aria-hidden="true"><canvas class="hcv"></canvas><span class="orb o1"></span><span class="orb o2"></span><span class="orb o3"></span></div>
     <div class="hero-txt">
       <div class="hero-eb"><span class="live"><i></i>${esc(o.eyebrow)}</span></div>
       <h2>${esc(o.title)}</h2><p>${esc(o.sub)}</p>
@@ -1536,7 +1567,7 @@ function covGlanceHTML(T){
   const miss=[{l:"Still NA (not available)",v:T.stillNA,c:"var(--b3)"},{l:"Still refusals",v:T.stillRef,c:"var(--b4)"},{l:"Still leftover",v:T.stillLO,c:"var(--b1)"}];
   const days=covAgg(covRows(),r=>r.day,{noDay:true}); let cum=0;
   const drows=[...days].filter(([d])=>d).sort((a,b)=>dayOrd(a[0])-dayOrd(b[0])).map(([d,m])=>{ cum+=m.hhCov; return {k:d,label:DAYLAB(d),v:T.neap?cum/T.neap:null,txt:`+${nf.format(m.hhCov)} · ${T.neap?(cum/T.neap*100).toFixed(1)+"%":"–"}`}; });
-  return `<div class="card lift"><div class="card-h"><div><h3>Performance at a glance</h3><p>${esc(scopeName())} · ${esc(S.cov.camp)}${S.cov.day?" · "+esc(DAYLAB(S.cov.day)):""}</p></div></div>
+  return `<div class="card lift"><div class="card-h"><div><h3>Performance at a glance</h3><p>${esc(scopeName())} · ${esc(S.cov.camp)}${S.cov.days.length?" · "+esc(S.cov.days.map(DAYLAB).join(" + ")):""}</p></div></div>
     <div class="gauges gx">${gauge2(T.overallPct,IND.overallPct,"Total coverage",{max:1.2})}${gauge2(T.hhcovPct,IND.hhcovPct,"HH coverage",{max:1.2})}${gauge2(T.sdc,IND.sdc,"Same-day coverage",{max:1})}${gauge2(T.mmpPct,IND.mmpPct,"MMP coverage",{max:1.2})}${gauge2(T.score,IND.score,"UC score",{max:1})}${gauge2(T.wastage,IND.wastage,"Wastage",{max:.2})}</div></div>
   <div class="g3">
     <div class="card"><div class="card-h"><div><h3>Where children were vaccinated</h3><p>In houses (HH coverage) and outside houses</p></div></div><div class="card-b">${donutHTML(cov,{center:"children",label:"Where children were vaccinated"})}</div></div>
@@ -1751,11 +1782,270 @@ function reveal(pg){
   for(const e of els){ e.classList.add("rv"); RVO.observe(e); k++; }
 }
 function afterRender(pg){
-  wireSitebar();
+  wireSitebar(); fxRender(pg);
   addDownloads(pg); reveal(pg); countUp($("#ctx"));
 }
 (function(){ let t=0; const pg=document.getElementById("page"); if(!pg) return;
   new MutationObserver(()=>{ clearTimeout(t); t=setTimeout(()=>{ addDownloads(pg); countUp(pg); },120); }).observe(pg,{childList:true,subtree:true}); })();
+
+/* ---------------- extra motion: progress bar, constellation, typing, tilt, spotlight, ripple ---------------- */
+let FX_RAF=0;
+function fxRender(pg){
+  cancelAnimationFrame(FX_RAF);
+  let bar=$("#topbar"); if(!bar){ bar=document.createElement("div"); bar.id="topbar"; document.body.appendChild(bar); }
+  bar.classList.remove("go"); void bar.offsetWidth; if(MOTION.on) bar.classList.add("go");
+  if(!MOTION.on) return;
+  const h2=$(".hero h2",pg); if(h2&&!h2.dataset.typed){ const full=h2.textContent; h2.dataset.typed="1"; h2.textContent=""; h2.classList.add("typing"); let i=0;
+    const t=setInterval(()=>{ if(!h2.isConnected){ clearInterval(t); return; } h2.textContent=full.slice(0,++i); if(i>=full.length){ clearInterval(t); setTimeout(()=>h2.classList.remove("typing"),1400); } },32); }
+  const cv=$(".hero .hcv",pg); if(cv) constellation(cv);
+}
+function constellation(cv){
+  const ctx=cv.getContext("2d"), host=cv.parentElement, dpr=Math.min(2,devicePixelRatio||1); let W=0,H=0;
+  const size=()=>{ W=host.clientWidth; H=host.clientHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+"px"; cv.style.height=H+"px"; ctx.setTransform(dpr,0,0,dpr,0,0); };
+  size(); const P=Array.from({length:Math.round(Math.min(70,W/16))},()=>({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-.5)*.35,vy:(Math.random()-.5)*.35,r:Math.random()*1.6+.6}));
+  let mx=-999,my=-999; host.parentElement.addEventListener("pointermove",e=>{ const b=cv.getBoundingClientRect(); mx=e.clientX-b.left; my=e.clientY-b.top; });
+  host.parentElement.addEventListener("pointerleave",()=>{ mx=my=-999; });
+  const step=()=>{ if(!cv.isConnected||!MOTION.on) return; if(cv.width!==Math.round(host.clientWidth*dpr)) size();
+    ctx.clearRect(0,0,W,H);
+    for(const p of P){ p.x+=p.vx; p.y+=p.vy; if(p.x<0||p.x>W) p.vx*=-1; if(p.y<0||p.y>H) p.vy*=-1;
+      const dx=p.x-mx, dy=p.y-my, d=Math.hypot(dx,dy); if(d<90){ p.x+=dx/d*.8; p.y+=dy/d*.8; } }
+    for(let i=0;i<P.length;i++) for(let j=i+1;j<P.length;j++){ const a=P[i],b=P[j], d=Math.hypot(a.x-b.x,a.y-b.y); if(d<110){ ctx.strokeStyle=`rgba(126,231,247,${(1-d/110)*.35})`; ctx.lineWidth=.8; ctx.beginPath(); ctx.moveTo(a.x,a.y); ctx.lineTo(b.x,b.y); ctx.stroke(); } }
+    for(const p of P){ ctx.fillStyle="rgba(210,200,255,.85)"; ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,7); ctx.fill(); }
+    FX_RAF=requestAnimationFrame(step); };
+  FX_RAF=requestAnimationFrame(step);
+}
+(function(){
+  const TILT=".k, .sc, .gauges .gauge, .hs";
+  document.addEventListener("pointermove",e=>{ if(!MOTION.on||e.pointerType==="touch") return;
+    const c=e.target.closest(".card"); if(c){ const b=c.getBoundingClientRect(); c.style.setProperty("--mx",(e.clientX-b.left)+"px"); c.style.setProperty("--my",(e.clientY-b.top)+"px"); }
+    const t=e.target.closest(TILT); if(t){ const b=t.getBoundingClientRect(), x=(e.clientX-b.left)/b.width-.5, y=(e.clientY-b.top)/b.height-.5;
+      t.style.transform=`perspective(700px) rotateX(${(-y*7).toFixed(2)}deg) rotateY(${(x*9).toFixed(2)}deg) translateY(-3px)`; t.classList.add("tilting"); } },{passive:true});
+  document.addEventListener("pointerout",e=>{ const t=e.target.closest(TILT); if(t&&!t.contains(e.relatedTarget)){ t.style.transform=""; t.classList.remove("tilting"); } });
+  document.addEventListener("pointerdown",e=>{ if(!MOTION.on) return; const b=e.target.closest(".chip, .tbtn, .btn, .seg button, .ibtn, .ms-ok, .sc.click, .hb.click, .nav a"); if(!b||b.disabled) return;
+    const r=b.getBoundingClientRect(), d=Math.max(r.width,r.height)*2.2, s=document.createElement("span"); s.className="ripple";
+    s.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`;
+    if(getComputedStyle(b).position==="static") b.style.position="relative"; b.style.overflow="hidden"; b.appendChild(s); setTimeout(()=>s.remove(),700); });
+})();
+</script>
+<script>
+/* =====================================================================
+   DERM — District Evening Review Meeting deck, built in the browser.
+   Coverage slides compare the same campaign day(s) across the last three
+   rounds of the district; list slides use only the current round.
+   ===================================================================== */
+const DERM={plan:{PESHAWAR:7,KHYBER:7}, lib:"assets/pptxgen.bundle.js",
+  C:{green:"006837",gold:"C3922E",head:"274E13",tag:"EFE3D3",red:"990000",blue:"1F5C8B",grid:"BFBFBF",zebra:"F4F7F2",ink:"1A1A1A",mute:"595959"}};
+const plannedDays=d=>DERM.plan[d]||4;
+/* campaign days of a district in a campaign: CD → CU → AC (leftover reporting rows are not campaign days) */
+function dermDays(district,camp){ return [...new Set(D.cov.filter(r=>r.camp===camp&&r.district===district&&r.day&&!/^LO/.test(r.day)).map(r=>r.day))].sort((a,b)=>dayOrd(a)-dayOrd(b)); }
+function dermDaySet(district,camp,mode,n){ if(mode==="full") return null; const d=dermDays(district,camp); return new Set(mode==="only"?d.slice(n-1,n):d.slice(0,n)); }
+function dermCov(district,camp,set,keyFn=()=>"all",extra=()=>true){
+  const out=new Map();
+  for(const r of D.cov){ if(r.camp!==camp||r.district!==district||!extra(r)) continue; if(set&&!set.has(r.day)) continue;
+    const k=keyFn(r); let s=out.get(k); if(!s){ s=Object.fromEntries(COV_F.map(f=>[f,0])); out.set(k,s); } for(const f of COV_F) s[f]+=r.v[f]; }
+  const m=new Map(); for(const [k,s] of out) m.set(k,covM(s)); return m; }
+function dermIcmSet(mode,n){ if(mode==="full") return null; const a=[]; for(let i=mode==="only"?n:1;i<=n;i++) a.push(String(i)); return new Set(a); }
+function dermIcm(district,camp,set,extra=()=>true){ return D.icm.filter(r=>r.camp===camp&&r.district===district&&(!set||set.has(String(r.day)))&&extra(r)); }
+/* the last two full rounds held in the district (small special rounds with under half the target are skipped) */
+function dermPrevCamps(district,camp,list){ const i=list.indexOf(camp);
+  const tgt=c=>D.cov.reduce((a,r)=>a+(r.district===district&&campKey(r.camp)===campKey(c)?r.v.neap:0),0), t0=tgt(camp);
+  const held=c=>(D.cov.some(r=>r.camp===c&&r.district===district)||D.icm.some(r=>r.camp===c&&r.district===district))&&(!t0||tgt(c)>=t0*.5);
+  return list.slice(0,i).filter(held).slice(-2).concat([camp]); }
+const pctT=v=>v==null||!isFinite(v)?"–":Math.round(v*100)+"%", numT=v=>v==null||!isFinite(v)?"–":nf.format(Math.round(v));
+const campUp=c=>String(c).toUpperCase();
+
+/* ---------------- dialog ---------------- */
+function dermOpen(){
+  const dists=Object.keys(D.H).sort(), d0=S.geo.district||"", c0=S.cov.camp;
+  openModal(`<div class="card-h"><div><h3 id="modal-h">Evening Review Meeting deck</h3><p>Builds the district ERM PowerPoint from the live data — ready in a few seconds</p></div><button class="ibtn" data-close aria-label="Close">${X_ICON}</button></div>
+  <div class="card-b derm">
+    <div class="frow">
+      <div class="fld"><label for="dm-d">District</label><select id="dm-d"><option value="">Choose a district…</option>${dists.map(d=>`<option value="${esc(d)}"${d===d0?" selected":""}>${esc(tc(d))}</option>`).join("")}</select></div>
+      <div class="fld"><label for="dm-c">Campaign</label><select id="dm-c">${D.covCamps.slice().reverse().map(c=>`<option${c===c0?" selected":""}>${esc(c)}</option>`).join("")}</select></div>
+      <div class="fld"><label for="dm-dt">Meeting date</label><input class="inp" id="dm-dt" type="date" value="${new Date().toISOString().slice(0,10)}"></div>
+    </div>
+    <div id="dm-info" class="dm-info"></div>
+    <div class="dm-sec"><div class="dm-l">Which day?</div><div class="chips" id="dm-days"></div></div>
+    <div class="dm-sec"><div class="dm-l">What should the deck cover?</div><div class="dm-opts" id="dm-mode">
+      <label class="dm-o"><input type="radio" name="dm-m" value="upto" checked><span><b id="dm-up-t">Days 1–N together</b><small>Every slide shows the days done so far, compared with the same days of the last 2 rounds</small></span></label>
+      <label class="dm-o"><input type="radio" name="dm-m" value="only"><span><b id="dm-only-t">Day N only</b><small>Only the selected day, compared with the same day of the last 2 rounds</small></span></label>
+      <label class="dm-o"><input type="radio" name="dm-m" value="full"><span><b>Full campaign, all days</b><small>Whole campaign including catch-up and leftover, compared with the last 2 full rounds</small></span></label>
+    </div></div>
+    <div class="dm-sec"><div class="dm-l">Slides to include</div><div class="dm-chk">
+      <label><input type="checkbox" id="dm-s1" checked> Coverage comparison (last 3 rounds)</label>
+      <label><input type="checkbox" id="dm-s2" checked> Still-missed UCs by tehsil (this round)</label>
+      <label><input type="checkbox" id="dm-s3" checked> ICM analysis (last 3 rounds + this round)</label>
+    </div></div>
+    <div class="dm-foot"><span class="note" id="dm-msg"></span><button class="btn pri dm-go" id="dm-go" type="button"><span>Download PowerPoint</span></button></div>
+  </div>`,c=>{
+    const upd=()=>{ const d=$("#dm-d",c).value, camp=$("#dm-c",c).value; const dd=d?dermDays(d,camp):[], pl=d?plannedDays(d):4, ic=D.icmByKey[campKey(camp)];
+      const idays=d&&ic?[...new Set(D.icm.filter(r=>r.camp===ic&&r.district===d).map(r=>+r.day))].sort((a,b)=>a-b):[];
+      const done=Math.max(dd.length,idays.at(-1)||0); let sel=+(c.dataset.day||0); if(!sel||sel>Math.max(pl,done)) sel=Math.max(1,done);
+      c.dataset.day=sel;
+      $("#dm-info",c).innerHTML=d?`<b>${esc(tc(d))}</b> runs a <b>${pl}-day</b> campaign. Days with data in ${esc(camp)}: ${dd.length?dd.map((x,i)=>`Day ${i+1} <span class="note">(${esc(DAYLAB(x))})</span>`).join(", "):"none yet"}${idays.length?` · ICM days ${idays.join(", ")}`:""}`:"Pick the district this deck is for.";
+      $("#dm-days",c).innerHTML=Array.from({length:Math.max(pl,done)},(_,i)=>i+1).map(i=>`<button type="button" class="chip" data-dd="${i}" aria-pressed="${i===sel}"${i>done?" disabled title=\"No data for this day yet\"":""}>Day ${i}</button>`).join("");
+      $$("[data-dd]",c).forEach(b=>b.onclick=()=>{ c.dataset.day=b.dataset.dd; upd(); });
+      $("#dm-up-t",c).textContent=sel===1?"Day 1":`Days 1–${sel} together`; $("#dm-only-t",c).textContent=`Day ${sel} only`;
+      $("#dm-go",c).disabled=!d||!done; };
+    $("#dm-d",c).onchange=upd; $("#dm-c",c).onchange=()=>{ c.dataset.day=""; upd(); }; upd();
+    $("#dm-go",c).onclick=async()=>{ const btn=$("#dm-go",c), msg=$("#dm-msg",c);
+      const o={district:$("#dm-d",c).value,camp:$("#dm-c",c).value,day:+c.dataset.day,mode:$("input[name=dm-m]:checked",c).value,date:$("#dm-dt",c).value,
+        cov:$("#dm-s1",c).checked,blocks:$("#dm-s2",c).checked,icm:$("#dm-s3",c).checked};
+      btn.disabled=true; btn.classList.add("busy"); msg.textContent="Building slides…";
+      try{ const n=await dermBuild(o,t=>msg.textContent=t); msg.innerHTML=`<b style="color:var(--pass)">Done — ${n} slides downloaded.</b>`; }
+      catch(e){ console.error(e); msg.innerHTML=`<span style="color:var(--fail)">Could not build the deck: ${esc(e.message)}</span>`; }
+      finally{ btn.disabled=false; btn.classList.remove("busy"); } };
+  });
+}
+
+/* ---------------- deck ---------------- */
+async function dataURL(u){ try{ const r=await fetch(u); if(!r.ok) return null; const b=await r.blob(); return await new Promise(ok=>{ const f=new FileReader(); f.onload=()=>ok(f.result); f.readAsDataURL(b); }); }catch(e){ return null; } }
+async function dermBuild(o,say){
+  await loadScript(DERM.lib); if(!window.PptxGenJS) throw new Error("PowerPoint library did not load");
+  const C=DERM.C, dist=o.district, camp=o.camp, N=o.day, mode=o.mode, icmCamp=D.icmByKey[campKey(camp)];
+  const dateTxt=new Date(o.date||Date.now()).toLocaleDateString("en-GB",{day:"numeric",month:"short",year:"numeric"}).toUpperCase();
+  const scope=mode==="full"?"Full campaign":mode==="only"?`Day-${N}`:N===1?"Day-1":`${N}-Day's`;
+  const pptx=new PptxGenJS(); pptx.layout="LAYOUT_16x9"; pptx.author="ERU Peshawar Dashboard"; pptx.title=`ERM ${tc(dist)} ${scope} ${camp}`;
+  const [kp,pei]=await Promise.all([dataURL("assets/logo-kp.png"),dataURL("assets/logo-pei.jpg")]);
+  const F="Calibri"; let no=0;
+  const src=`Source: IDIMS / ICM app as of ${dateTxt} · ERU Peshawar Dashboard`;
+  const base=(title,tag)=>{ const s=pptx.addSlide(); no++;
+    s.addText(title,{x:.3,y:.12,w:8.3,h:.55,fontFace:F,fontSize:17,bold:true,color:C.ink,valign:"middle"});
+    if(tag) s.addText(tag,{x:8.9,y:0,w:1.1,h:.3,fontFace:F,fontSize:9,color:C.ink,fill:{color:C.tag},align:"center",valign:"middle"});
+    s.addShape(pptx.ShapeType.line,{x:.3,y:.7,w:9.4,h:0,line:{color:C.gold,width:1.2}});
+    s.addText(src,{x:.3,y:5.3,w:7,h:.25,fontFace:F,fontSize:7.5,color:C.mute});
+    s.addText(String(no),{x:9.2,y:5.28,w:.5,h:.28,fontFace:F,fontSize:9,color:C.mute,align:"right"});
+    return s; };
+  const cover=(t1,t2)=>{ const s=pptx.addSlide(); no++;
+    s.background={color:"FFFFFF"};
+    s.addShape(pptx.ShapeType.rect,{x:0,y:2.02,w:10,h:3.61,fill:{color:C.green},line:{color:C.green}});
+    s.addShape(pptx.ShapeType.rect,{x:0,y:1.8,w:10,h:.13,fill:{color:C.gold},line:{color:C.gold}});
+    if(pei) s.addImage({data:pei,x:.25,y:.25,w:2.0,h:.64});
+    if(kp) s.addImage({data:kp,x:8.75,y:.1,w:1.08,h:1.12});
+    s.addText([{text:t1,options:{fontSize:28,bold:true,breakLine:true}},{text:t2,options:{fontSize:18,bold:true}}],{x:.45,y:2.55,w:9,h:1.5,fontFace:F,color:"FFFFFF",valign:"top"});
+    s.addText(dateTxt,{x:.45,y:4.95,w:4,h:.35,fontFace:F,fontSize:12,bold:true,color:"FFFFFF"});
+    return s; };
+  /* table helpers */
+  const hc=(t,fill=C.head)=>({text:t,options:{bold:true,color:"FFFFFF",fill:{color:fill},align:"center",valign:"middle"}});
+  const cell=(t,opt={})=>({text:t==null?"":String(t),options:{align:"center",valign:"middle",...opt}});
+  const compTable=(s,groups,camps,y=.95,rowH=.3)=>{ // groups: [[category,[[label,values[],bold?]...]]]
+    const rows=[[hc("Category"),hc("Indicator"),...camps.map(c=>hc(campUp(c)))]];
+    for(const [cat,items] of groups){ items.forEach(([lab,vals,b],i)=>{ const r=[];
+      if(i===0) r.push({text:cat,options:{rowspan:items.length,bold:true,valign:"middle",align:"left",fill:{color:"FFFFFF"}}});
+      r.push(cell(lab,{align:"left",bold:!!b})); vals.forEach((v,j)=>r.push(cell(v,{bold:!!b||j===vals.length-1,fill:j===vals.length-1?{color:"EEF5E9"}:undefined}))); rows.push(r); }); }
+    s.addTable(rows,{x:.45,y,w:9.1,colW:[1.7,3.0,...camps.map(()=>4.4/camps.length)],fontFace:F,fontSize:10.5,color:C.ink,rowH,border:{type:"solid",pt:.6,color:C.grid},autoPage:false}); };
+
+  const covCamps=dermPrevCamps(dist,camp,D.covCamps);
+  const covFor=(set,c)=>one(dermCov(dist,c,set));
+  const setFor=(c,m,n)=>dermDaySet(dist,c,m,n);
+  const S1=covCamps.map(c=>covFor(setFor(c,mode,N),c)||covM(Object.fromEntries(COV_F.map(f=>[f,0]))));
+  const V=(arr,f,fm=numT)=>arr.map(m=>fm(f(m)));
+  const title=`Evening Review Meeting - District ${tc(dist)}`;
+  cover(title,`${scope.replace("Day-","Day ")} - ${campUp(camp)}`);
+  say("Coverage slides…"); await new Promise(r=>setTimeout(r,0));
+
+  if(o.cov){
+    const hh=m=>[["Daily Target (HH)",V(m,x=>x.tsTarget)],["Total coverage (HH)",V(m,x=>x.hhCov)],["% Total HH Coverage",V(m,x=>div(x.hhCov,x.tsTarget),pctT),1],["Recorded NA",V(m,x=>x.recna)],["Still NA",V(m,x=>x.stillNA)],["Recorded Refusals",V(m,x=>x.recref)],["Still Refusals",V(m,x=>x.stillRef)],["Same day Coverage %",V(m,x=>x.sdc,pctT),1]];
+    const oth=m=>[["MMP Covered",V(m,x=>x.mob)],["Guests Covered",V(m,x=>x.guest)],["Vaccinated at School",V(m,x=>x.school)],["Vaccinated in streets",V(m,x=>x.outhh)],["Vaccinated at transit points",V(m,x=>x.transit)],["Vaccinated at fixed centers",V(m,x=>x.fix)]];
+    const rcm=m=>[["Recorded NA",V(m,x=>x.recna)],["Covered NA",V(m,x=>x.covna)],["Still NA",V(m,x=>x.stillNA),1],["Recorded Refusals",V(m,x=>x.recref)],["Covered Refusals",V(m,x=>x.covref)],["Still Refusals",V(m,x=>x.stillRef),1],["Total Still Missed",V(m,x=>x.stillNA+x.stillRef),1]];
+    let s=base(`Summary of HH coverage ${scope} - comparison with last ${covCamps.length-1} campaigns`,"Coverages"); compTable(s,[["HH Coverage",hh(S1)]],covCamps,.95,.44);
+    s=base(`Summary of other coverages ${scope} - comparison with last ${covCamps.length-1} campaigns`,"Coverages"); compTable(s,[["Other Coverages",oth(S1)]],covCamps,1.1,.5);
+    s.addText("Note: MMP coverage is not included in total coverage (Admin)",{x:.45,y:4.75,w:9,h:.3,fontFace:F,fontSize:9,italic:true,color:C.mute});
+    s=base(`Summary of Rec, Cov and Missed ${scope} - comparison with last ${covCamps.length-1} campaigns`,"Coverages"); compTable(s,[["Rec, Cov and Missed",rcm(S1)]],covCamps,1.05,.5);
+    if(mode==="upto"&&N>1){ const SD=covCamps.map(c=>covFor(setFor(c,"only",N),c)||covM(Object.fromEntries(COV_F.map(f=>[f,0]))));
+      s=base(`Summary of HH and other coverages Day-${N} - comparison with last ${covCamps.length-1} campaigns`,"Coverages"); compTable(s,[["HH Coverage",hh(SD)],["Other Coverages",oth(SD)]],covCamps,.85,.29);
+      s=base(`Summary of Rec, Cov and Missed Day-${N} - comparison with last ${covCamps.length-1} campaigns`,"Coverages"); compTable(s,[["Rec, Cov and Missed",rcm(SD)]],covCamps,1.05,.5); }
+    s=base(`Summary of missed children ${scope} - comparison with last ${covCamps.length-1} campaigns`,"Missed children");
+    compTable(s,[["Recorded missed children",[["Rec NA",V(S1,x=>x.recna)],["Rec Refusals",V(S1,x=>x.recref)],["Total Rec Missed",V(S1,x=>x.recna+x.recref),1]]],
+      ["Covered missed children",[["Covered NA",V(S1,x=>x.covna)],["Covered Refusals",V(S1,x=>x.covref)],["Total covered missed",V(S1,x=>x.covna+x.covref)],["% Same day missed coverage",V(S1,x=>x.sdc,pctT),1]]],
+      ["Still Missed",[["Still NA",V(S1,x=>x.stillNA)],["Still Refusals",V(S1,x=>x.stillRef)],["Total still missed",V(S1,x=>x.stillNA+x.stillRef),1],["% Still missed against Rec",V(S1,x=>div(x.stillNA+x.stillRef,x.recna+x.recref),pctT)],["% Still missed against HH target",V(S1,x=>div(x.stillNA+x.stillRef,x.tsTarget),pctT),1]]],
+      ["Other",[["Zero Dose",V(S1,x=>x.zerod)],["AFP",V(S1,x=>x.afp)]]]],covCamps,.85,.268);
+    /* top 10 UCs (this round) */
+    const cur=covCamps.at(-1), U=[...dermCov(dist,cur,setFor(cur,mode,N),ucKey)].map(([k,m])=>({k,uc:k.split("|")[1],t:D.tehOf.get(k)||"",m})), tier=new Map();
+    for(const r of D.cov) if(r.camp===cur&&r.district===dist) tier.set(r.uc,r.tier);
+    const tot=U.reduce((a,u)=>a+u.m.stillNA+u.m.stillRef,0);
+    s=base(`${nf.format(tot)} total still missed children remained unvaccinated on ${scope}`,"Missed children");
+    const top=(f,lab,x)=>{ const L=U.filter(u=>f(u.m)>0).sort((a,b)=>f(b.m)-f(a.m)).slice(0,10);
+      s.addText([{text:`Top 10 UCs with high number of ${lab} (${scope})`,options:{bold:true,breakLine:true,fontSize:11}},{text:`Number of ${lab.toLowerCase()} children`,options:{italic:true,fontSize:9,color:C.mute}}],{x,y:.8,w:4.55,h:.55,fontFace:F,color:C.ink});
+      s.addTable([[hc("Tehsil",C.red),hc("UC",C.red),hc("Category",C.red),hc(lab+", #",C.red)],...L.map(u=>[cell(tc(u.t),{align:"left"}),cell(u.uc,{align:"left"}),cell(tier.get(u.uc)?"Tier "+tier.get(u.uc):""),cell(nf.format(f(u.m)),{bold:true})])],
+        {x,y:1.4,w:4.5,colW:[1.05,1.75,.8,.9],fontFace:F,fontSize:9,rowH:.3,border:{type:"solid",pt:.5,color:"9E9E9E"},autoPage:false}); };
+    top(m=>m.stillRef,"Still Refusals",.35); top(m=>m.stillNA,"Still NA",5.15);
+  }
+  if(o.blocks){ say("Still-missed lists by tehsil…"); await new Promise(r=>setTimeout(r,0));
+    const cur=camp, U=[...dermCov(dist,cur,setFor(cur,mode,N),ucKey)].map(([k,m])=>({uc:k.split("|")[1],t:D.tehOf.get(k)||"—",na:Math.max(0,m.stillNA),rf:Math.max(0,m.stillRef)})).map(u=>({...u,tot:u.na+u.rf}));
+    const byT=new Map(); for(const u of U){ (byT.get(u.t)||byT.set(u.t,[]).get(u.t)).push(u); }
+    for(const [t,L] of [...byT].sort()){ L.sort((a,b)=>b.tot-a.tot); const PER=15, pages=Math.max(1,Math.ceil(L.length/PER));
+      for(let p=0;p<pages;p++){ const s=pptx.addSlide(); no++;
+        s.addText(`${campUp(t)} BLOCK STILL MISSED`,{x:.7,y:.1,w:8.6,h:.5,fontFace:F,fontSize:22,color:"FFFFFF",fill:{color:C.blue},align:"center",valign:"middle"});
+        const part=L.slice(p*PER,p*PER+PER), rows=[["Sr.No","Tehsil","UC Name","Still NA","Still Refusal","Total"].map(h=>hc(h,C.blue)),
+          ...part.map((u,i)=>[cell(p*PER+i+1),cell(tc(t)),cell(u.uc),cell(nf.format(u.na)),cell(nf.format(u.rf)),cell(nf.format(u.tot),{bold:true})])];
+        if(p===pages-1) rows.push([cell("TOTAL",{bold:true}),cell(""),cell(""),cell(nf.format(L.reduce((a,u)=>a+u.na,0)),{bold:true}),cell(nf.format(L.reduce((a,u)=>a+u.rf,0)),{bold:true}),cell(nf.format(L.reduce((a,u)=>a+u.tot,0)),{bold:true,fill:{color:"FCE4E4"}})]);
+        s.addTable(rows,{x:.7,y:.75,w:8.6,colW:[.7,1.5,2.8,1.2,1.2,1.2],fontFace:F,fontSize:10,rowH:.26,border:{type:"solid",pt:.5,color:"000000"},autoPage:false});
+        s.addText(`${scope} · ${campUp(camp)}`,{x:.7,y:5.3,w:5,h:.25,fontFace:F,fontSize:8,color:C.mute}); s.addText(String(no),{x:9.2,y:5.28,w:.5,h:.28,fontFace:F,fontSize:9,color:C.mute,align:"right"}); } } }
+
+  if(o.icm&&icmCamp){ say("ICM slides…"); await new Promise(r=>setTimeout(r,0));
+    const iset=dermIcmSet(mode,N), icamps=dermPrevCamps(dist,icmCamp,D.icmCamps), iscope=mode==="full"?"All days":mode==="only"?`Day-${N}`:N===1?"Day-1":`Days 1–${N}`;
+    const agg=rows=>{ const s=Object.fromEntries(ICM_F.map(f=>[f,0])); for(const r of rows){ s.clusters++; for(const f of ICM_F) if(f!=="clusters") s[f]+=r.v[f]; } return icmM(s); };
+    const tier1=new Set(D.cov.filter(r=>r.camp===camp&&r.district===dist&&String(r.tier)==="1").map(r=>r.uc));
+    const IA=icamps.map(c=>agg(dermIcm(dist,c,iset))), IP=icamps.map(c=>agg(dermIcm(dist,c,iset,r=>tier1.has(r.uc))));
+    const campsTxt=icamps.map(campUp).join(" & ");
+    cover("ICM Cluster Data Analysis",`${iscope.replace("Day-","Day ")} - ${campUp(icmCamp)}`);
+    let s=base(`ICM by Recall and Finger-marking in Last ${icamps.length} SIAs (${iscope})`,"ICM");
+    s.addChart(pptx.ChartType.bar,[{name:"ICM By Recall",labels:icamps.map(campUp),values:IA.map(x=>x.recallPct||0)},{name:"ICM By F.M",labels:icamps.map(campUp),values:IA.map(x=>x.seenPct||0)}],
+      {x:.4,y:.85,w:9.2,h:4.35,barDir:"col",barGrouping:"clustered",chartColors:["8FAADC","00B050"],showValue:true,dataLabelFormatCode:"0%",valAxisLabelFormatCode:"0%",valAxisMaxVal:1,valAxisMinVal:0,showLegend:true,legendPos:"b",catAxisLabelFontSize:11,dataLabelFontSize:11,valGridLine:{style:"none"}});
+    const perf=A=>[["ICM on Recall",[["Total Clusters Taken",V(A,x=>x.clusters)],["Total HH Checked",V(A,x=>x.hh)],["Total Children Checked",V(A,x=>x.children)],["Total vaccinated Children",V(A,x=>x.vaccinated)],["Total Missed",V(A,x=>x.missed)],["% age on Recall",V(A,x=>x.recallPct,pctT),1]]],
+      ["Unrecorded Missed Children",[["Missed (Team did not visit house)",V(A,x=>x.nt)],["Team visited but missed child",V(A,x=>x.tv)]]],
+      ["ICM on FM Seen",[["Seen F.M <5Yr",V(A,x=>x.st)],["Verified F.M <5Y",V(A,x=>x.sv)],["Seen %age",V(A,x=>x.seenPct,pctT),1]]],
+      ["Other",[["Children vaccinated by monitor",V(A,x=>x.vm)],["Zero Dose",V(A,x=>x.ri)]]]];
+    s=base(`Summary of Intra-Campaign Monitoring (ICM) performance`,"ICM"); s.addText(`ICM performance - ${iscope} · ${campsTxt}`,{x:.45,y:.72,w:9,h:.25,fontFace:F,fontSize:9.5,bold:true,color:C.mute}); compTable(s,perf(IA),icamps,1.0,.285);
+    if(tier1.size&&IP.some(x=>x.clusters)){ s=base(`Summary of ICM for ${tier1.size} Tier-1 (priority) UCs - last ${icamps.length} SIAs`,"ICM"); s.addText(`ICM performance - ${iscope} · ${campsTxt}`,{x:.45,y:.72,w:9,h:.25,fontFace:F,fontSize:9.5,bold:true,color:C.mute}); compTable(s,perf(IP),icamps,1.0,.285); }
+    const reasons=A=>{ const pc=(x,f)=>pctT(div(f(x),x.missed)); return [["Total Missed",[["",V(A,x=>x.missed),1]]],["Team did not visit the house",[["Total NT reported",V(A,x=>x.nt)],["%age of NT",A.map(x=>pc(x,y=>y.nt))]]],["TVBMC",[["Total TVBMC reported",V(A,x=>x.tv)],["%age of TVBMC",A.map(x=>pc(x,y=>y.tv))]]],["NA",[["Total NA reported",V(A,x=>x.na)],["%age of NA",A.map(x=>pc(x,y=>y.na)),1]]],["Refusals",[["Total refusals reported",V(A,x=>x.ref)],["%age of Refusals",A.map(x=>pc(x,y=>y.ref))]]]]; };
+    s=base(`Reasons for missed children as identified during ICM`,"ICM"); s.addText(`Break-down of missed children during ICM - ${iscope} · ${campsTxt}`,{x:.45,y:.72,w:9,h:.25,fontFace:F,fontSize:9.5,bold:true,color:C.mute}); compTable(s,reasons(IA),icamps,1.05,.38);
+    s=base(`ICM vaccinated and reasons of missed children by recall in last ${icamps.length} SIAs (${iscope})`,"ICM");
+    const lb=icamps.map(campUp);
+    s.addChart(pptx.ChartType.bar,[["Vaccinated",x=>x.vaccinated],["Child Away (NA)",x=>x.na],["Refusal",x=>x.ref],["TVBMC",x=>x.tv],["NT",x=>x.nt]].map(([n,f])=>({name:n,labels:lb,values:IA.map(f)})),
+      {x:.4,y:.85,w:9.2,h:4.35,barDir:"bar",barGrouping:"percentStacked",chartColors:["339933","2F4B8F","2E9BD6","FFD700","E02424"],showValue:true,dataLabelFontSize:9,dataLabelColor:"FFFFFF",showLegend:true,legendPos:"b",valAxisLabelFormatCode:"0%"});
+    const tehs=[...new Set(icamps.flatMap(c=>dermIcm(dist,c,iset).map(r=>r.tehsil)))].filter(Boolean).sort();
+    s=base(`ICM recall coverage by tehsil in last ${icamps.length} SIAs (${iscope})`,"ICM");
+    s.addChart(pptx.ChartType.bar,icamps.map(c=>({name:campUp(c),labels:tehs.map(tc),values:tehs.map(t=>agg(dermIcm(dist,c,iset,r=>r.tehsil===t)).recallPct||0)})),
+      {x:.4,y:.85,w:9.2,h:4.35,barDir:"col",barGrouping:"clustered",chartColors:["2F4B8F","8FAADC","00B0F0"],showValue:true,dataLabelFormatCode:"0%",dataLabelFontSize:8,valAxisLabelFormatCode:"0%",valAxisMaxVal:1,valAxisMinVal:0,showLegend:true,legendPos:"b"});
+    /* this-round cluster tables */
+    const curRows=dermIcm(dist,icmCamp,iset);
+    const band=(v,lo,hi)=>v==null?undefined:{color:v<lo?"FF4D4D":v<hi?"FFFF00":"00B050"};
+    const wide=(rows,keyLab)=>{ const H=["# Clusters","0-59 CHK by recall","0-59 Vacc by recall","% by recall","Total missed","NT","TVBMC","NA","Refusal","Guest CHK","Guest Vacc","Seen by monitor","F.M 0-59","F.M %","Missed by FM","Vacc by monitor","0-Dose","NT %","TVBMC %","Away %","Refusal %"];
+      const out=[[hc(keyLab),...H.map(h=>hc(h,"1F3864"))]];
+      for(const [k,A] of rows){ const r4=A.nt+A.tv+A.na+A.ref, p=x=>pctT(div(x,r4)); const tot=k==="Grand Total";
+        out.push([cell(k,{bold:true,align:"left"}),cell(A.clusters),cell(A.children),cell(A.vaccinated),cell(pctT(A.recallPct),{fill:band(A.recallPct,.9,.95),bold:true}),cell(A.missed),cell(A.nt),cell(A.tv,{fill:A.tv?{color:"FFFF00"}:undefined}),cell(A.na),cell(A.ref),cell(A.g),cell(A.gv),cell(A.st),cell(A.sv),cell(pctT(A.seenPct),{fill:band(A.seenPct,.95,.95),bold:true}),cell(A.st-A.sv),cell(A.vm),cell(A.ri),cell(p(A.nt)),cell(p(A.tv)),cell(p(A.na)),cell(p(A.ref))].map(c=>tot?{...c,options:{...c.options,bold:true,fill:c.options.fill||{color:"E7E6E6"}}}:c)); }
+      return out; };
+    const isM=r=>/^(mmp|hrmp)$/i.test(r.pop);
+    s=base(`MMP ICM cluster data ${iscope} - ${campUp(icmCamp)}`,"ICM");
+    s.addTable(wide([["MMP",agg(curRows.filter(isM))],["NON-MMP",agg(curRows.filter(r=>!isM(r)))],["Grand Total",agg(curRows)]],"Population"),{x:.2,y:1.0,w:9.6,colW:[.9,...Array(21).fill(8.7/21)],fontFace:F,fontSize:7.5,rowH:.42,border:{type:"solid",pt:.5,color:"000000"},autoPage:false});
+    const byTeh=tehs.filter(t=>curRows.some(r=>r.tehsil===t)).map(t=>[tc(t),agg(curRows.filter(r=>r.tehsil===t))]).concat([["Grand Total",agg(curRows)]]);
+    s=base(`Tehsil-wise ICM cluster data ${iscope} - ${campUp(icmCamp)}`,"ICM");
+    s.addTable(wide(byTeh,"Tehsil"),{x:.2,y:.85,w:9.6,colW:[.9,...Array(21).fill(8.7/21)],fontFace:F,fontSize:7.5,rowH:Math.min(.4,4.1/(byTeh.length+1)),border:{type:"solid",pt:.5,color:"000000"},autoPage:false});
+    const des=[...new Set(curRows.map(r=>r.designation||"(blank)"))].sort((a,b)=>curRows.filter(r=>(r.designation||"(blank)")===b).length-curRows.filter(r=>(r.designation||"(blank)")===a).length).slice(0,11);
+    const dtRows=byTeh.slice(0,-1).map(([t])=>[t,...des.map(d=>curRows.filter(r=>tc(r.tehsil)===t&&(r.designation||"(blank)")===d).length),curRows.filter(r=>tc(r.tehsil)===t).length]);
+    s=base(`Designation-wise ICM cluster data ${iscope} - ${campUp(icmCamp)}`,"ICM");
+    s.addTable([[hc("Tehsil","1F3864"),...des.map(d=>hc(d.length>12?d.slice(0,11)+"…":d,"1F3864")),hc("Grand Total","1F3864")],...dtRows.map(r=>r.map((v,i)=>cell(i&&!v?"":v,{bold:i===0||i===r.length-1,align:i?"center":"left"}))),
+      [cell("TOTAL",{bold:true,align:"left"}),...des.map(d=>cell(curRows.filter(r=>(r.designation||"(blank)")===d).length,{bold:true})),cell(curRows.length,{bold:true})]],
+      {x:.3,y:.9,w:9.4,fontFace:F,fontSize:10,rowH:Math.min(.45,4.1/(dtRows.length+2)),border:{type:"solid",pt:.5,color:"808080"},autoPage:false});
+    /* UC lists */
+    const ucList=(t,rows)=>{ const per=14, pages=Math.max(1,Math.ceil(rows.length/per));
+      for(let p=0;p<pages;p++){ const s=base(t+(pages>1?` (${p+1}/${pages})`:""),"ICM"); s.addText(`ICM performance - ${iscope} · ${campsTxt}`,{x:.45,y:.72,w:9,h:.25,fontFace:F,fontSize:9.5,bold:true,color:C.mute});
+        const part=rows.slice(p*per,p*per+per); s.addTable([[hc("Tehsil",C.red),hc("UC",C.red),hc("Campaign",C.red)],...(part.length?part.map(r=>[cell(tc(r[0]),{align:"left"}),cell(r[1],{align:"left"}),cell(campUp(r[2]))]):[[cell("None"),cell("—"),cell("—")]])],
+          {x:.45,y:1.05,w:9.1,colW:[2.6,3.9,2.6],fontFace:F,fontSize:10,rowH:.28,border:{type:"solid",pt:.5,color:"9E9E9E"},autoPage:false}); } };
+    const zero=[], clean=[];
+    for(const c of icamps){ const covCamp=D.covCamps.find(x=>campKey(x)===campKey(c)); const ucs=new Map(); for(const r of D.cov) if(r.camp===covCamp&&r.district===dist) ucs.set(r.uc,r.tehsil);
+      const rows=dermIcm(dist,c,iset), by=new Map(); for(const r of rows){ const o=by.get(r.uc)||by.set(r.uc,{t:r.tehsil,n:0,m:0}).get(r.uc); o.n++; o.m+=r.v.a1+r.v.a2-r.v.a1c-r.v.a2c; }
+      for(const [u,t] of [...ucs].sort((a,b)=>(a[1]+a[0]).localeCompare(b[1]+b[0]))) if(!by.has(u)) zero.push([t,u,c]);
+      for(const [u,o] of [...by].sort((a,b)=>(a[1].t+a[0]).localeCompare(b[1].t+b[0]))) if(o.m<=0) clean.push([o.t,u,c]); }
+    ucList("UCs with zero ICM clusters",zero); ucList("UCs where ICM found no missed children",clean);
+  }
+  say("Saving the file…");
+  const fn=`ERM ${tc(dist)} ${scope.replace("'","")} ${camp}.pptx`.replace(/[\\/:*?"<>|]/g,"-");
+  await pptx.writeFile({fileName:fn});
+  return no;
+}
 </script>
 <script>
 "use strict";
@@ -1885,7 +2175,7 @@ function pgIcmSpot(el){
   ${sameSpotCard(allPts)}
   <div class="g2">
     <div class="card"><div class="card-h"><div><h3>Uploaded from the wrong place</h3><p>${wrong.filter(r=>r.band===2).length} more than 5 km out · ${wrong.filter(r=>r.band===1).length} borderline · furthest first</p></div></div><div class="tw tall" id="wr">${tableHTML([{k:"uc",t:"UC on the record",l:1,fn:r=>`<b>${esc(tc(r.uc))}</b><span class="sub">${esc(tc(r.tehsil))} · ${esc(tc(r.district))}</span>`},{k:"designation",t:"Designation",l:1,fn:r=>`<span title="${esc(r.designation)}">${esc(r.designation.length>30?r.designation.slice(0,28)+"…":r.designation)}</span>`,sv:r=>r.designation},{k:"day",t:"Day",fn:r=>`<span class="tag">${esc(r.day)}</span>`},{k:"kmOut",t:"Km out",fn:r=>`<b style="color:${SPOT_BAND[r.band].c}">${(r.kmOut||0).toFixed(1)}</b>`},{k:"standing",t:"Actually standing in",l:1,fn:r=>r.standing?`${esc(tc(r.standing))}<span class="sub">${esc(tc(r.standingD))}</span>`:`<span class="note">${esc(tc(r.standingD||"—"))}</span>`}],wrong.slice(0,400).map(r=>({...r,_k:r.district+"|"+r.uc})),{onRow:1})}</div></div>
-    <div class="card"><div class="card-h"><div><h3>Every district: UCs left without a single ICM cluster</h3><p>${esc(S.icm.camp)}${S.icm.day?" · day "+esc(S.icm.day):""}${S.icm.designation?" · "+esc(S.icm.designation):""}</p></div></div><div class="tw tall">${tableHTML([{k:"_k",t:"District",l:1,fn:r=>`<b>${esc(tc(r._k))}</b>`},{k:"total",t:"Union councils"},{k:"worked",t:"Worked"},{k:"missed",t:"Missed"},{k:"pct",t:"Missed %",ind:{f:P,band:[.05,.15],hb:false}},{k:"list",t:"Union councils missed",l:1,fn:r=>`<span style="white-space:normal;display:block;min-width:220px">${r.list.slice(0,12).map(u=>esc(tc(u))).join(", ")||'<span class="note">none</span>'}${r.list.length>12?` <span class="note">and ${r.list.length-12} more</span>`:""}</span>`}],cov)}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Every district: UCs left without a single ICM cluster</h3><p>${esc(S.icm.camp)}${S.icm.days.length?" · day "+esc(S.icm.days.join(" + ")):""}${S.icm.designation?" · "+esc(S.icm.designation):""}</p></div></div><div class="tw tall">${tableHTML([{k:"_k",t:"District",l:1,fn:r=>`<b>${esc(tc(r._k))}</b>`},{k:"total",t:"Union councils"},{k:"worked",t:"Worked"},{k:"missed",t:"Missed"},{k:"pct",t:"Missed %",ind:{f:P,band:[.05,.15],hb:false}},{k:"list",t:"Union councils missed",l:1,fn:r=>`<span style="white-space:normal;display:block;min-width:220px">${r.list.slice(0,12).map(u=>esc(tc(u))).join(", ")||'<span class="note">none</span>'}${r.list.length>12?` <span class="note">and ${r.list.length-12} more</span>`:""}</span>`}],cov)}</div></div>
   </div>
   <div class="card"><div class="card-h"><div><h3>GPS check by union council</h3><p>Click a column to sort · click a UC to focus the map</p></div></div><div class="tw tall" id="pu">${tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k},{k:"clusters"},{k:"right",t:"Right place"},{k:"border",t:"Borderline"},{k:"wrongN",t:"Wrong place"},{k:"wp",t:"Wrong place %",ind:{f:P,band:[.02,.1],hb:false}}],perUC,{id:"puc",onRow:1})}</div></div>`;
   $$("[data-mode]",el).forEach(b=>b.onclick=()=>{S.spot.color=b.dataset.mode;render();});
