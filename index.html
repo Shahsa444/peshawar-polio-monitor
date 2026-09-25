@@ -750,6 +750,9 @@ function parseCSV(text){
 const MONTHS={JAN:1,FEB:2,MAR:3,APR:4,MAY:5,JUN:6,JUL:7,AUG:8,SEP:9,OCT:10,NOV:11,DEC:12};
 function campRank(n){ const m=String(n).toUpperCase().match(/(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*[^0-9]*(\d{4})/); return m?(+m[2])*100+MONTHS[m[1]]:0; }
 const campKey=n=>up(n).replace(/\s+/g," ");
+/* special (partial-area) rounds are never used as the "previous round" in comparisons */
+const isSpecial=c=>/special/i.test(String(c));
+const fullRound=(c,cur)=>c===cur||!isSpecial(c);
 const shortCamp=c=>String(c).replace(/^KP-Special-1-/i,"Special ");
 const tinyCamp=c=>{ const m=String(c).match(/^(\S*?)\s*(JAN|FEB|MAR|APR|MAY|JUN|JUL|AUG|SEP|OCT|NOV|DEC)[A-Z]*\s*(\d{4})/i); if(!m) return c; const pre=/special/i.test(c)?"Spl ":/^SNID/i.test(c)?"SNID ":""; return pre+m[2][0].toUpperCase()+m[2].slice(1).toLowerCase()+" '"+m[3].slice(2); };
 
@@ -796,7 +799,7 @@ function covM(s){
     targetGap:s.neap-(hhCov+still),
     hhcovPct:div(hhCov,s.neap),dailyPct:div(hhCov,s.hhmp),overallPct:div(hhOther,s.neap),sdc:div(s.cd,s.recna+s.recref),
     msTar:div(still,s.neap),msRec:div(still,recMissed),mmpPct:div(s.mob,s.reg),zeroPct:div(s.zeroh,s.hhvisit),lockedPct:div(s.locked,s.hhvisit),
-    wastage:div(s.opvu-hhOther,s.opvu),rmPct:div(recMissed,s.neap),covOfRec:div(covMissed,recMissed),refCov:div(s.covref,s.recref),opvUsedPct:div(s.opvu,s.opvg)};
+    wastage:div(s.opvu-hhOther,s.opvu),rmPct:div(recMissed,s.neap),covOfRec:div(covMissed,recMissed),refCov:div(s.covref,s.recref),opvUsedPct:div(s.opvu,s.opvg),zdRate:hhCov?s.zerod/hhCov*1000:null};
   const sc=[band3(m.hhcovPct,v=>v>=.95&&v<=1.05,v=>(v>=.8&&v<.95)||(v>1.05&&v<=1.2)),band3(m.rmPct,v=>v>=.02&&v<=.2,v=>v>.2&&v<.4),
     band3(m.sdc,v=>v>=.3&&v<=1,v=>v>=.2&&v<.3),band3(m.covOfRec,v=>v>=.95&&v<=1,v=>v>=.8&&v<.95),
     band3(m.refCov,v=>v>=.95&&v<=1,v=>v>=.7&&v<.95),band3(m.msTar,v=>v>=0&&v<=.0075,v=>v>.0075&&v<=.02)];
@@ -819,8 +822,8 @@ const IND={
   overallPct:{t:"Total coverage %",f:P,band:[.85,.95],hb:true,d:"HH + other coverage (school, guests, fixed, transit, out-of-house) ÷ NEAP target"},
   dailyPct:{t:"Daily HH coverage %",f:P,band:[.85,.95],hb:true,d:"HH covered ÷ daily micro-plan target"},
   sdc:{t:"Same-day coverage (SDC%)",f:P,band:[.395,null],hb:true,d:"Missed children covered on the campaign day ÷ recorded NA + refusals"},
-  msTar:{t:"MS% (of target)",f:P,dp:2,band:[.0075,.02],hb:false,d:"Total still-missed children ÷ NEAP target"},
-  msRec:{t:"MS% (of recorded)",f:P,band:[.05495,null],hb:false,d:"Total still-missed children ÷ recorded missed children"},
+  msTar:{t:"SM% (of target)",f:P,dp:2,band:[.0075,.02],hb:false,d:"Total still-missed children ÷ NEAP target"},
+  msRec:{t:"SM% (of recorded)",f:P,band:[.05495,null],hb:false,d:"Total still-missed children ÷ recorded missed children"},
   mmpPct:{t:"MMP coverage %",f:P,band:[.85,.95],hb:true,d:"Mobile / migrant children covered ÷ registered MMP"},
   score:{t:"UC score %",f:P,band:[.6,.8],hb:true,d:"Six scored indicators out of 18: coverage, recorded missed, SDC, missed covered, refusals covered, still missed"},
   wastage:{t:"Wastage %",f:P,band:[0,.10],rng:true,hb:false,d:"(OPV used − children vaccinated) ÷ OPV used"},
@@ -839,7 +842,7 @@ const IND={
   stillNA:{t:"Still NA",f:N,bad:true,d:"Recorded NA − covered NA"}, stillRef:{t:"Still refusals",f:N,bad:true,d:"Recorded refusals − covered refusals"},
   stillLO:{t:"Still leftover",f:N,bad:true}, still:{t:"Total still missed",f:N,bad:true,d:"Still NA + still refusals + still leftover"},
   reg:{t:"Registered MMP",f:N,d:"Mobile / migrant children registered"}, mob:{t:"MMP coverage",f:N,d:"Mobile / migrant children covered"},
-  newborn:{t:"New born",f:N}, zerod:{t:"Zero dose",f:N,bad:true}, hhplan:{t:"HH plan",f:N}, hhvisit:{t:"HH visited",f:N}, diffHH:{t:"Difference in HH",f:N},
+  newborn:{t:"New born",f:N}, zerod:{t:"Zero dose recorded",f:N,d:"Zero-dose children recorded (campaign days + catch-up + after catch-up)"}, zdRate:{t:"Zero dose per 1,000 vaccinated",f:"dec",d:"Zero-dose children recorded ÷ children vaccinated in houses × 1,000 — UCs far below the division rate are probably not recording zero-dose children"}, hhplan:{t:"HH plan",f:N}, hhvisit:{t:"HH visited",f:N}, diffHH:{t:"Difference in HH",f:N},
   zeroh:{t:"Zero houses",f:N}, locked:{t:"Locked HH",f:N}, afp:{t:"AFP cases",f:N,bad:true}, opvg:{t:"OPV given",f:N}, opvu:{t:"OPV used",f:N},
   covStill:{t:"Coverage + still missed",f:N}, targetGap:{t:"Target − (coverage + still missed)",f:N},
   // ICM
@@ -855,11 +858,11 @@ const IND={
   ntTv:{t:"NT + TVBMC",f:N,bad:true}, g:{t:"Guests",f:N}, st:{t:"Seen total",f:N}
 };
 for(const k in IND) IND[k].k=k;
-const COV_MAP_IND=["hhcovPct","overallPct","dailyPct","sdc","stillNA","stillRef","still","msTar","msRec","mmpPct","reg","mob","score","wastage","zeroPct","lockedPct","refCov","covOfRec","zerod","afp","neap","hhCov"];
+const COV_MAP_IND=["hhcovPct","overallPct","dailyPct","sdc","stillNA","stillRef","still","msTar","msRec","mmpPct","reg","mob","score","wastage","zeroPct","lockedPct","refCov","covOfRec","zerod","zdRate","afp","neap","hhCov"];
 const ICM_MAP_IND=["recallPct","seenPct","nt","tv","pc","ma","missed","clusters","hh","na","ref","ri","ff","vm"];
 
 /* ---------------- formatting & bands ---------------- */
-function fmt(v,ind){ if(v==null||!isFinite(v)) return "–"; if(ind&&ind.f===P) return (v*100).toFixed(ind.dp??1)+"%"; if(ind&&ind.f==="txt") return esc(v); return nf.format(Math.round(v)); }
+function fmt(v,ind){ if(v==null||!isFinite(v)) return "–"; if(ind&&ind.f===P) return (v*100).toFixed(ind.dp??1)+"%"; if(ind&&ind.f==="txt") return esc(v); if(ind&&ind.f==="dec") return (+v).toFixed(1); return nf.format(Math.round(v)); }
 function bandOf(ind,v){ if(!ind||!ind.band||v==null||!isFinite(v)) return null; const [lo,hi]=ind.band;
   if(ind.rng) return v>=lo&&v<=hi?"pass":"fail";
   if(ind.hb){ if(hi==null) return v>=lo?"pass":"fail"; return v>=hi?"pass":v>=lo?"watch":"fail"; }
@@ -1263,7 +1266,7 @@ function pgCovReport(el){
   const byCamp=covAgg(covRows({camp:""}),r=>r.camp);
   /* only rounds actually conducted in the selected area (target or coverage reported) */
   const held=c=>{ const a=byCamp.get(c); return !!a&&((a.neap||0)>0||(a.hhCov||0)>0); };
-  const done=camps.slice(0,iC+1).filter(c=>c===cur||held(c));
+  const done=camps.slice(0,iC+1).filter(c=>c===cur||(held(c)&&!isSpecial(c)));
   const prevC=done[done.indexOf(cur)-1];
   const T=one(covAgg(covRows())), Pv=prevC?one(covAgg(covRows({camp:prevC}))):null;
   const last3=done.slice(-3);
@@ -1275,6 +1278,7 @@ function pgCovReport(el){
     <div class="kband">${kpi(IND.neap,T?.neap,Pv?.neap,prevC)}${kpi(IND.hhCov,T?.hhCov,Pv?.hhCov,prevC)}${kpi(IND.sdc,T?.sdc,Pv?.sdc,prevC)}${kpi(IND.still,T?.still,Pv?.still,prevC)}${kpi(IND.msTar,T?.msTar,Pv?.msTar,prevC)}${kpi(IND.mmpPct,T?.mmpPct,Pv?.mmpPct,prevC)}${kpi(IND.score,T?.score,Pv?.score,prevC)}${kpi(IND.wastage,T?.wastage,Pv?.wastage,prevC)}</div>
   ${neapResourceBand()}
   ${covGlanceHTML(T)}
+  ${zeroDoseSection()}
   <div class="sec-h"><h2>Round on round</h2><p>${esc(last3.join(" · "))} · ${esc(scopeName())}</p></div>
   <div class="g2">
     <div class="card"><div class="card-h"><div><h3>Total coverage comparison</h3><p>Target and every child vaccinated, in and out of house</p></div></div><div class="tw">${tableHTML([campCol,{k:"neap",t:"Total target"},{k:"hhOther",t:"Total coverage"},{k:"overallPct",t:"Total coverage %",bg:1}],rowsFor(),{cur:r=>r.camp===cur})}</div></div>
@@ -1298,7 +1302,7 @@ function pgCovReport(el){
     <div class="card"><div class="card-h"><div><h3>Top 10 UCs: HH target vs coverage + still missed</h3><p>${esc(rc)} · biggest gap either way</p></div></div><div class="tw" id="rk4"></div></div>
   </div>
   ${footer(["hhcovPct","overallPct","sdc","msTar","msRec","mmpPct","score","wastage","zeroPct","lockedPct"])}`;
-  const pts=k=>camps.map(c=>({label:c,v:byCamp.get(c)?.[k],hl:c===cur}));
+  const pts=k=>camps.filter(c=>fullRound(c,cur)).map(c=>({label:c,v:byCamp.get(c)?.[k],hl:c===cur}));
   barsSVG($("#ch1"),pts("overallPct"),IND.overallPct); barsSVG($("#ch2"),pts("hhcovPct"),IND.hhcovPct); barsSVG($("#ch3"),pts("sdc"),IND.sdc);
   const U=[...ucs].map(([k,m])=>({_k:k,...m}));
   const ucc={k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)};
@@ -1309,7 +1313,7 @@ function pgCovReport(el){
   $("#rk4").innerHTML=tableHTML([ucc,{k:"neap",t:"HH target"},{k:"covStill"},{k:"targetGap",t:"Difference"}],top(U.filter(r=>r.neap>0),r=>Math.abs(r.targetGap),10),{rank:1,onRow:1});
   $$("#rk1,#rk2,#rk3,#rk4").forEach(t=>wireTable(t,null,pickUC));
   $("#rank-camp").onchange=e=>{S.cov.rankCamp=e.target.value;render();};
-  wireScoreCards();
+  wireScoreCards(); wireZeroDose();
 }
 
 /* =====================================================================
@@ -1354,14 +1358,46 @@ function bigMap(vals,ind,campLabel,extra){
     c=>bindMap($("#bigm",c),vals,ind,{extra,zoom:true,campLabel}));
 }
 
+
+/* =====================================================================
+   ZERO-DOSE RECORDING — which UCs are silent (none recorded) or low
+   ===================================================================== */
+function zdList(rows){ return [...covAgg(rows,ucKey)].map(([k,m])=>({_k:k,district:k.split("|")[0],teh:D.tehOf.get(k)||"",...m})).filter(r=>r.hhCov>0); }
+function zdRef(){ const v=zdList(covRows({geo:"none"})).map(r=>r.zdRate).filter(x=>x!=null&&isFinite(x)).sort((a,b)=>a-b); return v.length?v[Math.floor(v.length/2)]:null; }
+function zdStatus(r,ref){ if(!r.zerod) return "Silent"; if(ref!=null&&r.zdRate<ref*.5) return "Low"; return "OK"; }
+const zdPill=s=>s==="Silent"?'<span class="pill fail">Silent</span>':s==="Low"?'<span class="pill watch">Low</span>':'<span class="pill pass">OK</span>';
+function zdSummary(U,ref){ const lv=S.geo.district?"tehsil":"district", g=new Map();
+  for(const r of U){ const k=lv==="district"?r.district:r.teh; const o=g.get(k)||g.set(k,{_k:k,ucs:0,zerod:0,hh:0,silent:0,low:0}).get(k);
+    o.ucs++; o.zerod+=r.zerod; o.hh+=r.hhCov; const s=zdStatus(r,ref); if(s==="Silent") o.silent++; if(s==="Low") o.low++; }
+  const rows=[...g.values()].map(o=>({...o,rate:o.hh?o.zerod/o.hh*1000:null,share:o.ucs?(o.silent+o.low)/o.ucs:null})).sort((a,b)=>String(a._k).localeCompare(b._k));
+  const T=rows.reduce((a,o)=>({ucs:a.ucs+o.ucs,zerod:a.zerod+o.zerod,hh:a.hh+o.hh,silent:a.silent+o.silent,low:a.low+o.low}),{ucs:0,zerod:0,hh:0,silent:0,low:0});
+  return {lv,rows,tot:{_k:"",_tot:1,...T,rate:T.hh?T.zerod/T.hh*1000:null,share:T.ucs?(T.silent+T.low)/T.ucs:null}}; }
+const ZD_SHARE={f:P,band:[.1,.25],hb:false};
+function zdSumCols(lv){ return [{k:"_k",t:lv==="district"?"District":"Tehsil",l:1,fn:r=>r._tot?`<b>${esc(scopeName())}</b>`:`<b>${esc(tc(r._k))}</b>`,sv:r=>r._k},{k:"ucs",t:"UCs reporting"},{k:"zerod",t:"Zero dose recorded"},
+  {k:"rate",t:"Per 1,000 vaccinated",fmt:v=>v==null?"–":(+v).toFixed(1)},{k:"silent",t:"Silent UCs (none recorded)"},{k:"low",t:"Low-recording UCs"},{k:"share",t:"Silent + low share",ind:ZD_SHARE,bg:1}]; }
+function zdUcCols(ref){ return [{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k.split("|")[1]},{k:"hhCov",t:"Vaccinated in houses"},{k:"zerod",t:"Zero dose recorded"},
+  {k:"zdRate",t:"Per 1,000 vaccinated",fmt:v=>v==null?"–":(+v).toFixed(1)},{k:"st",t:"Status",fn:r=>zdPill(r.st),sv:r=>r.st==="Silent"?0:r.st==="Low"?1:2}]; }
+function zeroDoseSection(){
+  const ref=zdRef(), U=zdList(covRows()).map(r=>({...r,st:zdStatus(r,ref)})); if(!U.length) return "";
+  const {lv,rows,tot}=zdSummary(U,ref);
+  const flag=U.filter(r=>r.st!=="OK").sort((a,b)=>(a.st==="Silent"?0:1)-(b.st==="Silent"?0:1)||a.zdRate-b.zdRate||b.hhCov-a.hhCov);
+  return `<div class="sec-h"><h2>Zero-dose recording</h2><p>${esc(S.cov.camp)} · silent = no zero-dose child recorded · low = under half the division rate (${ref==null?"–":ref.toFixed(1)} per 1,000 vaccinated)</p></div>
+  <div class="kband">${kpi(IND.zerod,tot.zerod)}${kpi({t:"Zero dose per 1,000 vaccinated",f:"dec"},tot.rate)}${kpi({t:"Silent UCs",f:N},tot.silent)}${kpi({t:"Low-recording UCs",f:N},tot.low)}</div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>Zero dose by ${lv}</h3><p>${esc(scopeName())} · how many UCs are silent or low</p></div></div><div class="tw">${tableHTML(zdSumCols(lv),[...rows,tot],{id:"zds"})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Silent and low-recording UCs</h3><p>${nf.format(flag.length)} of ${nf.format(U.length)} UCs · silent first · <a href="#/cov/tables" id="zd-all">see every UC</a></p></div></div><div class="tw tall" id="zdl">${tableHTML(zdUcCols(ref),flag.slice(0,25),{rank:1,onRow:1})}</div></div>
+  </div>`;
+}
+function wireZeroDose(){ const l=$("#zdl"); if(l) wireTable(l,null,pickUC); const a=$("#zd-all"); if(a) a.onclick=()=>{ S.covTable="zero"; }; const s=$("table[data-tid=zds]"); if(s) wireTable(s.parentElement,render); }
+
 /* =====================================================================
    COVERAGE REPORT TABLES (Division level, District comparative, UC level …)
    ===================================================================== */
 const DIV_ROWS=[["Target",["neap","tsTarget"]],["HH coverage",["cd","dailyPct","cu","ac","loc","hhCov","hhcovPct","hhOther","overallPct"]],
   ["Missed children",["recna","recref","reclo","recMissed","covna","covref","covMissed","sdc","stillNA","stillRef","stillLO","still","msRec","msTar"]],
   ["Other coverage",["outhh","school","transit","fix","guest","other"]],["MMP",["reg","mob","mmpPct"]],
-  ["Houses",["hhplan","hhvisit","diffHH","zeroh","locked","zeroPct","lockedPct"]],["Quality",["newborn","zerod","afp","opvg","opvu","wastage","score"]]];
-const COV_TABLES=[["division","Division level"],["district","District comparative"],["uc","UC level"],["less","Tehsil-wise less coverage"],["afp","AFP cases"],["wastage","Wastage %"],["transit","Transit teams"],["camps","Camps report"],["microplan","Micro-plan target difference"]];
+  ["Houses",["hhplan","hhvisit","diffHH","zeroh","locked","zeroPct","lockedPct"]],["Zero dose",["zerod","zdRate"]],["Quality",["newborn","afp","opvg","opvu","wastage","score"]]];
+const COV_TABLES=[["division","Division level"],["district","District comparative"],["uc","UC level"],["zero","Zero-dose recording"],["less","Tehsil-wise less coverage"],["afp","AFP cases"],["wastage","Wastage %"],["transit","Transit teams"],["camps","Camps report"],["microplan","Micro-plan target difference"]];
 function pgCovTables(el){
   const t=S.covTable;
   el.innerHTML=`<div class="chips" role="tablist" aria-label="Report">${COV_TABLES.map(([k,l])=>`<button class="chip" data-t="${k}" aria-pressed="${k===t}">${l}</button>`).join("")}</div><div id="tb"></div>`;
@@ -1382,10 +1418,19 @@ function pgCovTables(el){
     let U=[...covAgg(covRows(),ucKey)].map(([k,m])=>({_k:k,teh:D.tehOf.get(k)||"",...m}));
     if(t==="less") U=U.filter(r=>r.hhcovPct!=null&&r.hhcovPct<.95);
     const q=(S.search.uc||"").toUpperCase(); if(q) U=U.filter(r=>r._k.includes(q)||r.teh.includes(q));
-    const cols=[{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k.split("|")[1]},{k:"neap"},{k:"tsTarget"},{k:"hhCov"},{k:"hhcovPct",bg:1},{k:"hhOther"},{k:"overallPct",bg:1},{k:"sdc",bg:1},{k:"stillNA"},{k:"stillRef"},{k:"still"},{k:"msRec",bg:1},{k:"msTar",bg:1},{k:"reg"},{k:"mmpPct",bg:1},{k:"zeroPct",bg:1},{k:"lockedPct",bg:1},{k:"wastage",bg:1},{k:"score",bg:1},{k:"category",t:"Performance",fn:r=>r.category?`<span class="pill ${r.category==="Satisfactory"?"pass":r.category==="Poor performing"?"fail":"watch"}">${r.category}</span>`:"",sv:r=>r.score}];
+    const cols=[{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k),sv:r=>r._k.split("|")[1]},{k:"neap"},{k:"tsTarget"},{k:"hhCov"},{k:"hhcovPct",bg:1},{k:"hhOther"},{k:"overallPct",bg:1},{k:"sdc",bg:1},{k:"stillNA"},{k:"stillRef"},{k:"still"},{k:"msRec",bg:1},{k:"msTar",bg:1},{k:"reg"},{k:"mmpPct",bg:1},{k:"zerod"},{k:"zdRate"},{k:"zeroPct",bg:1},{k:"lockedPct",bg:1},{k:"wastage",bg:1},{k:"score",bg:1},{k:"category",t:"Performance",fn:r=>r.category?`<span class="pill ${r.category==="Satisfactory"?"pass":r.category==="Poor performing"?"fail":"watch"}">${r.category}</span>`:"",sv:r=>r.score}];
     if(!S.sort["ucl"]) S.sort["ucl"]={k:t==="less"?"hhcovPct":"score",d:1};
     tb.innerHTML=card(t==="less"?"UCs below 95% HH coverage":"UC level",`${esc(S.cov.camp)} · ${U.length} union councils · click a column to sort`,tableHTML(cols,U,{id:"ucl",onRow:1,cur:r=>isPicked({district:r._k.split("|")[0],name:r._k.split("|")[1]})}),`<input class="inp" id="ucq" type="search" placeholder="Search UC or tehsil" aria-label="Search" value="${esc(S.search.uc||"")}" style="width:220px">`);
     wireTable($("#tt"),rer,pickUC); const qi=$("#ucq"); qi.oninput=()=>{S.search.uc=qi.value; const p=qi.selectionStart; rer(); const n=$("#ucq"); n.focus(); n.setSelectionRange(p,p);};
+  } else if(t==="zero"){
+    const ref=zdRef(); let U=zdList(covRows()).map(r=>({...r,st:zdStatus(r,ref)}));
+    const {lv,rows,tot}=zdSummary(U,ref);
+    const q=(S.search.uc||"").toUpperCase(); if(q) U=U.filter(r=>r._k.includes(q)||r.teh.includes(q));
+    if(!S.sort.zdu) S.sort.zdu={k:"st",d:1};
+    tb.innerHTML=`<div class="card"><div class="card-h"><div><h3>Zero dose by ${lv}</h3><p>${esc(S.cov.camp)} · low = under half the division rate (${ref==null?"–":ref.toFixed(1)} per 1,000 vaccinated)</p></div></div><div class="tw">${tableHTML(zdSumCols(lv),[...rows,tot],{id:"zds2"})}</div></div>`
+      +card("Zero-dose recording by union council",`${esc(S.cov.camp)} · ${U.length} union councils · silent = none recorded`,tableHTML(zdUcCols(ref),U,{id:"zdu",onRow:1}),`<input class="inp" id="ucq" type="search" placeholder="Search UC or tehsil" aria-label="Search" value="${esc(S.search.uc||"")}" style="width:220px">`);
+    wireTable($("#tt"),rer,pickUC); wireTable($("table[data-tid=zds2]").parentElement,rer);
+    const qi=$("#ucq"); qi.oninput=()=>{S.search.uc=qi.value; const p=qi.selectionStart; rer(); const n=$("#ucq"); n.focus(); n.setSelectionRange(p,p);};
   } else if(t==="afp"){
     const rows=covRows().filter(r=>r.v.afp>0).map(r=>({_k:r.district+"|"+r.uc,day:r.day,afp:r.v.afp}));
     tb.innerHTML=card("AFP cases reported during the campaign",`${esc(S.cov.camp)} · ${nf.format(rows.reduce((a,r)=>a+r.afp,0))} cases`,tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)},{k:"day",t:"Day",fn:r=>`<span class="tag">${esc(r.day||"–")}</span>`},{k:"afp"}],rows,{onRow:1}));
@@ -1409,7 +1454,7 @@ function pgCovTables(el){
       ...cs.map(c=>({k:"p"+c,t:"HH plan · "+shortCamp(c)})),...cs.map(c=>({k:"m"+c,t:"MMP covered · "+shortCamp(c)})),...cs.map(c=>({k:"c"+c,t:"HH cov % · "+shortCamp(c),ind:IND.hhcovPct}))],out,{onRow:1}));
     wireTable($("#tt"),rer,pickUC);
   } else if(t==="microplan"){
-    const cs=D.covCamps, cur=S.cov.camp, prev=S.search.mpPrev&&cs.includes(S.search.mpPrev)?S.search.mpPrev:cs[Math.max(0,cs.indexOf(cur)-1)];
+    const cs=D.covCamps, cur=S.cov.camp, prev=S.search.mpPrev&&cs.includes(S.search.mpPrev)?S.search.mpPrev:(cs.slice(0,cs.indexOf(cur)).filter(c=>!isSpecial(c)).at(-1)||cs[Math.max(0,cs.indexOf(cur)-1)]);
     const a=covAgg(covRows({camp:prev}),ucKey,{noDay:1}), b=covAgg(covRows({camp:cur}),ucKey,{noDay:1});
     const keys=new Set([...a.keys(),...b.keys()]); const U=[...keys].map(k=>({_k:k,a:a.get(k)?.neap,b:b.get(k)?.neap,d:(b.get(k)?.neap||0)-(a.get(k)?.neap||0)})).filter(r=>r.a||r.b);
     if(!S.sort.mp) S.sort.mp={k:"d",d:1};
@@ -1426,7 +1471,7 @@ const DCOL={CHARSADA:["#2a78d6","#3987e5"],KHYBER:["#1baf7a","#199e70"],MOHMAND:
 const isDark=()=>matchMedia("(prefers-color-scheme: dark)").matches&&document.documentElement.dataset.theme!=="light"||document.documentElement.dataset.theme==="dark";
 let raceTimer=null;
 function pgCovRace(el){
-  const mk=S.race.m, ind=IND[mk], camps=D.covCamps;
+  const mk=S.race.m, ind=IND[mk], camps=D.covCamps.filter(c=>!isSpecial(c));
   const frames=camps.map(c=>{ const a=covAgg(covRows({camp:c}),ucKey); return {c,vals:new Map([...a].map(([k,m])=>[k,m[mk]]))}; });
   el.innerHTML=`<div class="card lift"><div class="card-h"><div><h3>${esc(ind.t)} — the 15 highest union councils, round by round</h3><p>${esc(scopeName())} · bars are coloured by district</p></div>
     <div class="race-ctl"><div class="seg">${[["stillNA","Still NA"],["stillRef","Still refusals"],["still","Still missed"]].map(([k,l])=>`<button data-m="${k}" aria-pressed="${k===mk}">${l}</button>`).join("")}</div><button class="btn pri" id="play">Play rounds</button></div></div>
@@ -1552,7 +1597,7 @@ function donutHTML(parts,o={}){
   let s=`<svg class="donut" viewBox="0 0 160 160" role="img" aria-label="${esc(o.label||"")}"><circle cx="80" cy="80" r="${R}" fill="none" stroke="var(--sunk)" stroke-width="22"/>`;
   P2.forEach((p,i)=>{ const len=tot?p.v/tot*C:0; if(len>.2) s+=`<circle class="dseg" cx="80" cy="80" r="${R}" fill="none" stroke="${p.c}" stroke-width="22" stroke-dasharray="${len.toFixed(2)} ${(C-len).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 80 80)" style="animation-delay:${(i*.12).toFixed(2)}s"><title>${esc(p.l)}: ${nf.format(Math.round(p.v))}</title></circle>`; off+=len; });
   s+=`<text class="cu dn-v" x="80" y="80" text-anchor="middle">${nf.format(Math.round(tot))}</text><text class="dn-l" x="80" y="99" text-anchor="middle">${esc(o.center||"total")}</text></svg>`;
-  return `<div class="dwrap">${s}<div class="dleg">${P2.map(p=>`<div class="dl-r"><i style="background:${p.c}"></i><span>${esc(p.l)}</span><b>${nf.format(Math.round(p.v))}</b><em>${tot?(p.v/tot*100).toFixed(1)+"%":"–"}</em></div>`).join("")}</div></div>`;
+  return `<div class="dwrap">${s}<div class="dleg">${P2.map(p=>`<div class="dl-r"><i style="background:${p.c}"></i><span>${esc(p.l)}</span><b>${nf.format(Math.round(p.v))}</b><em>${(o.base??tot)?(p.v/(o.base??tot)*100).toFixed(1)+"%":"–"}</em></div>`).join("")}</div></div>`;
 }
 /* horizontal bars (HTML) — rows: {k,label,v,txt,sub} */
 function hbarsHTML(rows,ind,o={}){
@@ -1576,7 +1621,7 @@ function scoreCardsHTML(){
   const lab=k=>lv==="uc"?tc(k.split("|")[1]):tc(k);
   return `<div class="sec-h"><h2>${lv==="district"?"Districts":lv==="tehsil"?"Tehsils of "+esc(tc(S.geo.district)):"Selected union councils"} at a glance</h2><p>${esc(S.cov.camp)} · ring = HH coverage %${lv!=="uc"?" · click a card to filter":""}</p></div>
   <div class="scards" id="scards">${list.map(([k,x],i)=>`<div class="sc${lv!=="uc"?" click":""}"${lv!=="uc"?` role="button" tabindex="0" data-k="${esc(k)}"`:""} style="animation-delay:${i*60}ms">${ringSVG(x.hhcovPct,IND.hhcovPct,{max:1.1})}
-    <div class="sc-b"><b>${esc(lab(k))}</b><span>SDC <em style="color:var(--${bandOf(IND.sdc,x.sdc)||"ink"})">${fmt(x.sdc,IND.sdc)}</em></span><span>Still missed <em>${fmt(x.still,IND.still)}</em></span><span>MS% <em style="color:var(--${bandOf(IND.msTar,x.msTar)||"ink"})">${fmt(x.msTar,IND.msTar)}</em></span></div></div>`).join("")}</div>`;
+    <div class="sc-b"><b>${esc(lab(k))}</b><span>SDC <em style="color:var(--${bandOf(IND.sdc,x.sdc)||"ink"})">${fmt(x.sdc,IND.sdc)}</em></span><span>Still missed <em>${fmt(x.still,IND.still)}</em></span><span>SM% <em style="color:var(--${bandOf(IND.msTar,x.msTar)||"ink"})">${fmt(x.msTar,IND.msTar)}</em></span></div></div>`).join("")}</div>`;
 }
 function wireScoreCards(){ wireClick($("#scards"),k=>{ const lv=areaLevel(); if(lv==="district"){ S.geo.district=k; S.geo.tehsils=[]; S.geo.ucs=[]; } else if(lv==="tehsil"){ S.geo.tehsils=[k]; S.geo.ucs=[]; } render(); }); }
 
@@ -1590,7 +1635,7 @@ function covGlanceHTML(T){
   return `<div class="card lift"><div class="card-h"><div><h3>Performance at a glance</h3><p>${esc(scopeName())} · ${esc(S.cov.camp)}${S.cov.days.length?" · "+esc(S.cov.days.map(DAYLAB).join(" + ")):""}</p></div></div>
     <div class="gauges gx">${gauge2(T.overallPct,IND.overallPct,"Total coverage",{max:1.2})}${gauge2(T.hhcovPct,IND.hhcovPct,"HH coverage",{max:1.2})}${gauge2(T.sdc,IND.sdc,"Same-day coverage",{max:1})}${gauge2(T.mmpPct,IND.mmpPct,"MMP coverage",{max:1.2})}${gauge2(T.score,IND.score,"UC score",{max:1})}${gauge2(T.wastage,IND.wastage,"Wastage",{max:.2})}</div></div>
   <div class="g3">
-    <div class="card"><div class="card-h"><div><h3>Where children were vaccinated</h3><p>In houses (HH coverage) and outside houses</p></div></div><div class="card-b">${donutHTML(cov,{center:"children",label:"Where children were vaccinated"})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Where children were vaccinated</h3><p>In houses (HH coverage) and outside houses · % of NEAP target</p></div></div><div class="card-b">${donutHTML(cov,{center:"children",label:"Where children were vaccinated",base:T.neap||null})}</div></div>
     <div class="card"><div class="card-h"><div><h3>Children still missed</h3><p>Recorded but not yet covered</p></div></div><div class="card-b">${donutHTML(miss,{center:"still missed",label:"Children still missed"})}</div></div>
     <div class="card"><div class="card-h"><div><h3>Campaign progress, day by day</h3><p>Children covered each day · running % of NEAP target</p></div></div><div class="card-b">${hbarsHTML(drows,{f:P,band:[.95,null],hb:true},{max:1.05})}</div></div>
   </div>
@@ -2225,7 +2270,7 @@ function neapResourceBand(){
   const camp=S.cov.camp, rows=(D.neapByCamp.get(camp)||[]).filter(preOK);
   if(!rows.length) return `<div class="sec-h"><h2>Campaign resources</h2><p>No NEAP resource plan found for ${esc(camp)} · ${esc(scopeName())}</p></div>`;
   const T=neapAgg(rows), L=D.neapCamps, i=L.indexOf(camp);
-  const prevC=[...L.slice(0,i)].reverse().find(c=>(D.neapByCamp.get(c)||[]).some(preOK)&&(D.neapByCamp.get(c)||[]).filter(preOK).length>=rows.length*.5);
+  const prevC=[...L.slice(0,i)].reverse().find(c=>!isSpecial(c)&&(D.neapByCamp.get(c)||[]).some(preOK)&&(D.neapByCamp.get(c)||[]).filter(preOK).length>=rows.length*.5);
   const Pv=prevC?neapAgg((D.neapByCamp.get(prevC)||[]).filter(preOK)):null;
   const t=(k,l)=>kpi({t:l,f:N},T[k],Pv?.[k],prevC);
   return `<div class="sec-h"><h2>Campaign resources</h2><p>From NEAP · ${esc(camp)} · ${esc(scopeName())} · <a href="#/pre/neap">full NEAP readiness</a></p></div>
@@ -2243,7 +2288,7 @@ function pgPreNeap(el){
   const nameCol={k:"_k",t:lvl==="district"?"District":lvl==="tehsil"?"Tehsil":"Union council",l:1,sv:r=>r._k,fn:r=>r._tot?`<b>${esc(scopeName())}</b>`:lvlLabel(lvl,r._k)};
   const rdyCols=[nameCol,...NEAP_READY.map(c=>({k:c.k,t:c.t,ind:c.ind,bg:1,fmt:c.ind.f===P?pct2:null})),{k:"green",t:"Green",fn:r=>`<b>${r.green}</b>/${r.readyN}`,sv:r=>r.green}];
   const resCols=[nameCol,...RES_COLS.map(([k,t])=>({k,t}))];
-  const L=D.neapCamps, iC=L.indexOf(camp), rr=L.slice(0,iC+1).filter(c=>(D.neapByCamp.get(c)||[]).some(preOK)).slice(-4);
+  const L=D.neapCamps, iC=L.indexOf(camp), rr=L.slice(0,iC+1).filter(c=>fullRound(c,camp)&&(D.neapByCamp.get(c)||[]).some(preOK)).slice(-4);
   const trend=rr.map(c=>({_k:c,camp:c,...neapAgg((D.neapByCamp.get(c)||[]).filter(preOK))}));
   const campCol={k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`};
   const worst=[...byD].map(([d,rs])=>[d,neapAgg(rs)]).sort((a,b)=>a[1].green-b[1].green);
@@ -2380,7 +2425,7 @@ function wireTr(el){ $$("[data-tr]",el).forEach(b=>b.onclick=()=>{ S.pre.tr=b.da
    ICM DASHBOARD
    ===================================================================== */
 function pgIcmDash(el){
-  const camps=D.icmCamps, cur=S.icm.camp, prevC=camps[camps.indexOf(cur)-1];
+  const camps=D.icmCamps, cur=S.icm.camp, prevC=camps.slice(0,camps.indexOf(cur)).filter(c=>!isSpecial(c)).at(-1);
   const T=one(icmAgg(icmRows())), Pv=prevC?one(icmAgg(icmRows({camp:prevC}))):null;
   const byC=icmAgg(icmRows({camp:""}),r=>r.camp);
   const R=camps.map(c=>({_k:c,camp:c,...byC.get(c)}));
@@ -2522,7 +2567,7 @@ function pgIcmSpot(el){
    THREE-ROUND SPOT COMPARISON
    ===================================================================== */
 function pgIcmCompare(el){
-  const last=D.icmCamps.slice(-3);
+  const last=D.icmCamps.filter(c=>!isSpecial(c)).slice(-3);
   const rows=icmRows({camp:""}).filter(r=>r.lat);
   const inS=scopeUCs(); const vb=extentOf(inS.length?inS:D.U);
   const stats=D.icmCamps.map(c=>{ const a=rows.filter(r=>r.camp===c); const n=a.length; return {_k:c,camp:c,n,right:a.filter(r=>r.band===0).length,border:a.filter(r=>r.band===1).length,wrong:a.filter(r=>r.band===2).length,wp:n?a.filter(r=>r.band===2).length/n:null}; });
