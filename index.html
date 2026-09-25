@@ -649,6 +649,15 @@ th.on{color:var(--accent-2)}
 .motion-off .rv{opacity:1;transform:none;filter:none}
 @media print{.rv{opacity:1!important;transform:none!important;filter:none!important}body::before,body::after{display:none}.tbtn{display:none!important}.card{background:#fff!important;backdrop-filter:none}}
 
+.nav-h i.pre{background:#F28CB1}
+/* NEAP readiness table: solid green / red cells like the national NEAP summary */
+.neapT td.bgc-pass{background:linear-gradient(180deg,#1fa463,#178a52);color:#fff;font-weight:750}
+.neapT td.bgc-fail{background:linear-gradient(180deg,#e0453a,#c7362c);color:#fff;font-weight:750}
+.neapT td.bgc-watch{background:linear-gradient(180deg,#e0453a,#c7362c);color:#fff;font-weight:750}
+.neapT tr.tot td{border-top:2px solid var(--line-2)}
+.neapT th{white-space:normal;min-width:78px;vertical-align:bottom}
+.kband.res{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
+.kband.res .kv{background:linear-gradient(100deg,#F28CB1,#C4A8FF 55%,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent}
 </style>
 </head>
 <body>
@@ -661,6 +670,11 @@ th.on{color:var(--accent-2)}
       <div><b>ERU Peshawar Dashboard</b><small>Peshawar Division · KP</small></div>
     </div>
     <nav class="nav">
+      <div class="nav-g"><div class="nav-h"><i class="pre"></i>Pre-Campaign Phase</div>
+        <a href="#/pre/neap" data-p="pre/neap"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="4" y="3" width="12" height="15" rx="2"/><path d="M7.5 3V2h5v1M7 8.5l1.6 1.6L12.5 6.5M7 13.5h6"/></svg>NEAP readiness</a>
+        <a href="#/pre/mpqa" data-p="pre/mpqa"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5.5 7.5 3.5l5 2 4.5-2v11l-4.5 2-5-2L3 16.5z"/><path d="m8 10 1.6 1.6L13 8.2"/></svg>Micro-plan quality (MPQA)</a>
+        <a href="#/pre/train" data-p="pre/train"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="6" r="2.6"/><path d="M4.5 17c.6-3.2 2.8-5 5.5-5s4.9 1.8 5.5 5"/><path d="M2.5 9.5 10 12l7.5-2.5"/></svg>Trainings</a>
+      </div>
       <div class="nav-g"><div class="nav-h"><i></i>Campaign coverage</div>
         <a href="#/cov/report" data-p="cov/report"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="14" height="14" rx="3"/><path d="M6.5 13V10M10 13V7M13.5 13V9"/></svg>Campaign report</a>
         <a href="#/cov/maps" data-p="cov/maps"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 5.5 7.5 3.5l5 2 4.5-2v11l-4.5 2-5-2L3 16.5z"/><path d="M7.5 3.5v11M12.5 5.5v11"/></svg>UC maps</a>
@@ -944,6 +958,7 @@ async function load(){
   D.H=H; D.tehOf=new Map(); for(const d in H) for(const t in H[d]) for(const u of H[d][t]) if(!D.tehOf.has(d+"|"+u)) D.tehOf.set(d+"|"+u,t);
   const full=(rows,camps)=>{const n=c=>new Set(rows.filter(r=>r.camp===c).map(r=>r.uc)).size; const mx=Math.max(...camps.map(n)); return [...camps].reverse().find(c=>n(c)>=mx*.5)||camps.at(-1);};
   S.cov.camp=full(cov,D.covCamps); S.icm.camp=full(icm,D.icmCamps); S.cmp.camp=full(cov,D.cmpCamps)||D.cmpCamps.at(-1);
+  try{ await loadPre(); }catch(e){ console.error(e); D.neap=[];D.mpqa=[];D.aic=[];D.team=[];D.neapCamps=[];D.mpqaCamps=[];D.aicCamps=[];D.teamCamps=[];D.neapByCamp=new Map(); }
   analyseSpots();
 }
 function centroid(r){ let a=0,x=0,y=0; for(let i=0;i<r.length;i++){const p=r[i],q=r[(i+1)%r.length],c=p[0]*q[1]-q[0]*p[1]; a+=c; x+=(p[0]+q[0])*c; y+=(p[1]+q[1])*c;} return a?[x/(3*a),y/(3*a)]:r[0]; }
@@ -1064,12 +1079,12 @@ function groupSVG(el,cats,series,o={}){
 /* generic table. cols: {k,t,ind,l,fn,bg} · rows: objects · o.id enables sorting */
 function tableHTML(cols,rows,o={}){
   const id=o.id, st=id?S.sort[id]:null; let R=rows;
-  if(st){ const c=cols.find(c=>c.k===st.k); if(c){ R=[...rows].sort((a,b)=>{ const x=c.sv?c.sv(a):a[c.k], y=c.sv?c.sv(b):b[c.k]; if(typeof x==="string"||typeof y==="string") return String(x??"").localeCompare(String(y??""))*st.d; if(x==null||!isFinite(x)) return 1; if(y==null||!isFinite(y)) return -1; return (x-y)*st.d; }); } }
+  if(st){ const c=cols.find(c=>c.k===st.k); if(c){ R=[...rows].sort((a,b)=>{ if(a._tot||b._tot) return (a._tot?1:0)-(b._tot?1:0); const x=c.sv?c.sv(a):a[c.k], y=c.sv?c.sv(b):b[c.k]; if(typeof x==="string"||typeof y==="string") return String(x??"").localeCompare(String(y??""))*st.d; if(x==null||!isFinite(x)) return 1; if(y==null||!isFinite(y)) return -1; return (x-y)*st.d; }); } }
   let h=`<table${id?` data-tid="${id}"`:""}><thead><tr>${o.rank?'<th class="l rk">#</th>':""}${cols.map((c,i)=>`<th class="${c.l?"l ":""}${id?"s ":""}${st&&st.k===c.k?"on":""}" ${id?`data-k="${c.k}"`:""}>${esc(c.t??IND[c.k]?.t??c.k)}${st&&st.k===c.k?(st.d>0?" ↑":" ↓"):""}</th>`).join("")}</tr></thead><tbody>`;
   R.forEach((r,ix)=>{ h+=`<tr class="${o.onRow?"click ":""}${o.cur&&o.cur(r)?"cur":""}${r._tot?" tot":""}"${r._k?` data-k="${esc(r._k)}"`:""}>${o.rank?`<td class="l rk">${r._tot?"":ix+1}</td>`:""}${cols.map(c=>{ const v=r[c.k]; const ind=c.ind||IND[c.k];
     if(c.fn) return `<td class="${c.l?"l":""}">${c.fn(r)}</td>`;
     if(c.l) return `<td class="l">${esc(v??"")}</td>`;
-    const b=ind?bandOf(ind,v):null; return `<td class="${b?(c.bg?"bgc-":"c-")+b:""}">${fmt(v,ind||{f:N})}</td>`; }).join("")}</tr>`; });
+    const b=ind?bandOf(ind,v):null; return `<td class="${b?(c.bg?"bgc-":"c-")+b:""}">${c.fmt?c.fmt(v,r):fmt(v,ind||{f:N})}</td>`; }).join("")}</tr>`; });
   if(!R.length) h+=`<tr><td class="l" colspan="${cols.length+(o.rank?1:0)}"><span class="note">Nothing for this selection.</span></td></tr>`;
   return h+"</tbody></table>";
 }
@@ -1154,6 +1169,9 @@ const EXPAND='<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-
    CONTEXT BAR (title + campaign + filters)
    ===================================================================== */
 const PAGES={
+  "pre/neap":{eb:"Pre-Campaign Phase",t:"NEAP readiness & resources",ds:"pre",src:"neap"},
+  "pre/mpqa":{eb:"Pre-Campaign Phase",t:"Micro-plan quality assessment (MPQA)",ds:"pre",src:"mpqa"},
+  "pre/train":{eb:"Pre-Campaign Phase",t:"AIC / UCMO and team trainings",ds:"pre",src:"train"},
   "cov/report":{eb:"Campaign coverage",t:"Campaign report",ds:"cov"},
   "cov/maps":{eb:"Campaign coverage",t:"UC maps",ds:"cov"},
   "cov/tables":{eb:"Campaign coverage",t:"Report tables",ds:"cov"},
@@ -1207,6 +1225,7 @@ function renderCtx(){
       +sel("f-des","Designation",u("designation").sort(),S.icm.designation,"All designations",x=>x.length>30?x.slice(0,28)+"…":x)
       +sel("f-org","Organisation",u("org").sort(),S.icm.org,"All organisations",x=>x.length>30?x.slice(0,28)+"…":x)
       +sel("f-pop","Population",u("pop").sort(),S.icm.pop,"HRMP + non-HRMP",x=>x==="hrmp"?"HRMP":x==="nonhrmp"?"Non-HRMP":x);
+  } else if(ds==="pre"){ const L=preList(P.src); if(L.length) camps=chipRow(L,preCamp(P.src),"pre");
   } else camps=chipRow(D.cmpCamps,S.cmp.camp,"cmp");
   const any=g.district||g.tehsils.length||g.ucs.length||(ds==="cov"&&(S.cov.days.length||S.cov.tier||S.cov.risk))||(ds==="icm"&&(S.icm.days.length||S.icm.designation||S.icm.org||S.icm.pop));
   $("#ctx").innerHTML=`<div class="ctx-in">
@@ -1214,7 +1233,7 @@ function renderCtx(){
     <div class="ctx-top">
       <div style="display:flex;gap:12px;align-items:flex-end;min-width:0">
         <button class="ibtn menu-btn" id="menu" aria-label="Open menu"><svg viewBox="0 0 16 16"><path d="M2.5 4h11M2.5 8h11M2.5 12h11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg></button>
-        <div class="ptitle"><div class="eyebrow">${esc(P.eb)}</div><h1>${esc(P.t)}</h1><p>${esc(scopeName())}${ds==="cov"&&!P.noCamp?" · "+esc(S.cov.camp):""}${ds==="icm"&&!P.noCamp?" · "+esc(S.icm.camp):""}${ds==="cmp"?" · "+esc(S.cmp.camp):""}</p></div>
+        <div class="ptitle"><div class="eyebrow">${esc(P.eb)}</div><h1>${esc(P.t)}</h1><p>${esc(scopeName())}${ds==="cov"&&!P.noCamp?" · "+esc(S.cov.camp):""}${ds==="icm"&&!P.noCamp?" · "+esc(S.icm.camp):""}${ds==="cmp"?" · "+esc(S.cmp.camp):""}${ds==="pre"&&preCamp(P.src)?" · "+esc(preCamp(P.src)):""}</p></div>
       </div>
       ${camps}
     </div>
@@ -1231,7 +1250,7 @@ function renderCtx(){
   wireMsel("f-day",v=>{S.cov.days=v;}); on("f-tier",v=>S.cov.tier=v); on("f-risk",v=>S.cov.risk=v);
   wireMsel("f-iday",v=>{S.icm.days=v;}); on("f-des",v=>S.icm.designation=v); on("f-org",v=>S.icm.org=v); on("f-pop",v=>S.icm.pop=v);
   $$("[data-camp]").forEach(b=>b.onclick=()=>{ S[b.dataset.ds].camp=b.dataset.camp; if(b.dataset.ds==="cov") S.covMaps.all=""; render(); });
-  $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo=newGeo(); if(ds==="cov") Object.assign(S.cov,{days:[],tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{days:[],designation:"",org:"",pop:""}); render();});
+  $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo=newGeo(); if(ds==="pre") S.pre.ttype=""; if(ds==="cov") Object.assign(S.cov,{days:[],tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{days:[],designation:"",org:"",pop:""}); render();});
   $("#menu").onclick=()=>document.body.classList.toggle("nav-open");
 }
 function chipRow(list,cur,ds){ return `<div class="chips" role="group" aria-label="Campaign">${list.map((c,i)=>`<button class="chip" data-ds="${ds}" data-camp="${esc(c)}" aria-pressed="${c===cur}">${esc(shortCamp(c))}${i===list.length-1?'<span class="lt">latest</span>':""}</button>`).join("")}</div>`; }
@@ -1254,6 +1273,7 @@ function pgCovReport(el){
   const campCol={k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`};
   el.innerHTML=`${covHero(T)}
     <div class="kband">${kpi(IND.neap,T?.neap,Pv?.neap,prevC)}${kpi(IND.hhCov,T?.hhCov,Pv?.hhCov,prevC)}${kpi(IND.sdc,T?.sdc,Pv?.sdc,prevC)}${kpi(IND.still,T?.still,Pv?.still,prevC)}${kpi(IND.msTar,T?.msTar,Pv?.msTar,prevC)}${kpi(IND.mmpPct,T?.mmpPct,Pv?.mmpPct,prevC)}${kpi(IND.score,T?.score,Pv?.score,prevC)}${kpi(IND.wastage,T?.wastage,Pv?.wastage,prevC)}</div>
+  ${neapResourceBand()}
   ${covGlanceHTML(T)}
   <div class="sec-h"><h2>Round on round</h2><p>${esc(last3.join(" · "))} · ${esc(scopeName())}</p></div>
   <div class="g2">
@@ -2050,6 +2070,313 @@ async function dermBuild(o,say){
 <script>
 "use strict";
 /* =====================================================================
+   PRE-CAMPAIGN PHASE — NEAP readiness & resources, MPQA, trainings
+   Files (all optional, written by Excel on save):
+     data/neap.csv       from NEAP3 in the coverage workbook
+     data/mpqa.csv       from MPQA_New.xlsx  (UC Scores)
+     data/aictrain.csv   from AIC-UCMO Training Monitoring (UPEC).xlsx
+     data/teamtrain.csv  from Team Training Monitoring Dashboard.xlsx
+   ===================================================================== */
+const PRE_FILES={neap:"data/neap.csv",mpqa:"data/mpqa.csv",aic:"data/aictrain.csv",team:"data/teamtrain.csv"};
+S.pre={camp:"",lvl:"district",tr:"aic",ttype:""};
+const numOr=x=>{ if(x==null) return null; const s=String(x).trim(); if(s===""||s.toUpperCase()==="NULL") return null; const n=+s; return isFinite(n)?n:null; };
+
+async function loadPre(){
+  const opt=async u=>{ try{ const r=await fetch(u,{cache:"no-cache"}); return r.ok?await r.text():""; }catch(e){ return ""; } };
+  const keys=Object.keys(PRE_FILES);
+  const txt=await Promise.all(keys.map(k=>opt(PRE_FILES[k])));
+  const stamp=await Promise.all(keys.map(k=>opt(PRE_FILES[k].replace(".csv",".updated.txt"))));
+  const tab=t=>{ if(!t||!t.trim()) return []; const r=parseCSV(t), h=r.shift().map(s=>String(s).trim()); return r.filter(x=>x.length>1).map(x=>Object.fromEntries(h.map((k,i)=>[k,(x[i]??"").trim()]))); };
+  const T=Object.fromEntries(keys.map((k,i)=>[k,tab(txt[i])]));
+  keys.forEach((k,i)=>D.upd[k]=stamp[i].trim());
+
+  /* NEAP: one row per UC per campaign (latest submission wins) */
+  const NF=["mt","ft","tp","aic","aicF","aicG","aicT","zs","hh","sch","fix","trn","m18","gov","loc","fem","tmT","upec","ucmo","ucsec","sho","inCh","inAr","dr1","dr2","dr3","fv1","fv2","fv3","mpuc","stall","hml","newA","walk","hrm","hrmp","zd","vca","vcr"];
+  const nm=new Map();
+  for(const r of T.neap){ if(!r.camp||!r.uc) continue;
+    const o={camp:r.camp,district:up(r.dist),tehsil:up(r.teh),uc:up(r.uc),ucode:r.ucode,tier:r.tier,cat:r.cat,ts:r.ts,upecdate:r.upecdate,v:{}};
+    for(const f of NF) o.v[f]=numOr(r[f]);
+    const k=o.camp+"|"+(o.ucode||o.district+o.uc), p=nm.get(k); if(!p||String(o.ts)>=String(p.ts)) nm.set(k,o); }
+  D.neap=[...nm.values()];
+
+  /* MPQA: UC Scores (percent values 0–100 -> 0–1) */
+  const mh=T.mpqa.length?Object.keys(T.mpqa[0]):[], qStart=mh.indexOf("Field vs Desk");
+  D.mpqaQ=qStart>=0?mh.slice(qStart+1).filter(h=>h&&!/^column/i.test(h)):[];
+  const pc=x=>{ const n=numOr(x); return n==null?null:n/100; };
+  D.mpqa=T.mpqa.filter(r=>r["UC Code"]&&r["UC name"]).map(r=>({camp:r.Campaign,district:up(r.District),tehsil:up(r.Tehsil),uc:up(r["UC name"]),
+    rep:/^y/i.test(r["MPQA Reported"]||""),desk:pc(r["Desk Review %"]),field:pc(r["Field Validation %"]),overall:pc(r["Over-all %"]),band:r.Band||"",
+    q:D.mpqaQ.map(h=>pc(r[h]))}));
+
+  /* AIC / UCMO training: one row per training monitored; UCs are ":"-separated */
+  const ucsOf=s=>String(s||"").split(/[:;,]/).map(x=>up(x)).filter(Boolean);
+  D.aic=T.aic.filter(r=>r.camp).map(r=>({camp:r.camp,district:up(r.dist),tehsil:up(r.teh),ucs:ucsOf(r.uc),type:r.type||"",
+    exp:numOr(r.exp),m:numOr(r.m),f:numOr(r.f),att:numOr(r.att),neu:numOr(r.new),dur:numOr(r.dur),overall:numOr(r.overall),
+    y:AIC_IND.map((_,i)=>{ const v=numOr(r["q"+String(i+1).padStart(2,"0")]); return v==null?null:v; })}));
+
+  /* Team training: raw app rows -> yes / applicable per indicator (same rules as the workbook) */
+  D.team=T.team.filter(r=>r.ActivityName).map(r=>{
+    const dur=numOr(r.duration), y=[], a=[];
+    for(const [,,fld,ty] of TEAM_IND){ let yy=0,aa=0; const v=String(r[fld]??"").trim();
+      if(ty==="B"||ty==="F"){ if(v==="1"){yy=1;aa=1;} else if(v==="0"){aa=1;} }
+      else if(ty==="G"){ if(dur!=null&&dur>0){ aa=1; yy=dur>=240?1:0; } }
+      else if(ty==="R"){ if(dur!=null&&dur>0){ aa=1; yy=dur>=240&&dur<=300?1:0; } }
+      else if(ty==="X"){ aa=1; yy=v==="1"?1:0; }
+      y.push(yy); a.push(aa); }
+    const tt=String(r.training_type||"").trim().toUpperCase();
+    /* new form (stall keepers recorded): attend_m already holds everyone who attended, attend_f the women among them */
+    const am=numOr(r.attend_m)||0, af=numOr(r.attend_f)||0, v2=String(r.sk_ipc??"").trim()!=="";
+    return {camp:r.ActivityName,district:up(r.district_name),tehsil:up(r.tehsil_name),ucs:ucsOf(r.ucs),type:tt,
+      exp:numOr(r.no_partcpnt),att:v2?am:am+af,m:v2?Math.max(0,am-af):am,f:af,neu:numOr(r.new_partcpnt),dur,y,a}; });
+
+  /* make sure every tehsil / UC used here can be picked in the filters */
+  const add=(d,t,u)=>{ if(!d||!t||!u) return; ((D.H[d]??={})[t]??=new Set()).add(u); if(!D.tehOf.has(d+"|"+u)) D.tehOf.set(d+"|"+u,t); };
+  for(const r of D.neap) add(r.district,r.tehsil,r.uc);
+  for(const r of D.mpqa) add(r.district,r.tehsil,r.uc);
+  const byCamp=rows=>{ const s=[...new Set(rows.map(r=>r.camp))].sort((a,b)=>campRank(a)-campRank(b)); return s; };
+  D.neapCamps=byCamp(D.neap); D.mpqaCamps=byCamp(D.mpqa); D.aicCamps=byCamp(D.aic); D.teamCamps=byCamp(D.team);
+  D.neapByCamp=new Map(); for(const r of D.neap){ (D.neapByCamp.get(r.camp)||D.neapByCamp.set(r.camp,[]).get(r.camp)).push(r); }
+}
+
+/* ---------- indicator lists ---------- */
+const AIC_IND=[
+ ["A. Training material","Training agenda available"],["A. Training material","Resource documents for micro planning available"],["A. Training material","Blank micro-plan formats available (NIDs only)"],
+ ["A. Training material","Tally sheet / registration book / panaflex tally sheet"],["A. Training material","Vaccine vials with droppers"],["A. Training material","Team route map"],
+ ["A. Training material","Finger marker"],["A. Training material","Chalk or board marker"],["A. Training material","Other material (flip charts, toolkit)"],
+ ["B. Polio introduction","Polio introduction and motivational session"],["B. Polio introduction","Trainer briefed on current polio update"],
+ ["C. Micro plan","Micro-plan development process observed"],["C. Micro plan","Micro-plan development process briefed"],["C. Micro plan","New micro plan developed / updated"],["C. Micro plan","Desk review and field validation discussed"],
+ ["D. FLW training","Process of FLW training observed"],["D. FLW training","Agenda of FLW training discussed in detail"],["D. FLW training","Practical exercise on stall method"],
+ ["E. Communication & SM","Communication and social mobilization session"],["E. Communication & SM","Review of social mobilization activities"],["E. Communication & SM","Challenge mapping and resistance reasons discussed"],["E. Communication & SM","Social mobilization plan updated"],
+ ["F. Training conduct","Conducted in local language"],["F. Training conduct","Conducted per guidelines and agenda"],["F. Training conduct","Participants answered questions on covered topics"],
+ ["G. Venue & duration","Venue appropriate for training"],["G. Venue & duration","Duration met the 4-hour minimum"],["G. Venue & duration","Duration within 4–5 hours"],
+ ["H. Follow-up & oversight","Date of defaulters' training decided"],["H. Follow-up & oversight","Checklist discussed, feedback given"],["H. Follow-up & oversight","Also monitored by someone else"],["H. Follow-up & oversight","Live picture uploaded"]];
+const TEAM_IND=[
+ ["Venue & facilities","Training venue appropriate","t_venue","B"],["Venue & facilities","Drinking water for all workers","water_avail","B"],["Venue & facilities","Functional washroom for female workers","func_wash","B"],
+ ["Training material","Training agenda","tmat_agenda","B"],["Training material","Tally sheet / registration book","tmar_tsheet","B"],["Training material","Vaccine vials (stages) and droppers","tmar_vaccvial","B"],
+ ["Training material","Route map","tmar_rmap","B"],["Training material","Finger marker","tmar_fm","B"],["Training material","Chalk or board marker","tmar_chalk","B"],["Training material","Other material (flip charts, toolkit)","tmar_other","B"],
+ ["Session content","Polio introduction and motivational session","p_briefed","B"],["Session content","AIC sat with team on the micro plan","aic_sit","B"],["Session content","Vaccination videos shared and discussed","vacc_admin_videos","B"],["Session content","Stall method of training used","stall_method","B"],
+ ["Stalls established","Stall: IPC","sk_ipc","B"],["Stalls established","Stall: vaccine administration","sk_vacc_administration","B"],["Stalls established","Stall: finger marking","sk_finger_mark","B"],
+ ["Stalls established","Stall: door chalking","sk_door_chalk","B"],["Stalls established","Stall: data recording","sk_data_record","B"],["Stalls established","Stall: gender mainstreaming","sk_gender_mainstream","B"],
+ ["Stalls run to SOP","SOP: IPC","sop_ipc","B"],["Stalls run to SOP","SOP: vaccine administration","sop_vacc_administration","B"],["Stalls run to SOP","SOP: finger marking","sop_finger_mark","B"],
+ ["Stalls run to SOP","SOP: door chalking","sop_door_chalk","B"],["Stalls run to SOP","SOP: data recording","sop_data_record","B"],["Stalls run to SOP","SOP: gender mainstreaming","sop_gender_mainstream","B"],
+ ["Wrap-up & compliance","Participants answered questions on covered topics","qa","B"],["Wrap-up & compliance","Checklist discussed, feedback given","feedback","F"],
+ ["Wrap-up & compliance","Training lasted at least 4 hours","duration","G"],["Wrap-up & compliance","Training within 4–5 hours","duration","R"],["Wrap-up & compliance","Live picture uploaded","ttmv2_picture","X"],
+ ["Older form (v1)","Stall keeper with a community member","stall_comm","B"],["Older form (v1)","Team member interacted with community member","stall_visiting","B"],["Older form (v1)","Guidelines given at IPC stall","stall_guid","B"],
+ ["Older form (v1)","VVM, expiry and carrier placement asked","vacc_mang_vvm","B"],["Older form (v1)","Team performed the vaccination process","stall_visiting_process","B"],["Older form (v1)","Finger marking practised on each other","stall_pfm","B"],
+ ["Older form (v1)","Finger-marking guidelines given","stall_guid_fm","B"],["Older form (v1)","Door-marking scenarios on board","stall_board","B"],["Older form (v1)","Team performed door marking","stall_doorm","B"],
+ ["Older form (v1)","Door-marking guidelines given","stall_guid_door","B"],["Older form (v1)","Tally-sheet scenarios on panaflex","stall_tely_pana","B"],["Older form (v1)","Team filled the tally sheet","stall_fill_telly","B"],
+ ["Older form (v1)","Data-recording guidelines given","stall_guid_data_r","B"],["Older form (v1)","AFP and zero-dose definitions asked","stall_afp","B"],["Older form (v1)","Payment process asked","stall_payment_p","B"],
+ ["Older form (v1)","Conducted in local language","local_lang","B"],["Older form (v1)","Conducted per guidelines and agenda","local_lang_guideline","B"],
+ ["Older form (v1)","Field demonstration conducted","field_activity","B"],["Older form (v1)","AIC ran a practical field demonstration","field_demonstration","B"]];
+const TEAM_R=TEAM_IND.findIndex(x=>x[3]==="R");   // 4–5 h band is shown but, as in the workbook, not counted in the overall score
+
+/* ---------- campaign & scope helpers ---------- */
+function preList(src){ if(src==="neap") return D.neapCamps||[]; if(src==="mpqa") return D.mpqaCamps||[];
+  if(src==="train") return S.pre.tr==="team"?(D.teamCamps||[]):(D.aicCamps||[]); return []; }
+function preRowsAll(src){ return src==="neap"?D.neap:src==="mpqa"?D.mpqa:S.pre.tr==="team"?D.team:D.aic; }
+function preCamp(src){ const L=preList(src); if(L.includes(S.pre.camp)) return S.pre.camp;
+  const cov=S.cov.camp; if(L.includes(cov)) return cov;
+  const rows=preRowsAll(src)||[], n=c=>rows.filter(r=>r.camp===c).length, mx=Math.max(0,...L.map(n));
+  return [...L].reverse().find(c=>n(c)>=mx*.5)||L.at(-1)||""; }
+function preOK(r){ const g=S.geo; if(g.district&&r.district!==g.district) return false; if(g.tehsils.length&&!g.tehsils.includes(r.tehsil)) return false;
+  if(g.ucs.length){ if(r.ucs) return r.ucs.some(u=>g.ucs.includes(u)); return g.ucs.includes(r.uc); } return true; }
+const LVL=[["district","District"],["tehsil","Tehsil"],["uc","UC"]];
+const lvlKey=l=>l==="district"?r=>r.district:l==="tehsil"?r=>r.district+"|"+r.tehsil:r=>r.district+"|"+r.uc;
+function lvlLabel(l,k){ if(l==="district") return `<b>${esc(tc(k))}</b>`; if(l==="tehsil"){ const [d,t]=k.split("|"); return `<b>${esc(tc(t))}</b><span class="sub">${esc(tc(d))}</span>`; } return ucLabel(k); }
+function lvlSeg(cur,id){ return `<div class="seg" role="group" aria-label="Level" id="${id}">${LVL.map(([k,t])=>`<button data-lvl="${k}" aria-pressed="${k===cur}">${t}</button>`).join("")}</div>`; }
+function wireLvl(el){ $$("[data-lvl]",el).forEach(b=>b.onclick=()=>{ S.pre.lvl=b.dataset.lvl; render(); }); }
+/* drill down: district -> its tehsils, tehsil -> its UCs, UC -> pick it */
+function preDrill(l,k){ if(l==="district"){ S.geo=newGeo(); S.geo.district=k; S.pre.lvl="tehsil"; render(); }
+  else if(l==="tehsil"){ const [d,t]=k.split("|"); S.geo=newGeo(); S.geo.district=d; S.geo.tehsils=[t]; S.pre.lvl="uc"; render(); }
+  else pickUC(k); }
+function explodeUC(rows){ const out=[]; for(const r of rows){ const us=r.ucs&&r.ucs.length?r.ucs:[r.uc||""]; for(const u of us){ if(S.geo.ucs.length&&!S.geo.ucs.includes(u)) continue; out.push({...r,uc:u}); } } return out; }
+const pct2=v=>v==null||!isFinite(v)?"–":(+(v*100).toFixed(2))+"%";
+const group=(rows,kf)=>{ const m=new Map(); for(const r of rows){ const k=kf(r); (m.get(k)||m.set(k,[]).get(k)).push(r); } return m; };
+function preEmpty(what,file){ return `<div class="card" style="padding:28px"><h3 style="margin:0 0 6px">No ${esc(what)} data yet</h3><p class="note">Save the ${esc(file)} workbook once — the results appear here automatically about a minute later.</p></div>`; }
+function stampLine(k,src){ const t=D.upd[k]; if(!t) return ""; const d=new Date(t); return `<span class="note">Updated ${isNaN(d)?esc(t):d.toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})} from ${esc(src)}</span>`; }
+
+/* =====================================================================
+   NEAP  — readiness (like the national NEAP summary) + resources
+   ===================================================================== */
+function neapAgg(rows){
+  const s={ucs:rows.length}; const f=["mt","ft","tp","aic","aicF","aicG","aicT","zs","hh","sch","fix","trn","m18","gov","loc","fem","upec","ucmo","ucsec","inCh","inAr","dr1","dr2","dr3","fv1","fv2","fv3","mpuc","stall","hml","hrmp","zd","vca","vcr","newA"];
+  for(const k of f) s[k]=0; s.teams=0; s.tmTc=0; s.inAny=0;
+  for(const r of rows){ const v=r.v; for(const k of f) s[k]+=v[k]||0; const t=(v.mt||0)+(v.ft||0)+(v.tp||0); s.teams+=t; s.tmTc+=Math.min(v.tmT||0,t); if(v.inAr!=null||v.inCh!=null) s.inAny++; }
+  s.ucmoPct=div(s.ucmo,s.ucs); s.ucsecPct=div(s.ucsec,s.ucs); s.upecPct=div(s.upec,s.ucs);
+  s.aicTrPct=div(s.aicT,s.aic); s.teamTrPct=div(s.tmTc,s.teams); s.mpucPct=div(s.mpuc,s.ucs);
+  s.m18Pct=div(s.m18,s.mt); s.locPct=div(s.loc,s.mt); s.govPct=div(s.gov,s.mt); s.femPct=div(s.fem,s.mt);
+  s.aicFemPct=div(s.aicF,s.aic); s.aicGovPct=div(s.aicG,s.aic); s.stallPct=div(s.stall,s.ucs);
+  s.drPass=div(s.dr1,s.dr1+s.dr2+s.dr3); s.fvPass=div(s.fv1,s.fv1+s.fv2+s.fv3);
+  s.inacc=s.inAr+s.inCh;
+  s.green=NEAP_READY.filter(c=>bandOf(c.ind,s[c.k])==="pass").length; s.readyN=NEAP_READY.length;
+  const R=NEAP_READY.filter(c=>c.ind.f===P).map(c=>s[c.k]).filter(v=>v!=null&&isFinite(v)); s.readyAvg=R.length?R.reduce((a,b)=>a+b,0)/R.length:null;
+  return s;
+}
+const RDY={f:P,band:[.9995,null],hb:true,dp:2};
+const NEAP_READY=[
+  {k:"upecPct",t:"UPEC held",ind:RDY},{k:"ucmoPct",t:"UCMO present",ind:RDY},{k:"ucsecPct",t:"UC Secretary present",ind:RDY},
+  {k:"aicTrPct",t:"Trained AICs",ind:RDY},{k:"teamTrPct",t:"Teams trained",ind:RDY},{k:"mpucPct",t:"MP field validated by UC staff",ind:RDY},
+  {k:"m18Pct",t:"All MT members > 18 years",ind:RDY},{k:"locPct",t:"MT with local team member",ind:RDY},{k:"govPct",t:"MT with Govt. accountable member",ind:RDY},
+  {k:"femPct",t:"MT with female member",ind:RDY},{k:"inacc",t:"Inaccessible areas",ind:{f:N,band:[0,null],hb:false}}];
+const RES_COLS=[["ucs","UCs"],["ucs","UCMOs"],["aic","Area In-charges"],["mt","Mobile teams"],["ft","Fixed teams"],["tp","Transit teams"],["teams","Total teams"],["zs","Zonal supervisors"],["hh","HH target (0–59 m)"],["sch","School target"],["fix","Fixed-site target"],["trn","Transit target"]];
+
+/* resource tiles on the Campaign report (follows the coverage campaign + district / tehsil / UC filters) */
+function neapResourceBand(){
+  if(!D.neap||!D.neap.length) return "";
+  const camp=S.cov.camp, rows=(D.neapByCamp.get(camp)||[]).filter(preOK);
+  if(!rows.length) return `<div class="sec-h"><h2>Campaign resources</h2><p>No NEAP resource plan found for ${esc(camp)} · ${esc(scopeName())}</p></div>`;
+  const T=neapAgg(rows), L=D.neapCamps, i=L.indexOf(camp);
+  const prevC=[...L.slice(0,i)].reverse().find(c=>(D.neapByCamp.get(c)||[]).some(preOK)&&(D.neapByCamp.get(c)||[]).filter(preOK).length>=rows.length*.5);
+  const Pv=prevC?neapAgg((D.neapByCamp.get(prevC)||[]).filter(preOK)):null;
+  const t=(k,l)=>kpi({t:l,f:N},T[k],Pv?.[k],prevC);
+  return `<div class="sec-h"><h2>Campaign resources</h2><p>From NEAP · ${esc(camp)} · ${esc(scopeName())} · <a href="#/pre/neap">full NEAP readiness</a></p></div>
+    <div class="kband res">${t("ucs","UCMOs (UPEC)")}${t("aic","Area In-charges")}${t("mt","Mobile teams")}${t("tp","Transit teams")}${t("ft","Fixed teams")}${t("teams","Total teams")}</div>`;
+}
+
+function pgPreNeap(el){
+  if(!D.neap||!D.neap.length){ el.innerHTML=preEmpty("NEAP","coverage (Daily Coverage Version 2_1)"); return; }
+  const camp=preCamp("neap"), lvl=S.pre.lvl, all=(D.neapByCamp.get(camp)||[]);
+  const rows=all.filter(preOK), T=neapAgg(rows);
+  const byD=group(all,r=>r.district), vals=new Map([...byD].map(([d,rs])=>[d,neapAgg(rs).readyAvg]));
+  const G=group(rows,lvlKey(lvl));
+  const R=[...G].map(([k,rs])=>({_k:k,...neapAgg(rs)})).sort((a,b)=>a._k.localeCompare(b._k));
+  const tot={_k:"",_tot:1,...T};
+  const nameCol={k:"_k",t:lvl==="district"?"District":lvl==="tehsil"?"Tehsil":"Union council",l:1,sv:r=>r._k,fn:r=>r._tot?`<b>${esc(scopeName())}</b>`:lvlLabel(lvl,r._k)};
+  const rdyCols=[nameCol,...NEAP_READY.map(c=>({k:c.k,t:c.t,ind:c.ind,bg:1,fmt:c.ind.f===P?pct2:null})),{k:"green",t:"Green",fn:r=>`<b>${r.green}</b>/${r.readyN}`,sv:r=>r.green}];
+  const resCols=[nameCol,...RES_COLS.map(([k,t])=>({k,t}))];
+  const L=D.neapCamps, iC=L.indexOf(camp), rr=L.slice(0,iC+1).filter(c=>(D.neapByCamp.get(c)||[]).some(preOK)).slice(-4);
+  const trend=rr.map(c=>({_k:c,camp:c,...neapAgg((D.neapByCamp.get(c)||[]).filter(preOK))}));
+  const campCol={k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`};
+  const worst=[...byD].map(([d,rs])=>[d,neapAgg(rs)]).sort((a,b)=>a[1].green-b[1].green);
+  const tick=worst.map(([d,m])=>({c:m.green===m.readyN?"var(--pass)":"var(--fail)",h:`<b>${esc(tc(d))}</b> ${m.green}/${m.readyN} readiness checks green · UCMO ${pct2(m.ucmoPct)} · UC Sec ${pct2(m.ucsecPct)} · female members ${pct2(m.femPct)}`}));
+  el.innerHTML=heroHTML({eyebrow:`${camp} · National Emergency Action Plan`,title:"Ready before the first door is knocked",sub:`Pre-campaign readiness and resources for ${scopeName()} — straight from NEAP, updated when the coverage workbook is saved.`,
+      stats:[{v:nf.format(T.ucs),l:"UCs planned"},{v:nf.format(T.teams),l:"teams deployed"},{v:nf.format(T.aic),l:"area in-charges"},{v:`${T.green}/${T.readyN}`,l:"readiness checks green"}],
+      ind:{f:P,band:[.9995,.97],hb:true},vals,ticker:tick})
+  +`<div class="kband res">${[["ucs","UCMOs (UPEC)"],["aic","Area In-charges"],["mt","Mobile teams"],["tp","Transit teams"],["ft","Fixed teams"],["zs","Zonal supervisors"]].map(([k,l])=>kpi({t:l,f:N},T[k])).join("")}</div>
+  <div class="sec-h"><h2>NEAP readiness summary</h2><div class="frow">${lvlSeg(lvl,"lv1")}${stampLine("neap","NEAP3")}</div></div>
+  <div class="card neapT"><div class="card-h"><div><h3>National Emergency Action Plan — ${esc(lvl==="district"?"district":lvl==="tehsil"?"tehsil":"UC")}-wise</h3><p>${esc(camp)} · green = 100%, red = below 100% · inaccessible areas green only when none · click a row to drill down</p></div></div>
+    <div class="tw">${tableHTML(rdyCols,[...R,tot],{id:"neapR",onRow:1})}</div>
+    <p class="note" style="padding:0 16px 12px">District-level DPEC attendance (DPEC held in time, DC, DHO, must-member attendance) is not part of the UC-level NEAP data, so it is not shown here.</p></div>
+  <div class="sec-h"><h2>Campaign resources</h2><p>${esc(camp)} · ${esc(scopeName())}</p></div>
+  <div class="card"><div class="card-h"><div><h3>Human resources and targets — ${esc(lvl==="district"?"district":lvl==="tehsil"?"tehsil":"UC")}-wise</h3><p>One UCMO per union council · teams and micro-plan targets as entered in NEAP</p></div></div>
+    <div class="tw">${tableHTML(resCols,[...R,tot],{id:"neapRes",onRow:1})}</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>Team composition</h3><p>Share of mobile teams meeting each requirement</p></div></div><div class="card-b">${hbarsHTML([["m18Pct","All members over 18"],["locPct","Local team member"],["govPct","Govt. accountable member"],["femPct","Female member"]].map(([k,l])=>({k,label:l,v:T[k],txt:pct2(T[k])})),{f:P,band:[.9995,.9],hb:true},{max:1})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Area in-charges and micro-plans</h3><p>As reported in NEAP for ${esc(camp)}</p></div></div><div class="card-b">${hbarsHTML([["aicTrPct","AICs trained"],["aicFemPct","Female AICs"],["aicGovPct","Government AICs"],["drPass","MP desk review passed (AIC areas)"],["fvPass","MP field validation passed (AIC areas)"],["stallPct","UCs using stall-method team training"]].map(([k,l])=>({k,label:l,v:T[k],txt:pct2(T[k])})),{f:P,band:[.9995,.9],hb:true},{max:1})}</div></div>
+  </div>
+  <div class="sec-h"><h2>Round on round</h2><p>${esc(rr.join(" · "))} · ${esc(scopeName())}</p></div>
+  <div class="card neapT"><div class="card-h"><div><h3>Readiness, last rounds</h3><p>Same checks for the same area, round by round</p></div></div><div class="tw">${tableHTML([campCol,...rdyCols.slice(1,-1)],trend,{cur:r=>r.camp===camp})}</div></div>
+  <div class="card"><div class="card-h"><div><h3>Resources, last rounds</h3><p>How the plan changed round by round</p></div></div><div class="tw">${tableHTML([campCol,...resCols.slice(1)],trend,{cur:r=>r.camp===camp})}</div></div>`;
+  wireLvl(el);
+  $$("table[data-tid=neapR],table[data-tid=neapRes]",el).forEach(t=>wireTable(t.parentElement,render,k=>{ if(k) preDrill(lvl,k); }));
+}
+
+/* =====================================================================
+   MPQA — micro-plan quality assessment (desk review + field validation)
+   ===================================================================== */
+const MPQA_B={f:P,band:[.7,.9],hb:true};
+function mpqaAgg(rows){ const rp=rows.filter(r=>r.rep), av=k=>{ const v=rp.map(r=>r[k]).filter(x=>x!=null); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; };
+  const s={ucs:rows.length,rep:rp.length,desk:av("desk"),field:av("field"),overall:av("overall")};
+  s.gap=s.desk!=null&&s.field!=null?s.field-s.desk:null;
+  s.good=rp.filter(r=>r.band==="Good").length; s.inter=rp.filter(r=>r.band==="Intermediate").length; s.fail=rp.filter(r=>r.band==="Failed").length;
+  s.q=(D.mpqaQ||[]).map((_,i)=>{ const v=rp.map(r=>r.q[i]).filter(x=>x!=null); return v.length?v.reduce((a,b)=>a+b,0)/v.length:null; });
+  return s; }
+function pgPreMpqa(el){
+  if(!D.mpqa||!D.mpqa.length){ el.innerHTML=preEmpty("MPQA","MPQA_New"); return; }
+  const camp=preCamp("mpqa"), lvl=S.pre.lvl, all=D.mpqa.filter(r=>r.camp===camp), rows=all.filter(preOK), T=mpqaAgg(rows);
+  const byD=group(all,r=>r.district), vals=new Map([...byD].map(([d,rs])=>[d,mpqaAgg(rs).overall]));
+  const G=group(rows,lvlKey(lvl)), R=[...G].map(([k,rs])=>({_k:k,...mpqaAgg(rs),bandTxt:rs.length===1?rs[0].band:""})).sort((a,b)=>a._k.localeCompare(b._k));
+  const nameCol={k:"_k",t:lvl==="district"?"District":lvl==="tehsil"?"Tehsil":"Union council",l:1,sv:r=>r._k,fn:r=>r._tot?`<b>${esc(scopeName())}</b>`:lvlLabel(lvl,r._k)};
+  const bandPill=b=>b==="Good"?pill("pass").replace(BL.pass,"Good"):b==="Intermediate"?pill("watch").replace(BL.watch,"Intermediate"):b==="Failed"?pill("fail").replace(BL.fail,"Failed"):"";
+  const cols=[nameCol,...(lvl==="uc"?[]:[{k:"rep",t:"UCs assessed"}]),{k:"desk",t:"Desk review %",ind:MPQA_B,bg:1},{k:"field",t:"Field validation %",ind:MPQA_B,bg:1},{k:"overall",t:"Overall %",ind:MPQA_B,bg:1},
+    {k:"gap",t:"Field − desk",fn:r=>r.gap==null?"–":(r.gap>=0?"+":"−")+Math.abs(r.gap*100).toFixed(1)+" pts",sv:r=>r.gap},
+    ...(lvl==="uc"?[{k:"bandTxt",t:"Result",fn:r=>bandPill(r.bandTxt),sv:r=>r.overall}]:[{k:"good",t:"Good"},{k:"inter",t:"Intermediate"},{k:"fail",t:"Failed"}])];
+  const kl=S.geo.district?(S.geo.tehsils.length?"uc":"tehsil"):"district";
+  const hb=[...group(rows,lvlKey(kl))].map(([k,rs])=>{ const m=mpqaAgg(rs); return {k,label:kl==="uc"?tc(k.split("|")[1]):kl==="tehsil"?tc(k.split("|")[1]):tc(k),v:m.overall,sub:kl==="uc"?"":m.rep+" UCs"}; }).sort((a,b)=>(a.v??2)-(b.v??2));
+  const qcols=S.geo.district?[...group(rows,r=>r.tehsil)].sort():[...group(rows,r=>r.district)].sort();
+  const qa=qcols.map(([k,rs])=>[k,mpqaAgg(rs)]);
+  const nDesk=Math.min(10,(D.mpqaQ||[]).length);
+  const qRows=(D.mpqaQ||[]).map((h,i)=>({_k:String(i),sec:i<nDesk?"Desk review":"Field validation",q:h,all:T.q[i],...Object.fromEntries(qa.map(([k,m])=>["c_"+k,m.q[i]]))}));
+  const worst=rows.filter(r=>r.rep&&r.overall!=null).sort((a,b)=>a.overall-b.overall).slice(0,10).map(r=>({_k:r.district+"|"+r.uc,...r}));
+  el.innerHTML=heroHTML({eyebrow:`${camp} · Micro-Plan Quality Assessment`,title:"Is the micro-plan good enough to reach every child?",sub:`Desk review and field validation of UC micro-plans for ${scopeName()} — Good ≥ 90%, Intermediate 70–90%, Failed below 70%.`,
+      stats:[{v:nf.format(T.rep),l:"UCs assessed"},{v:pct2(T.overall),l:"overall score"},{v:nf.format(T.good),l:"rated Good"},{v:nf.format(T.inter+T.fail),l:"need improvement"}],ind:MPQA_B,vals,
+      ticker:[...byD].sort().map(([d,rs])=>{ const m=mpqaAgg(rs); return {c:`var(--${bandOf(MPQA_B,m.overall)||"grey"})`,h:`<b>${esc(tc(d))}</b> overall ${pct2(m.overall)} · desk ${pct2(m.desk)} · field ${pct2(m.field)} · ${m.fail} failed`}; })})
+  +`<div class="g3">${gauge2(T.desk,MPQA_B,"Desk review")}${gauge2(T.field,MPQA_B,"Field validation")}${gauge2(T.overall,MPQA_B,"Overall MPQA")}</div>
+  <div class="kband">${kpi({t:"UCs assessed",f:N},T.rep)}${kpi({t:"Good",f:N},T.good)}${kpi({t:"Intermediate",f:N},T.inter)}${kpi({t:"Failed",f:N},T.fail)}</div>
+  <div class="sec-h"><h2>MPQA results</h2><div class="frow">${lvlSeg(lvl,"lv2")}${stampLine("mpqa","MPQA_New")}</div></div>
+  <div class="card"><div class="card-h"><div><h3>MPQA — ${esc(lvl==="district"?"district":lvl==="tehsil"?"tehsil":"UC")}-wise</h3><p>${esc(camp)} · averages of UC scores · click a row to drill down</p></div></div>
+    <div class="tw">${tableHTML(cols,[...R,{_k:"",_tot:1,...T}],{id:"mpqaR",onRow:1})}</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>Overall MPQA by ${kl==="district"?"district":kl==="tehsil"?"tehsil":"UC"}</h3><p>Lowest first · marks at 70% and 90%</p></div></div><div class="card-b">${hbarsHTML(hb,MPQA_B,{max:1})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Lowest 10 UCs</h3><p>${esc(camp)} · overall score</p></div></div><div class="tw" id="mpw">${tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)},{k:"desk",t:"Desk",ind:MPQA_B,bg:1},{k:"field",t:"Field",ind:MPQA_B,bg:1},{k:"overall",t:"Overall",ind:MPQA_B,bg:1}],worst,{rank:1,onRow:1})}</div></div>
+  </div>
+  <div class="card"><div class="card-h"><div><h3>Question by question</h3><p>Average UC score on each checklist item · ${esc(S.geo.district?"tehsils of "+tc(S.geo.district):"districts")}</p></div></div>
+    <div class="tw">${tableHTML([{k:"sec",t:"Part",l:1},{k:"q",t:"Checklist item",l:1},...qa.map(([k])=>({k:"c_"+k,t:tc(k),ind:MPQA_B,bg:1})),{k:"all",t:"All",ind:MPQA_B,bg:1}],qRows)}</div></div>`;
+  wireLvl(el);
+  wireTable($("table[data-tid=mpqaR]",el).parentElement,render,k=>{ if(k) preDrill(lvl,k); });
+  wireTable($("#mpw"),null,pickUC);
+}
+
+/* =====================================================================
+   TRAININGS — AIC / UCMO training and team training monitoring
+   ===================================================================== */
+const TR_B={f:P,band:[.75,.9],hb:true};
+function trAgg(rows,kind){
+  const s={n:rows.length,exp:0,att:0,m:0,f:0,neu:0,durN:0,dur:0,ov:0,ovN:0};
+  const IN=kind==="team"?TEAM_IND:AIC_IND, y=IN.map(()=>0), a=IN.map(()=>0);
+  let Y=0,A=0;
+  for(const r of rows){ s.exp+=r.exp||0; s.m+=r.m||0; s.f+=r.f||0; s.att+=(r.att!=null?r.att:(r.m||0)+(r.f||0)); s.neu+=r.neu||0;
+    if(r.dur!=null&&r.dur>0){ s.dur+=r.dur; s.durN++; }
+    if(kind==="team"){ r.y.forEach((v,i)=>{ y[i]+=v; a[i]+=r.a[i]; if(i!==TEAM_R){ Y+=v; A+=r.a[i]; } }); }
+    else { r.y.forEach((v,i)=>{ if(v!=null){ y[i]+=v; a[i]++; } }); if(r.overall!=null){ s.ov+=r.overall; s.ovN++; } } }
+  s.ind=IN.map((_,i)=>a[i]?y[i]/a[i]:null);
+  s.overall=kind==="team"?div(Y,A):div(s.ov,s.ovN);
+  s.attPct=div(s.att,s.exp); s.avgDur=div(s.dur,s.durN);
+  s.dur4=kind==="team"?s.ind[TEAM_IND.findIndex(x=>x[3]==="G")]:s.ind[26];
+  return s;
+}
+function pgPreTrain(el){
+  const kind=S.pre.tr, src=kind==="team"?D.team:D.aic;
+  const seg=`<div class="seg" role="group" aria-label="Training" id="trk"><button data-tr="aic" aria-pressed="${kind==="aic"}">AIC / UCMO training</button><button data-tr="team" aria-pressed="${kind==="team"}">Team training</button></div>`;
+  if(!src||!src.length){ el.innerHTML=`<div class="sec-h"><h2>Trainings</h2><div class="frow">${seg}</div></div>`+preEmpty(kind==="team"?"team training":"AIC / UCMO training",kind==="team"?"Team Training Monitoring Dashboard":"AIC-UCMO Training Monitoring (UPEC)"); wireTr(el); return; }
+  const camp=preCamp("train"), lvl=S.pre.lvl, IN=kind==="team"?TEAM_IND:AIC_IND;
+  const all=src.filter(r=>r.camp===camp&&(!S.pre.ttype||r.type===S.pre.ttype)), rows=all.filter(preOK), T=trAgg(rows,kind);
+  const byD=group(all,r=>r.district), vals=new Map([...byD].map(([d,rs])=>[d,trAgg(rs,kind).overall]));
+  const base=lvl==="uc"?explodeUC(rows):rows;
+  const G=group(base,lvlKey(lvl)), R=[...G].filter(([k])=>!k.endsWith("|")).map(([k,rs])=>({_k:k,...trAgg(rs,kind)})).sort((a,b)=>a._k.localeCompare(b._k));
+  const nameCol={k:"_k",t:lvl==="district"?"District":lvl==="tehsil"?"Tehsil":"Union council",l:1,sv:r=>r._k,fn:r=>r._tot?`<b>${esc(scopeName())}</b>`:lvlLabel(lvl,r._k)};
+  const cols=[nameCol,{k:"n",t:"Trainings monitored"},{k:"exp",t:"Expected participants"},{k:"att",t:"Attended"},{k:"attPct",t:"Attendance %",ind:{f:P,band:[.9,.95],hb:true},bg:1},{k:"neu",t:"First-time participants"},
+    {k:"avgDur",t:"Average duration (min)"},{k:"dur4",t:"4 hours or more",ind:TR_B,bg:1},{k:"overall",t:"Overall compliance %",ind:TR_B,bg:1}];
+  const cg=S.geo.district?[...group(rows,r=>r.tehsil)].sort():[...group(rows,r=>r.district)].sort();
+  const ca=cg.map(([k,rs])=>[k,trAgg(rs,kind)]);
+  const iRows=IN.map((x,i)=>({_k:String(i),sec:x[0],q:x[1],all:T.ind[i],...Object.fromEntries(ca.map(([k,m])=>["c_"+k,m.ind[i]]))})).filter(r=>r.all!=null);
+  const kl=S.geo.district?"tehsil":"district";
+  const hb=ca.map(([k,m])=>({k,label:tc(k),v:m.overall,sub:m.n+" trainings"})).sort((a,b)=>(a.v??2)-(b.v??2));
+  const weak=iRows.filter(r=>r.all!=null).sort((a,b)=>a.all-b.all).slice(0,8).map(r=>({k:r._k,label:r.q,v:r.all,sub:r.sec}));
+  const types=[...new Set(src.filter(r=>r.camp===camp).map(r=>r.type).filter(Boolean))].sort();
+  const name=kind==="team"?"Team training":"AIC / UCMO training";
+  el.innerHTML=`<div class="sec-h"><h2>Trainings</h2><div class="frow">${seg}${types.length>1?sel("f-ttype","Training type",types,S.pre.ttype,"All types",x=>x):""}${stampLine(kind==="team"?"team":"aic",kind==="team"?"Team Training Monitoring Dashboard":"AIC-UCMO Training Monitoring (UPEC)")}</div></div>`
+  +heroHTML({eyebrow:`${camp} · ${name} monitoring`,title:kind==="team"?"Trained teams make the difference at the door":"Area in-charges and UCMOs trained to lead",sub:`Monitoring of ${name.toLowerCase()} sessions for ${scopeName()} — checklist compliance, attendance and duration.`,
+      stats:[{v:nf.format(T.n),l:"trainings monitored"},{v:nf.format(T.att),l:"participants attended"},{v:pct2(T.attPct),l:"attendance"},{v:pct2(T.overall),l:"overall compliance"}],ind:TR_B,vals,
+      ticker:[...byD].sort().map(([d,rs])=>{ const m=trAgg(rs,kind); return {c:`var(--${bandOf(TR_B,m.overall)||"grey"})`,h:`<b>${esc(tc(d))}</b> ${m.n} trainings · compliance ${pct2(m.overall)} · attendance ${pct2(m.attPct)}`}; })})
+  +`<div class="g3">${gauge2(T.overall,TR_B,"Overall compliance")}${gauge2(T.attPct,{f:P,band:[.9,.95],hb:true},"Attendance",{max:1.1})}${gauge2(T.dur4,TR_B,"Lasted 4 hours or more")}</div>
+  <div class="sec-h"><h2>${esc(name)} results</h2><div class="frow">${lvlSeg(lvl,"lv3")}</div></div>
+  <div class="card"><div class="card-h"><div><h3>${esc(name)} — ${esc(lvl==="district"?"district":lvl==="tehsil"?"tehsil":"UC")}-wise</h3><p>${esc(camp)}${lvl==="uc"?" · a session covering several UCs counts for each of them":""} · click a row to drill down</p></div></div>
+    <div class="tw">${tableHTML(cols,[...R,{_k:"",_tot:1,...T}],{id:"trR",onRow:1})}</div></div>
+  <div class="g2">
+    <div class="card"><div class="card-h"><div><h3>Overall compliance by ${kl}</h3><p>Lowest first · marks at 75% and 90%</p></div></div><div class="card-b">${hbarsHTML(hb,TR_B,{max:1})}</div></div>
+    <div class="card"><div class="card-h"><div><h3>Weakest checklist items</h3><p>${esc(scopeName())} · lowest compliance first</p></div></div><div class="card-b">${hbarsHTML(weak,TR_B,{max:1})}</div></div>
+  </div>
+  <div class="card"><div class="card-h"><div><h3>Checklist item by ${kl}</h3><p>Share of monitored sessions meeting each item · ${esc(camp)}</p></div></div>
+    <div class="tw">${tableHTML([{k:"sec",t:"Section",l:1},{k:"q",t:"Checklist item",l:1},...ca.map(([k])=>({k:"c_"+k,t:tc(k),ind:TR_B,bg:1})),{k:"all",t:"All",ind:TR_B,bg:1}],iRows)}</div></div>`;
+  wireTr(el); wireLvl(el);
+  const ft=$("#f-ttype",el); if(ft) ft.onchange=e=>{ S.pre.ttype=e.target.value; render(); };
+  wireTable($("table[data-tid=trR]",el).parentElement,render,k=>{ if(k) preDrill(lvl,k); });
+}
+function wireTr(el){ $$("[data-tr]",el).forEach(b=>b.onclick=()=>{ S.pre.tr=b.dataset.tr; S.pre.ttype=""; render(); }); }
+</script>
+<script>
+"use strict";
+/* =====================================================================
    ICM DASHBOARD
    ===================================================================== */
 function pgIcmDash(el){
@@ -2304,7 +2631,7 @@ function pgCmp(el){
    FOOTER, ROUTER, BOOT
    ===================================================================== */
 function footer(keys){ return `<div class="card" style="padding:12px 16px"><details class="defs"><summary>How these indicators are calculated</summary><div class="defs-g">${keys.map(k=>IND[k]).map(i=>`<div><b>${esc(i.t)}</b><br>${esc(i.d||"")}${i.band?` · <span style="color:var(--pass)">on target ${bandText(i).pass}</span>`:""}</div>`).join("")}</div></details></div>`; }
-const RENDER={"cov/report":pgCovReport,"cov/maps":pgCovMaps,"cov/tables":pgCovTables,"cov/race":pgCovRace,"icm/dash":pgIcmDash,"icm/maps":pgIcmMaps,"icm/spot":pgIcmSpot,"icm/compare":pgIcmCompare,"icm/audit":pgIcmAudit,"icm/tables":pgIcmTables,"cmp":pgCmp};
+const RENDER={"cov/report":pgCovReport,"cov/maps":pgCovMaps,"cov/tables":pgCovTables,"cov/race":pgCovRace,"icm/dash":pgIcmDash,"icm/maps":pgIcmMaps,"icm/spot":pgIcmSpot,"icm/compare":pgIcmCompare,"icm/audit":pgIcmAudit,"icm/tables":pgIcmTables,"cmp":pgCmp,"pre/neap":pgPreNeap,"pre/mpqa":pgPreMpqa,"pre/train":pgPreTrain};
 function render(){
   cancelAnimationFrame(raceTimer); hideTip();
   $$(".nav a").forEach(a=>a.toggleAttribute("aria-current",false)); const a=$(`.nav a[data-p="${S.page}"]`); a&&a.setAttribute("aria-current","page");
@@ -2314,15 +2641,15 @@ function render(){
   saveHash();
 }
 function saveHash(){ try{ const q=new URLSearchParams(); const g=S.geo; if(g.district)q.set("d",g.district); g.tehsils.forEach(t=>q.append("t",t)); g.ucs.forEach(u=>q.append("u",u));
-  const P=PAGES[S.page]; if(P.ds==="cov")q.set("c",S.cov.camp); if(P.ds==="icm")q.set("c",S.icm.camp); if(P.ds==="cmp")q.set("c",S.cmp.camp);
+  const P=PAGES[S.page]; if(P.ds==="cov")q.set("c",S.cov.camp); if(P.ds==="icm")q.set("c",S.icm.camp); if(P.ds==="cmp")q.set("c",S.cmp.camp); if(P.ds==="pre"&&preCamp(P.src))q.set("c",preCamp(P.src));
   const h="#/"+S.page+(q.toString()?"?"+q:""); if(location.hash!==h) history.replaceState(null,"",h); }catch(e){} }
 function readHash(){ const h=location.hash.slice(2); const [p,qs]=h.split("?"); if(RENDER[p]) S.page=p; const q=new URLSearchParams(qs||"");
   const d=q.get("d"); if(d&&D.H[d]){ S.geo.district=d; S.geo.tehsils=q.getAll("t").filter(t=>D.H[d][t]); const all=new Set(Object.values(D.H[d]).flatMap(s=>[...s])); S.geo.ucs=q.getAll("u").filter(u=>all.has(u)); }
-  const c=q.get("c"), ds=PAGES[S.page].ds; if(c){ if(ds==="cov"&&D.covCamps.includes(c)) S.cov.camp=c; if(ds==="icm"&&D.icmCamps.includes(c)) S.icm.camp=c; if(ds==="cmp"&&D.cmpCamps.includes(c)) S.cmp.camp=c; } }
+  const c=q.get("c"), ds=PAGES[S.page].ds; if(c){ if(ds==="cov"&&D.covCamps.includes(c)) S.cov.camp=c; if(ds==="icm"&&D.icmCamps.includes(c)) S.icm.camp=c; if(ds==="cmp"&&D.cmpCamps.includes(c)) S.cmp.camp=c; if(ds==="pre"&&preList(PAGES[S.page].src).includes(c)) S.pre.camp=c; } }
 addEventListener("hashchange",()=>{ const p=location.hash.slice(2).split("?")[0]; if(RENDER[p]&&p!==S.page){ S.page=p; if(p==="cmp"){S.geo.tehsil="";S.geo.uc="";} render(); scrollTo({top:0}); } });
 let rzT=0,lastW=innerWidth; addEventListener("resize",()=>{ if(Math.abs(innerWidth-lastW)<60) return; lastW=innerWidth; clearTimeout(rzT); rzT=setTimeout(()=>D&&render(),250); });
 function railFoot(){ const f=t=>{ if(!t) return "—"; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
-  $("#rail-foot").innerHTML=`<span>Coverage data <b>${f(D.upd.cov)}</b></span><span>ICM data <b>${f(D.upd.icm)}</b></span><span class="rf-site"><b>Online Dashboard</b> — Peshawar Division, all districts · Campaign Coverages and Monitoring</span>`; }
+  $("#rail-foot").innerHTML=`<span>Coverage data <b>${f(D.upd.cov)}</b></span><span>ICM data <b>${f(D.upd.icm)}</b></span>${D.upd.neap?`<span>NEAP data <b>${f(D.upd.neap)}</b></span>`:""}${[D.upd.mpqa,D.upd.aic,D.upd.team].some(Boolean)?`<span>MPQA / trainings <b>${f([D.upd.mpqa,D.upd.aic,D.upd.team].filter(Boolean).sort().at(-1))}</b></span>`:""}<span class="rf-site"><b>Online Dashboard</b> — Peshawar Division, all districts · Campaign Coverages and Monitoring</span>`; }
 load().then(()=>{ try{ $(".brand b").textContent=SITE.short; $(".brand small").textContent=SITE.place; document.title=SITE.name; }catch(e){} readHash(); railFoot(); render(); }).catch(err=>{ console.error(err);
   $("#page").innerHTML=`<div class="err"><b>The data files could not be loaded.</b><br>${esc(err.message)}<br><br>This page reads <code>data/coverage.csv</code>, <code>data/icm.csv</code> and <code>data/geo.json</code> from the same folder. Open it from the website address, not by double-clicking the file.</div>`; });
 </script>
