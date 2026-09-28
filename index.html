@@ -658,6 +658,60 @@ th.on{color:var(--accent-2)}
 .neapT th{white-space:normal;min-width:78px;vertical-align:bottom}
 .kband.res{grid-template-columns:repeat(auto-fit,minmax(160px,1fr))}
 .kband.res .kv{background:linear-gradient(100deg,#F28CB1,#C4A8FF 55%,#22D3EE);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* NEAP small multiples */
+.mbg{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.mb{border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;background:var(--surface-2)}
+.mb-h{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:8px}
+.mb-h h4{margin:0;font-size:12.5px;font-weight:700;line-height:1.25;color:var(--ink)}
+.mb-s{font-size:10.5px;font-weight:700;white-space:nowrap;padding:2px 7px;border-radius:99px}
+.mb-s.ok{color:var(--pass);background:var(--pass-soft)}.mb-s.no{color:var(--fail);background:var(--fail-soft)}
+.mb-bars{display:flex;align-items:flex-end;gap:6px;height:120px}
+.mb-c{flex:1 1 0;min-width:0;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:3px}
+.mb-v{font-size:10.5px;font-weight:700;color:var(--ink-2);white-space:nowrap}
+.mb-b{display:block;width:100%;max-width:36px;border-radius:6px 6px 2px 2px;min-height:2px;transition:height .6s}
+.mb-l{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.mb-c.cur .mb-l{color:var(--ink);font-weight:700}.mb-c.cur .mb-b{box-shadow:0 0 0 2px var(--surface),0 0 0 3.5px var(--accent)}
+/* Coverage vs ICM four boxes */
+.qgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}
+.qb{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;gap:4px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);border-left:5px solid var(--qc);background:linear-gradient(135deg,color-mix(in srgb,var(--qc) 14%,var(--surface)),var(--surface));transition:transform .2s,box-shadow .2s}
+.qb:hover{transform:translateY(-2px)}.qb:focus-visible{outline:2px solid var(--accent)}
+.qb.on{box-shadow:0 0 0 2px var(--qc),0 10px 28px -14px var(--qc)}
+.qb .qn{font-family:var(--display);font-weight:800;font-size:30px;line-height:1;color:var(--qc)}
+.qb .qp{font-size:11px;color:var(--muted);font-weight:600}
+.qb b{font-size:14px;color:var(--ink)}.qb .qd{font-size:12px;color:var(--ink-2)}.qb .qa{font-size:11.5px;color:var(--qc);font-weight:700}
+/* ---------- phones ---------- */
+.ftog{display:none}
+@media (max-width:640px){
+  .ctx-in{padding:10px 14px 10px;gap:8px}
+  .ptitle h1{font-size:20px}.ptitle p{font-size:12px}.ptitle .eyebrow{font-size:10px}
+  .ctx-top{gap:8px!important}
+  .chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;margin:0 -14px;padding:2px 14px 4px;scroll-snap-type:x proximity}
+  .chips::-webkit-scrollbar{display:none}.chip{flex:0 0 auto;scroll-snap-align:start}
+  .ftog{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;border:1px solid var(--line-2);background:var(--glass,var(--surface));color:var(--ink);border-radius:10px;padding:7px 12px;font-weight:700;font-size:12.5px}
+  .ftog em{font-style:normal;background:var(--accent);color:#fff;border-radius:99px;padding:0 7px;font-size:11px}
+  .frow.fmain{display:none}
+  body.f-open .frow.fmain{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .frow.fmain .fld,.frow.fmain .ms{min-width:0;width:100%}.frow.fmain select,.frow.fmain .msb{width:100%}
+  .page{padding:12px 12px 40px!important}
+  .hero{min-height:0!important;border-radius:16px}.hero-art{display:none}
+  .hero h2{font-size:21px}.hero p{font-size:12px}
+  .hstats{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .kband,.kband.res{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
+  .kband .k{padding:10px 12px!important}.kband .kv{font-size:21px!important}.kband .kn{font-size:11px}.kband .ks{font-size:10.5px}
+  .gauges.gx{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}
+  .scards{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .sc{padding:10px!important;gap:8px!important}.sc svg{width:52px!important;height:52px!important}.sc-b{font-size:11.5px}
+  .sec-h h2{font-size:17px}.sec-h p{font-size:11.5px}
+  .card-h{padding:12px 12px 6px!important}.card-h h3{font-size:14px}.card-h p{font-size:11.5px}
+  .tw table{font-size:12px}.tw th,.tw td{padding:7px 8px!important}
+  .tw tbody td:first-child,.tw thead th:first-child{position:sticky;left:0;z-index:1;background:var(--surface)}
+  .tw thead th:first-child{background:var(--thead,var(--surface))}
+  .mbg{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.mb{padding:9px 8px 7px}.mb-h{flex-direction:column;gap:3px}.mb-h h4{font-size:11.5px}.mb-bars{height:92px;gap:3px}.mb-v{font-size:8.5px}.mb-l{font-size:8.5px}
+  .qgrid{gap:8px}.qb{padding:10px 12px}.qb .qn{font-size:24px}.qb .qd{display:none}
+  .hb-l{max-width:38vw}
+  .ticker{font-size:11px}
+}
 </style>
 </head>
 <body>
@@ -1240,7 +1294,9 @@ function renderCtx(){
       </div>
       ${camps}
     </div>
-    <div class="frow">
+    ${(()=>{ const n=(g.district?1:0)+(g.tehsils.length?1:0)+(g.ucs.length?1:0)+(ds==="cov"?(S.cov.days.length?1:0)+(S.cov.tier?1:0)+(S.cov.risk?1:0):0)+(ds==="icm"?(S.icm.days.length?1:0)+(S.icm.designation?1:0)+(S.icm.org?1:0)+(S.icm.pop?1:0):0);
+      return `<button type="button" class="ftog" id="ftog" aria-expanded="${document.body.classList.contains("f-open")}"><svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2.5 4h11M4.5 8h7M6.5 12h3"/></svg>Filters${n?` <em>${n}</em>`:""}${g.district?` · ${esc(tc(g.district))}`:""}</button>`; })()}
+    <div class="frow fmain">
       ${sel("f-dist","District",dists,g.district,"All districts")}
       ${ds==="cmp"?"":msel("f-teh","Tehsil",[{items:tehs}],g.tehsils,g.district?"All tehsils":"Pick a district first",!g.district)}
       ${ds==="cmp"?"":msel("f-uc","Union council",ucGroups,g.ucs,g.district?"All UCs":"Pick a district first",!g.district)}
@@ -1255,6 +1311,7 @@ function renderCtx(){
   $$("[data-camp]").forEach(b=>b.onclick=()=>{ S[b.dataset.ds].camp=b.dataset.camp; if(b.dataset.ds==="cov") S.covMaps.all=""; render(); });
   $("#f-clear")&&($("#f-clear").onclick=()=>{S.geo=newGeo(); if(ds==="pre") S.pre.ttype=""; if(ds==="cov") Object.assign(S.cov,{days:[],tier:"",risk:""}); if(ds==="icm") Object.assign(S.icm,{days:[],designation:"",org:"",pop:""}); render();});
   $("#menu").onclick=()=>document.body.classList.toggle("nav-open");
+  $("#ftog")&&($("#ftog").onclick=()=>{ const o=document.body.classList.toggle("f-open"); $("#ftog").setAttribute("aria-expanded",o); });
 }
 function chipRow(list,cur,ds){ return `<div class="chips" role="group" aria-label="Campaign">${list.map((c,i)=>`<button class="chip" data-ds="${ds}" data-camp="${esc(c)}" aria-pressed="${c===cur}">${esc(shortCamp(c))}${i===list.length-1?'<span class="lt">latest</span>':""}</button>`).join("")}</div>`; }
 
@@ -2277,6 +2334,16 @@ function neapResourceBand(){
     <div class="kband res">${t("ucs","UCMOs (UPEC)")}${t("aic","Area In-charges")}${t("mt","Mobile teams")}${t("tp","Transit teams")}${t("ft","Fixed teams")}${t("teams","Total teams")}</div>`;
 }
 
+/* small multiples: one mini bar chart per readiness check — series = districts / tehsils / rounds */
+function neapMini(series){
+  if(!series.length) return '<div class="empty">No data for this selection.</div>';
+  return `<div class="mbg">${NEAP_READY.map(c=>{ const pct=c.ind.f===P, vals=series.map(x=>x.m[c.k]), mx=pct?1:Math.max(1,...vals.filter(v=>v!=null));
+    const green=series.filter(x=>bandOf(c.ind,x.m[c.k])==="pass").length;
+    return `<div class="mb"><div class="mb-h"><h4>${esc(c.t)}</h4><span class="mb-s ${green===series.length?"ok":"no"}">${green}/${series.length} green</span></div>
+      <div class="mb-bars">${series.map(x=>{ const v=x.m[c.k], b=bandOf(c.ind,v), h=v==null||!isFinite(v)?0:pct?Math.max(2,v*100):(v>0?Math.max(6,v/mx*100):2);
+        return `<div class="mb-c${x.cur?" cur":""}" title="${esc(x.label)}: ${v==null?"–":pct?pct2(v):nf.format(v)}"><span class="mb-v">${v==null?"–":pct?(+(v*100).toFixed(v>=.9995?0:1))+"%":nf.format(v)}</span><i class="mb-b" style="height:${h.toFixed(1)}%;background:var(--${b||"grey"})"></i><span class="mb-l">${esc(x.short||x.label)}</span></div>`; }).join("")}</div></div>`; }).join("")}</div>`;
+}
+
 function pgPreNeap(el){
   if(!D.neap||!D.neap.length){ el.innerHTML=preEmpty("NEAP","coverage (Daily Coverage Version 2_1)"); return; }
   const camp=preCamp("neap"), lvl=S.pre.lvl, all=(D.neapByCamp.get(camp)||[]);
@@ -2291,6 +2358,9 @@ function pgPreNeap(el){
   const L=D.neapCamps, iC=L.indexOf(camp), rr=L.slice(0,iC+1).filter(c=>fullRound(c,camp)&&(D.neapByCamp.get(c)||[]).some(preOK)).slice(-4);
   const trend=rr.map(c=>({_k:c,camp:c,...neapAgg((D.neapByCamp.get(c)||[]).filter(preOK))}));
   const campCol={k:"camp",t:"Round",l:1,fn:r=>`<b>${esc(r.camp)}</b>`};
+  const gl=S.geo.district?(S.geo.tehsils.length?"uc":"tehsil"):"district";
+  const gser=[...group(rows,lvlKey(gl))].sort((a,b)=>a[0].localeCompare(b[0])).slice(0,16).map(([k,rs])=>{ const nm=gl==="district"?k:k.split("|")[1]; return {label:tc(nm),short:tc(nm).slice(0,9),m:neapAgg(rs)}; });
+  const tser=trend.map(t=>({label:t.camp,short:tinyCamp(t.camp),m:t,cur:t.camp===camp}));
   const worst=[...byD].map(([d,rs])=>[d,neapAgg(rs)]).sort((a,b)=>a[1].green-b[1].green);
   const tick=worst.map(([d,m])=>({c:m.green===m.readyN?"var(--pass)":"var(--fail)",h:`<b>${esc(tc(d))}</b> ${m.green}/${m.readyN} readiness checks green · UCMO ${pct2(m.ucmoPct)} · UC Sec ${pct2(m.ucsecPct)} · female members ${pct2(m.femPct)}`}));
   el.innerHTML=heroHTML({eyebrow:`${camp} · National Emergency Action Plan`,title:"Ready before the first door is knocked",sub:`Pre-campaign readiness and resources for ${scopeName()} — straight from NEAP, updated when the coverage workbook is saved.`,
@@ -2301,6 +2371,7 @@ function pgPreNeap(el){
   <div class="card neapT"><div class="card-h"><div><h3>National Emergency Action Plan — ${esc(lvl==="district"?"district":lvl==="tehsil"?"tehsil":"UC")}-wise</h3><p>${esc(camp)} · green = 100%, red = below 100% · inaccessible areas green only when none · click a row to drill down</p></div></div>
     <div class="tw">${tableHTML(rdyCols,[...R,tot],{id:"neapR",onRow:1})}</div>
     <p class="note" style="padding:0 16px 12px">District-level DPEC attendance (DPEC held in time, DC, DHO, must-member attendance) is not part of the UC-level NEAP data, so it is not shown here.</p></div>
+  <div class="card"><div class="card-h"><div><h3>Readiness at a glance — ${gl==="district"?"district":gl==="tehsil"?"tehsil":"UC"}-wise</h3><p>${esc(camp)} · one small chart per check · green bar = 100% (inaccessible: none) · red = gap</p></div></div><div class="card-b">${neapMini(gser)}</div></div>
   <div class="sec-h"><h2>Campaign resources</h2><p>${esc(camp)} · ${esc(scopeName())}</p></div>
   <div class="card"><div class="card-h"><div><h3>Human resources and targets — ${esc(lvl==="district"?"district":lvl==="tehsil"?"tehsil":"UC")}-wise</h3><p>One UCMO per union council · teams and micro-plan targets as entered in NEAP</p></div></div>
     <div class="tw">${tableHTML(resCols,[...R,tot],{id:"neapRes",onRow:1})}</div></div>
@@ -2309,6 +2380,7 @@ function pgPreNeap(el){
     <div class="card"><div class="card-h"><div><h3>Area in-charges and micro-plans</h3><p>As reported in NEAP for ${esc(camp)}</p></div></div><div class="card-b">${hbarsHTML([["aicTrPct","AICs trained"],["aicFemPct","Female AICs"],["aicGovPct","Government AICs"],["drPass","MP desk review passed (AIC areas)"],["fvPass","MP field validation passed (AIC areas)"],["stallPct","UCs using stall-method team training"]].map(([k,l])=>({k,label:l,v:T[k],txt:pct2(T[k])})),{f:P,band:[.9995,.9],hb:true},{max:1})}</div></div>
   </div>
   <div class="sec-h"><h2>Round on round</h2><p>${esc(rr.join(" · "))} · ${esc(scopeName())}</p></div>
+  <div class="card"><div class="card-h"><div><h3>Readiness trend, round by round</h3><p>${esc(scopeName())} · each small chart shows the last rounds · highlighted bar = ${esc(camp)}</p></div></div><div class="card-b">${neapMini(tser)}</div></div>
   <div class="card neapT"><div class="card-h"><div><h3>Readiness, last rounds</h3><p>Same checks for the same area, round by round</p></div></div><div class="tw">${tableHTML([campCol,...rdyCols.slice(1,-1)],trend,{cur:r=>r.camp===camp})}</div></div>
   <div class="card"><div class="card-h"><div><h3>Resources, last rounds</h3><p>How the plan changed round by round</p></div></div><div class="tw">${tableHTML([campCol,...resCols.slice(1)],trend,{cur:r=>r.camp===camp})}</div></div>`;
   wireLvl(el);
@@ -2636,38 +2708,63 @@ function pgIcmTables(el){
    ===================================================================== */
 const CMP_X=[{k:"hhcovPct",ref:.95},{k:"overallPct",ref:.95},{k:"sdc",ref:.395}], CMP_Y=[{k:"recallPct",ref:.9},{k:"seenPct",ref:.95}];
 function axisSel(id,label,list,cur){ return `<div class="fld"><label for="${id}">${label}</label><select id="${id}">${list.map(x=>`<option value="${x.k}"${x.k===cur?" selected":""}>${esc(IND[x.k].t)}</option>`).join("")}</select></div>`; }
+/* four boxes: where each UC sits when reported coverage meets monitoring */
+const CMP_Q={
+  good:{t:"Good in both",c:"var(--pass)",d:"Reported coverage and monitoring both meet the standard.",a:"Keep up the quality."},
+  gap:{t:"Reported high, monitors found gaps",c:"var(--fail)",d:"The UC reports good coverage, but monitors found too many unvaccinated children.",a:"Check first: possible over-reporting or poor quality — send a supervisor."},
+  under:{t:"Monitors good, reported low",c:"var(--watch)",d:"Monitors found children vaccinated, but reported coverage is below target.",a:"Check the target (micro-plan) and the data entry."},
+  low:{t:"Low in both",c:"#F97316",d:"Both reported coverage and monitoring are below standard.",a:"Real coverage gap — plan catch-up / mop-up."}};
+const cmpQ=(p,xr,yr)=>p.x>=xr.ref?(p.y>=yr.ref?"good":"gap"):(p.y>=yr.ref?"under":"low");
 function pgCmp(el){
   const camp=S.cmp.camp, ic=D.icmByKey[campKey(camp)];
   const cov=covAgg(D.cov.filter(r=>r.camp===camp&&geoOK(r,true)),ucKey), icm=icmAgg(D.icm.filter(r=>r.camp===ic&&geoOK(r,true)),ucKey);
   const xr=CMP_X.find(x=>x.k===S.cmp.x), yr=CMP_Y.find(y=>y.k===S.cmp.y), XI=IND[xr.k], YI=IND[yr.k];
-  const pts=[]; for(const [k,m] of cov){ const n=icm.get(k); if(!n) continue; const x=m[xr.k], y=n[yr.k]; if(x==null||y==null||!isFinite(x)||!isFinite(y)) continue; pts.push({_k:k,x,y,cl:n.clusters,m,n}); }
-  const disc=pts.filter(p=>p.x>=xr.ref&&p.y<yr.ref).sort((a,b)=>a.y-b.y);
+  const pts=[]; for(const [k,m] of cov){ const n=icm.get(k); if(!n) continue; const x=m[xr.k], y=n[yr.k]; if(x==null||y==null||!isFinite(x)||!isFinite(y)) continue; const p={_k:k,x,y,cl:n.clusters,m,n}; p.q=cmpQ(p,xr,yr); pts.push(p); }
+  const cnt=Object.fromEntries(Object.keys(CMP_Q).map(q=>[q,pts.filter(p=>p.q===q).length]));
+  const disc=pts.filter(p=>p.q==="gap");
+  const qSel=S.cmp.q&&CMP_Q[S.cmp.q]?S.cmp.q:"gap", list=pts.filter(p=>p.q===qSel).sort((a,b)=>a.y-b.y);
   const cT=one(covAgg(D.cov.filter(r=>r.camp===camp&&geoOK(r,true)))), iT=one(icmAgg(D.icm.filter(r=>r.camp===ic&&geoOK(r,true))));
-  el.innerHTML=`${cmpHero(camp,ic,cT,iT,disc.length)}<div class="callout"><div>Admin-reported coverage from the coverage data set against what ICM monitors found <b>in the same union councils</b>. UCs in the red corner report high coverage but fail the monitoring standard — the first place to send a supervisor.</div></div>
-  <div class="kband">${kpi(XI,cT?.[xr.k],null,null,XI.t+" (admin)")}${kpi(YI,iT?.[yr.k],null,null,YI.t+" (ICM)")}<div class="k"><span class="kn">UCs in both data sets</span><span class="kv">${nf.format(pts.length)}</span></div><div class="k"><span class="kn">Reported high, monitored low</span><span class="kv" style="color:${disc.length?"var(--fail)":"var(--pass)"}">${nf.format(disc.length)}</span><span class="ks">${pts.length?(disc.length/pts.length*100).toFixed(0)+"% of matched UCs":""}</span></div></div>
-  <div class="card lift"><div class="card-h"><div><h3>Reported vs monitored</h3><p>${esc(scopeName())} · ${esc(camp)}</p></div></div><div class="gauges gx">${gauge2(cT?.[xr.k],XI,XI.t+" (admin)",{max:1.2})}${gauge2(iT?.[yr.k],YI,YI.t+" (ICM)",{max:1})}${xr.k==="overallPct"?gauge2(cT?.hhcovPct,IND.hhcovPct,"HH coverage (admin)",{max:1.2}):gauge2(cT?.overallPct,IND.overallPct,"Total coverage (admin)",{max:1.2})}${gauge2(iT?.seenPct,IND.seenPct,"Seen finger-marked (ICM)",{max:1})}</div></div>
+  const box=q=>{ const o=CMP_Q[q], n=cnt[q]; return `<button type="button" class="qb${q===qSel?" on":""}" data-q="${q}" style="--qc:${o.c}"><span class="qn">${nf.format(n)}</span><span class="qp">${pts.length?Math.round(n/pts.length*100)+"% of UCs":""}</span><b>${esc(o.t)}</b><span class="qd">${esc(o.d)}</span><span class="qa">${esc(o.a)}</span></button>`; };
+  el.innerHTML=`${cmpHero(camp,ic,cT,iT,disc.length)}<div class="callout"><div><b>What this page shows:</b> for every union council, the coverage the UC <b>reported</b> (admin data) is compared with what independent <b>ICM monitors found</b> when they checked houses. When both agree, the data can be trusted. When a UC reports high coverage but monitors find many unvaccinated children, it needs a visit.</div></div>
+  <div class="kband">${kpi(XI,cT?.[xr.k],null,null,XI.t+" (reported)")}${kpi(YI,iT?.[yr.k],null,null,YI.t+" (monitors)")}<div class="k"><span class="kn">UCs in both data sets</span><span class="kv">${nf.format(pts.length)}</span></div><div class="k"><span class="kn">Reported high, monitors found gaps</span><span class="kv" style="color:${disc.length?"var(--fail)":"var(--pass)"}">${nf.format(disc.length)}</span><span class="ks">${pts.length?(disc.length/pts.length*100).toFixed(0)+"% of matched UCs":""}</span></div></div>
+  <div class="sec-h"><h2>Four groups of union councils</h2><div class="frow">${axisSel("cx","Reported (admin)",CMP_X,xr.k)}${axisSel("cy","Found by monitors (ICM)",CMP_Y,yr.k)}</div></div>
+  <p class="note" style="margin:-4px 0 10px">Standard: ${esc(XI.t)} ≥ ${fmt(xr.ref,{f:P,dp:xr.ref<.5?1:0})} reported, and ${esc(YI.t)} ≥ ${fmt(yr.ref,{f:P,dp:0})} found by monitors · click a box to list its UCs</p>
+  <div class="qgrid">${box("under")}${box("good")}${box("low")}${box("gap")}</div>
   <div class="g-side">
-    <div class="card lift"><div class="card-h"><div><h3>Each dot is a union council</h3><p>Dot size = clusters monitored</p></div>
-      <div class="frow">${axisSel("cx","Across (admin)",CMP_X,xr.k)}${axisSel("cy","Up (ICM)",CMP_Y,yr.k)}</div></div>
-      <div class="card-b chart" id="sc"></div></div>
-    <div class="card"><div class="card-h"><div><h3>Reported high, monitored low</h3><p>${esc(XI.t)} ≥ ${fmt(xr.ref,{f:P})} but ${esc(YI.t)} &lt; ${fmt(yr.ref,{f:P,dp:0})}</p></div></div><div class="tw tall" id="dc">${tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)},{k:"x",t:"Admin",ind:XI},{k:"y",t:"ICM",ind:YI},{k:"cl",t:"Clusters"}],disc,{onRow:1})}</div></div>
-  </div>`;
+    <div class="card lift"><div class="card-h"><div><h3>Where each union council sits</h3><p>Each dot is one UC · further right = higher coverage reported · higher up = more children found vaccinated by monitors · bigger dot = more clusters checked</p></div></div>
+      <div class="card-b chart" id="sc"></div>
+      <div class="legend" style="padding:0 16px 14px">${Object.entries(CMP_Q).map(([q,o])=>`<span class="lg"><span class="sw" style="background:${o.c}"></span>${esc(o.t)} (${cnt[q]})</span>`).join("")}</div></div>
+    <div class="card"><div class="card-h"><div><h3 style="color:${CMP_Q[qSel].c}">${esc(CMP_Q[qSel].t)}</h3><p>${nf.format(list.length)} UCs · ${esc(CMP_Q[qSel].a)} · click a UC to see its ICM clusters</p></div></div><div class="tw tall" id="dc">${tableHTML([{k:"_k",t:"Union council",l:1,fn:r=>ucLabel(r._k)},{k:"x",t:"Reported",ind:XI},{k:"y",t:"Monitors found",ind:YI},{k:"cl",t:"Clusters"}],list,{onRow:1})}</div></div>
+  </div>
+  <div class="card lift"><div class="card-h"><div><h3>Reported vs monitored — totals</h3><p>${esc(scopeName())} · ${esc(camp)}</p></div></div><div class="gauges gx">${gauge2(cT?.[xr.k],XI,XI.t+" (reported)",{max:1.2})}${gauge2(iT?.[yr.k],YI,YI.t+" (monitors)",{max:1})}${xr.k==="overallPct"?gauge2(cT?.hhcovPct,IND.hhcovPct,"HH coverage (reported)",{max:1.2}):gauge2(cT?.overallPct,IND.overallPct,"Total coverage (reported)",{max:1.2})}${gauge2(iT?.seenPct,IND.seenPct,"Seen finger-marked (monitors)",{max:1})}</div></div>`;
   $("#cx").onchange=e=>{S.cmp.x=e.target.value;render();}; $("#cy").onchange=e=>{S.cmp.y=e.target.value;render();};
+  $$(".qb",el).forEach(b=>b.onclick=()=>{ S.cmp.q=b.dataset.q; render(); setTimeout(()=>$("#dc")?.scrollIntoView({behavior:"smooth",block:"center"}),60); });
   wireTable($("#dc"),null,k=>{ S.icm.camp=ic; location.hash="#/icm/spot"; S.page="icm/spot"; pickUC(k); });
   const host=$("#sc"); if(!pts.length){ host.innerHTML='<div class="empty">No union council appears in both data sets for this campaign.</div>'; return; }
-  const W=Math.max(300,host.clientWidth), H=Math.round(Math.min(480,Math.max(300,W*.66))), ml=48,mr=14,mt=12,mb=40, iw=W-ml-mr, ih=H-mt-mb;
-  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y); const tx=niceTicks(Math.min(...xs,xr.ref)-.02,Math.max(...xs,xr.ref)+.02,5), ty=niceTicks(Math.min(...ys,yr.ref)-.02,Math.min(1,Math.max(...ys,yr.ref)+.01),5);
-  const [xl,xh,yl,yh]=[tx[0],tx.at(-1),ty[0],ty.at(-1)], X=v=>ml+(v-xl)/(xh-xl)*iw, Y=v=>mt+ih-(v-yl)/(yh-yl)*ih, mc=Math.max(...pts.map(p=>p.cl))||1, R=c=>3.5+Math.sqrt(c/mc)*7;
-  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Admin coverage against ICM per UC"><rect x="${X(xr.ref)}" y="${Y(yr.ref)}" width="${X(xh)-X(xr.ref)}" height="${Y(yl)-Y(yr.ref)}" fill="var(--fail-soft)"/>`;
-  for(const t of tx) s+=`<line class="gl" x1="${X(t)}" x2="${X(t)}" y1="${mt}" y2="${mt+ih}"/><text x="${X(t)}" y="${H-mb+16}" text-anchor="middle">${Math.round(t*100)}%</text>`;
-  for(const t of ty) s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${ml-7}" y="${Y(t)+4}" text-anchor="end">${Math.round(t*100)}%</text>`;
-  s+=`<line class="ref" x1="${X(xr.ref)}" x2="${X(xr.ref)}" y1="${mt}" y2="${mt+ih}"/><line class="ref" x1="${ml}" x2="${W-mr}" y1="${Y(yr.ref)}" y2="${Y(yr.ref)}"/>`;
-  s+=`<text x="${W-mr-6}" y="${Y(yl)-8}" text-anchor="end" style="fill:var(--fail);font-weight:700;letter-spacing:.06em;font-size:10.5px">REPORTED HIGH · MONITORED LOW</text><text x="${ml+iw/2}" y="${H-4}" text-anchor="middle" style="fill:var(--ink-2);font-weight:600">${esc(XI.t)} (admin) →</text><text transform="translate(12 ${mt+ih/2}) rotate(-90)" text-anchor="middle" style="fill:var(--ink-2);font-weight:600">${esc(YI.t)} (ICM) →</text>`;
-  for(const p of [...pts].sort((a,b)=>b.cl-a.cl)){ const bad=p.x>=xr.ref&&p.y<yr.ref; s+=`<circle cx="${X(p.x)}" cy="${Y(Math.max(yl,p.y))}" r="${R(p.cl)}" fill="${bad?"var(--fail)":"var(--h3)"}" fill-opacity="${bad?.9:.42}" stroke="var(--surface)" stroke-width="1.4" data-k="${esc(p._k)}" style="cursor:pointer"/>`; }
+  const W=Math.max(300,host.clientWidth), small=W<520, H=Math.round(Math.min(500,Math.max(320,W*.7))), ml=small?40:52,mr=12,mt=12,mb=small?46:48, iw=W-ml-mr, ih=H-mt-mb;
+  /* keep the axes on the bulk of the UCs: a few extreme values are pinned to the edge instead of squashing everything else */
+  const qv=(a,f)=>{ const b=[...a].sort((x,y)=>x-y); return b[Math.min(b.length-1,Math.max(0,Math.round(f*(b.length-1))))]; };
+  const xs=pts.map(p=>p.x), ys=pts.map(p=>p.y);
+  const x0=Math.min(qv(xs,.01),xr.ref)-.02, x1=Math.max(qv(xs,.99),xr.ref)+.02, y0=Math.min(qv(ys,.01),yr.ref)-.02;
+  const tx=niceTicks(x0,x1,small?4:5), ty=niceTicks(y0,Math.min(1,Math.max(...ys,yr.ref)+.01),5);
+  const [xl,xh,yl,yh]=[tx[0],tx.at(-1),ty[0],ty.at(-1)], X=v=>ml+(v-xl)/(xh-xl)*iw, Y=v=>mt+ih-(v-yl)/(yh-yl)*ih, mc=Math.max(...pts.map(p=>p.cl))||1, R=c=>(small?3:3.5)+Math.sqrt(c/mc)*(small?5:7);
+  const rx=X(xr.ref), ry=Y(yr.ref);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Reported coverage against monitoring per UC">`;
+  const zone=(x0,y0,x1,y1,q)=>`<rect x="${x0}" y="${y0}" width="${Math.max(0,x1-x0)}" height="${Math.max(0,y1-y0)}" fill="${CMP_Q[q].c}" opacity=".09"/>`;
+  s+=zone(ml,mt,rx,ry,"under")+zone(rx,mt,ml+iw,ry,"good")+zone(ml,ry,rx,mt+ih,"low")+zone(rx,ry,ml+iw,mt+ih,"gap");
+  for(const t of tx) s+=`<line class="gl" x1="${X(t)}" x2="${X(t)}" y1="${mt}" y2="${mt+ih}"/><text x="${X(t)}" y="${mt+ih+15}" text-anchor="middle">${Math.round(t*100)}%</text>`;
+  for(const t of ty) s+=`<line class="gl" x1="${ml}" x2="${W-mr}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${ml-6}" y="${Y(t)+4}" text-anchor="end">${Math.round(t*100)}%</text>`;
+  s+=`<line class="ref" x1="${rx}" x2="${rx}" y1="${mt}" y2="${mt+ih}"/><line class="ref" x1="${ml}" x2="${W-mr}" y1="${ry}" y2="${ry}"/>`;
+  const lab=(x,y,anchor,q)=>`<text x="${x}" y="${y}" text-anchor="${anchor}" style="fill:${CMP_Q[q].c};font-weight:800;font-size:${small?9.5:11}px;letter-spacing:.02em">${esc(CMP_Q[q].t.toUpperCase())} · ${cnt[q]}</text>`;
+  if(!small||rx-ml>150) s+=lab(ml+6,mt+14,"start","under");
+  s+=lab(ml+iw-6,mt+14,"end","good")+lab(ml+iw-6,mt+ih-8,"end","gap");
+  if(!small||rx-ml>150) s+=lab(ml+6,mt+ih-8,"start","low");
+  s+=`<text x="${ml+iw/2}" y="${H-6}" text-anchor="middle" style="fill:var(--ink-2);font-weight:650">Reported: ${esc(XI.t)} →</text><text transform="translate(11 ${mt+ih/2}) rotate(-90)" text-anchor="middle" style="fill:var(--ink-2);font-weight:650">Monitors found: ${esc(YI.t)} →</text>`;
+  for(const p of [...pts].sort((a,b)=>b.cl-a.cl)){ s+=`<circle cx="${X(Math.min(xh,Math.max(xl,p.x)))}" cy="${Y(Math.max(yl,p.y))}" r="${R(p.cl)}" fill="${CMP_Q[p.q].c}" fill-opacity="${p.q==="good"?.55:.9}" stroke="var(--surface)" stroke-width="1.3" data-k="${esc(p._k)}" style="cursor:pointer"/>`; }
   host.innerHTML=s+"</svg>";
   const svg=$("svg",host);
   svg.addEventListener("mousemove",e=>{ const c=e.target.closest("circle"); if(!c){hideTip();return;} const p=pts.find(q=>q._k===c.dataset.k); const [d,u]=p._k.split("|");
-    showTip(e,`<h4>${esc(tc(u))}</h4><div class="w">${esc(tc(d))}</div>`+dlist([[XI.t+" (admin)",fmt(p.x,XI),1],[YI.t+" (ICM)",fmt(p.y,YI),1],["Clusters monitored",nf.format(p.cl)],["Still missed (admin)",fmt(p.m.still)],["Missed children (ICM)",fmt(p.n.missed)]])); });
+    showTip(e,`<h4>${esc(tc(u))}</h4><div class="w">${esc(tc(d))} · <b style="color:${CMP_Q[p.q].c}">${esc(CMP_Q[p.q].t)}</b></div>`+dlist([[XI.t+" (reported)",fmt(p.x,XI),1],[YI.t+" (monitors)",fmt(p.y,YI),1],["Clusters monitored",nf.format(p.cl)],["Still missed (reported)",fmt(p.m.still)],["Missed children (monitors)",fmt(p.n.missed)]])); });
   svg.addEventListener("mouseleave",hideTip);
   svg.addEventListener("click",e=>{ const c=e.target.closest("circle"); if(c){ S.icm.camp=ic; location.hash="#/icm/spot"; S.page="icm/spot"; pickUC(c.dataset.k); } });
 }
@@ -2694,7 +2791,7 @@ function readHash(){ const h=location.hash.slice(2); const [p,qs]=h.split("?"); 
 addEventListener("hashchange",()=>{ const p=location.hash.slice(2).split("?")[0]; if(RENDER[p]&&p!==S.page){ S.page=p; if(p==="cmp"){S.geo.tehsil="";S.geo.uc="";} render(); scrollTo({top:0}); } });
 let rzT=0,lastW=innerWidth; addEventListener("resize",()=>{ if(Math.abs(innerWidth-lastW)<60) return; lastW=innerWidth; clearTimeout(rzT); rzT=setTimeout(()=>D&&render(),250); });
 function railFoot(){ const f=t=>{ if(!t) return "—"; const d=new Date(t); return isNaN(d)?esc(t):d.toLocaleString("en-GB",{day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"}); };
-  $("#rail-foot").innerHTML=`<span>Coverage data <b>${f(D.upd.cov)}</b></span><span>ICM data <b>${f(D.upd.icm)}</b></span>${D.upd.neap?`<span>NEAP data <b>${f(D.upd.neap)}</b></span>`:""}${[D.upd.mpqa,D.upd.aic,D.upd.team].some(Boolean)?`<span>MPQA / trainings <b>${f([D.upd.mpqa,D.upd.aic,D.upd.team].filter(Boolean).sort().at(-1))}</b></span>`:""}<span class="rf-site"><b>Online Dashboard</b> — Peshawar Division, all districts · Campaign Coverages and Monitoring</span>`; }
+  $("#rail-foot").innerHTML=`<span class="rf-site"><b>Online Dashboard</b> — Peshawar Division, all districts · Campaign Coverages and Monitoring</span>`; }
 load().then(()=>{ try{ $(".brand b").textContent=SITE.short; $(".brand small").textContent=SITE.place; document.title=SITE.name; }catch(e){} readHash(); railFoot(); render(); }).catch(err=>{ console.error(err);
   $("#page").innerHTML=`<div class="err"><b>The data files could not be loaded.</b><br>${esc(err.message)}<br><br>This page reads <code>data/coverage.csv</code>, <code>data/icm.csv</code> and <code>data/geo.json</code> from the same folder. Open it from the website address, not by double-clicking the file.</div>`; });
 </script>
