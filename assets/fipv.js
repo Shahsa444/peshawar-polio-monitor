@@ -349,7 +349,8 @@
     saveBlob(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }), name);
   }
   /* ---- ERM deck (PowerPoint), same format as the district ERM deck ---- */
-  var DK = { green: "006837", gold: "C3922E", head: "274E13", tag: "EFE3D3", red: "990000", blue: "1F5C8B", grid: "BFBFBF", zebra: "F4F7F2", ink: "1A1A1A", mute: "595959", tot: "EEF5E9" };
+  // Palette sampled from the fIPV Daily Sitrep PDF: green titles, red missed, orange NA, indigo refusals, blue headers, cream/mint panels.
+  var DK = { green: "388E3C", gold: "FF8F00", head: "1565C0", tag: "E8F4E9", red: "F44336", blue: "1565C0", orange: "FF8F00", indigo: "3949AB", teal: "00838F", grid: "A5D6A7", zebra: "FEF7E0", ink: "1A1A1A", mute: "595959", tot: "E8F4E9", hdr: "FCFDF3" };
   var DFONT = "Calibri";
   var pptxLoading = null;
   function loadPptx() {
@@ -399,15 +400,18 @@
       var sd = dr.length && /^\d{4}-\d{2}-\d{2}$/.test(dr[0].dayDate) ? " · " + shortDate(dr[0].dayDate) : "";
       return { d: d, h: "Day " + d + sd, m: metrics(dr, [], false), groups: ucGroups(dr, [], false), total: false };
     });
-    var total = { h: target ? "All days to Day " + target : "All days", m: metrics(rs, cs, !target), groups: ucGroups(rs, cs, !target), total: true };
+    var total = { h: "All days", m: metrics(rs, cs, !target), groups: ucGroups(rs, cs, !target), total: true };
     var panels = (target ? dayPanels.filter(function (p) { return +p.d === target; }) : dayPanels).concat([total]);
     return { target: target, days: days, rs: rs, cs: cs, trend: dayPanels, panels: panels, cols: panels, groups: total.groups };
   }
   function cw(n) { var r = (9.4 - 3.1) / Math.max(n, 1); var a = [3.1]; for (var i = 0; i < n; i++) a.push(r); return a; }
-  function hc(t, fill, align) { return { text: t, options: { bold: true, color: "FFFFFF", fill: { color: fill }, align: align || "center", valign: "middle" } }; }
+  function hc(t, fill, align) { return { text: t, options: { bold: true, color: DK.ink, fill: { color: DK.hdr }, align: align || "center", valign: "middle" } }; }
+  // Red heat shading as on the website tables: largest value solid red, smaller values fade to cream.
+  function heatFill(v, max) { var t = max > 0 ? Math.pow(Math.max(0, Math.min(1, v / max)), .9) : 0; var a = [252, 253, 243], b = [244, 67, 54]; return a.map(function (x, i) { var c = Math.round(x + (b[i] - x) * t).toString(16); return c.length < 2 ? "0" + c : c; }).join("").toUpperCase(); }
+  function hv(t, v, max, align) { return { text: String(t), options: { align: align || "center", valign: "middle", fill: { color: heatFill(v, max) } } }; }
   function bc(t, o) { var x = { align: "right", valign: "middle" }; if (o) for (var k in o) x[k] = o[k]; return { text: String(t), options: x }; }
   function pTable(slide, rows, opt) {
-    var o = { fontFace: DFONT, fontSize: 10, color: DK.ink, border: { type: "solid", pt: .5, color: DK.grid }, autoPage: false, rowH: .27 };
+    var o = { fontFace: DFONT, fontSize: 10, color: DK.ink, border: [{ type: "none" }, { type: "none" }, { type: "solid", pt: .75, color: DK.green }, { type: "none" }], autoPage: false, rowH: .27 };
     for (var k in opt) o[k] = opt[k];
     slide.addTable(rows, o);
   }
@@ -470,7 +474,7 @@
       box.forEach(function (f) { f.r.forEach(function (ring) { ring.forEach(function (p) { var q = proj(p); minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); }); }); });
       var pad = Math.max(maxx - minx, maxy - miny) * 0.03;
       var vx = minx - pad, vy = miny - pad, vw = maxx - minx + 2 * pad, vh = maxy - miny + 2 * pad;
-      var W = 1000, TOP = 120, BOT = 110, AW = W - 60, AH = 760;
+      var W = 1000, TOP = 104, BOT = 96, AW = W - 30, AH = 900;
       var s = Math.min(AW / vw, AH / vh);
       var mh = Math.round(vh * s), ox = (W - vw * s) / 2, oy = TOP;
       var H = TOP + mh + BOT;
@@ -481,8 +485,9 @@
       var TX = function (x) { return ox + (x - vx) * s; }, TY = function (y) { return oy + (y - vy) * s; };
       var labels = [];
       GEO.forEach(function (f) {
+        if (!inScope(f)) return; // only the district or tehsil chosen on the page
         var g = byKey[f.n + "|" + f.d], v = g ? M.f(g.m) : null, has = v != null && isFinite(v);
-        var fill = !inScope(f) ? "#EEF0F5" : !has ? NODATA : (good(v) ? GOOD : BAD);
+        var fill = !has ? NODATA : (good(v) ? GOOD : BAD);
         ctx.beginPath();
         f.r.forEach(function (ring) {
           ring.forEach(function (p, i) { var q = proj(p); if (i) ctx.lineTo(TX(q[0]), TY(q[1])); else ctx.moveTo(TX(q[0]), TY(q[1])); });
@@ -495,8 +500,16 @@
           labels.push({ x: TX(sx / f.r[0].length), y: TY(sy / f.r[0].length), t: f.n, dark: has && !good(v) });
         }
       });
-      ctx.font = "700 15px Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
-      labels.forEach(function (l) { ctx.fillStyle = l.dark ? "#FFFFFF" : "#14213D"; ctx.fillText(l.t, l.x, l.y); });
+      ctx.font = "700 22px Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      var placed = [];
+      labels.forEach(function (l) {
+        var tw = ctx.measureText(l.t).width + 8, th = 26;
+        var box = { x0: l.x - tw / 2, x1: l.x + tw / 2, y0: l.y - th / 2, y1: l.y + th / 2 };
+        var clash = placed.some(function (b) { return box.x0 < b.x1 && box.x1 > b.x0 && box.y0 < b.y1 && box.y1 > b.y0; });
+        if (clash) return; // keep the map readable: no overlapping names
+        placed.push(box);
+        ctx.fillStyle = l.dark ? "#FFFFFF" : "#14213D"; ctx.fillText(l.t, l.x, l.y);
+      });
       ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
       // title pill
       ctx.font = "700 30px Arial, sans-serif";
@@ -524,8 +537,9 @@
   function buildErmDeck() {
     var sc = deckScope();
     var mdef = [["ipv_hh", "fIPV HH coverage by UC", "fIPV"], ["opv_hh", "OPV HH coverage by UC", "OPV"], ["ipv_miss", "fIPV still missed by UC", "fIPV"], ["opv_miss", "OPV still missed by UC", "OPV"]];
+    var mapPanels = [sc.panels[sc.panels.length - 1]]; // all days only
     var mapJobs = mdef.map(function (d) {
-      return Promise.all(sc.panels.map(function (p) { return mapPanel(d[0], p.groups, p.h, MAPM[d[0]].f(p.m)); }));
+      return Promise.all(mapPanels.map(function (p) { return mapPanel(d[0], p.groups, p.h, MAPM[d[0]].f(p.m)); }));
     });
     return Promise.all([loadPptx(), dataUrl("assets/logo-pei.jpg"), dataUrl("assets/logo-kp.png"), Promise.all(mapJobs)]).then(function (a) {
       var pei = a[1], kp = a[2], mapPics = a[3];
@@ -568,16 +582,30 @@
       // 5-8. UC maps: chosen day beside all days (three panels per slide at most)
       mdef.forEach(function (d, mi) {
         var pics = mapPics[mi];
-        for (var k = 0; k < sc.panels.length; k += 3) {
-          var chunk = sc.panels.slice(k, k + 3), cp = pics.slice(k, k + 3);
-          var title = d[1] + (sc.panels.length > 3 ? " (" + (Math.floor(k / 3) + 1) + "/" + Math.ceil(sc.panels.length / 3) + ")" : "");
+        for (var k = 0; k < mapPanels.length; k += 3) {
+          var chunk = mapPanels.slice(k, k + 3), cp = pics.slice(k, k + 3);
+          var title = d[1];
           var s = frame(title, d[2]);
           var slot = 9.4 / chunk.length;
           chunk.forEach(function (p, i) {
             var pic = cp[i];
             if (!pic) { s.addText("No UC map data", { x: .3 + i * slot, y: 2.4, w: slot, h: .5, fontFace: DFONT, fontSize: 12, italic: true, color: DK.mute, align: "center" }); return; }
-            var h = Math.min(4.35, (slot - .25) / pic.ratio), w = h * pic.ratio;
-            s.addImage({ data: pic.data, x: .3 + i * slot + (slot - w) / 2, y: .88, w: w, h: h });
+            var h = 4.45, w = h * pic.ratio;
+            s.addImage({ data: pic.data, x: .3, y: .85, w: w, h: h });
+            var mk = d[0], M = MAPM[mk], ind = mk.slice(0, 3), isMiss = mk.indexOf("miss") > -1;
+            var ranked = chunk[0].groups.filter(function (g) { return M.f(g.m) != null && isFinite(M.f(g.m)); })
+              .sort(function (a, b) { return isMiss ? M.f(b.m) - M.f(a.m) : M.f(a.m) - M.f(b.m); }).slice(0, 10);
+            var tx = .3 + w + .3, tw = 9.7 - tx;
+            var tcol = isMiss ? DK.red : DK.green;
+            var hPct = isMiss ? "% of target" : "HH cov %", hCnt = isMiss ? "Still missed" : "HH covered";
+            s.addText("Top 10 UCs - " + (isMiss ? "highest still missed" : "lowest HH coverage") + " (all days)", { x: tx, y: .85, w: tw, h: .32, fontFace: DFONT, fontSize: 12, bold: true, color: tcol });
+            var trows = [[hc("#", tcol), hc("UC", tcol, "left"), hc("Tehsil", tcol, "left"), hc(hPct, tcol), hc(hCnt, tcol)]];
+            var mxC = 0; ranked.forEach(function (g) { mxC = Math.max(mxC, g.m[ind].missed); });
+            ranked.forEach(function (g, j) {
+              var val = M.f(g.m), cnt = isMiss ? g.m[ind].missed : g.m[ind].hh;
+              trows.push([bc(j + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(g.teh, { align: "left" }), bc(pct1(val), { bold: isMiss }), isMiss ? hv(n0(cnt), cnt, mxC) : bc(n0(cnt))]);
+            });
+            pTable(s, trows, { x: tx, y: 1.2, w: tw, rowH: .3, fontSize: 10, colW: [.35, 1.75, 1.05, 1.0, tw - 4.15] });
           });
         }
       });
@@ -597,14 +625,31 @@
         pTable(s9, drow, { x: .3, y: 3.6, w: 9.4, colW: cw(dayCols.length) });
       }
 
+      // 9b. still NA and still refusals, top 10 UCs, all days to date (PDF sitrep style), one slide per indicator
+      [["ipv", "fIPV"], ["opv", "OPV"]].forEach(function (ind) {
+        var sx = frame(ind[1] + " - highest still NA and still refusals UCs, all days to date", "NA and refusals");
+        [["stNA", .3, "Still NA", DK.orange], ["stREF", 5.1, "Still refusals", DK.indigo]].forEach(function (c) {
+          sx.addText(ind[1] + " - " + c[2] + " (top 10 UCs)", { x: c[1], y: .85, w: 4.6, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: c[3] });
+          var top = sc.groups.filter(function (g) { return g.m[ind[0]][c[0]] > 0; }).sort(function (a, b) { return b.m[ind[0]][c[0]] - a.m[ind[0]][c[0]]; }).slice(0, 10);
+          var rows = [[hc("#", c[3]), hc("UC", c[3], "left"), hc("Tehsil", c[3], "left"), hc(c[2], c[3]), hc("Still missed", c[3])]];
+          var mx = top.length ? top[0].m[ind[0]][c[0]] : 0;
+          top.forEach(function (g, i) {
+            var val = g.m[ind[0]][c[0]];
+            rows.push([bc(i + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(g.teh, { align: "left" }), hv(n0(val), val, mx), bc(n0(g.m[ind[0]].missed))]);
+          });
+          pTable(sx, rows, { x: c[1], y: 1.2, w: 4.6, rowH: .3, fontSize: 9, colW: [.35, 1.7, 1.0, .75, .8] });
+        });
+      });
+
       // 10. highest still missed UCs, all days to date
       var s10 = frame("Highest still missed UCs - fIPV and OPV", "Missed children");
       [["ipv", .3, "fIPV - top 10 UCs by still missed"], ["opv", 5.1, "OPV - top 10 UCs by still missed"]].forEach(function (d) {
         s10.addText(d[2], { x: d[1], y: .85, w: 4.6, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: DK.ink });
         var top = sc.groups.filter(function (g) { return g.m[d[0]].missed > 0; }).sort(function (a, b) { return b.m[d[0]].missed - a.m[d[0]].missed; }).slice(0, 10);
         var rows = [[hc("#", DK.red), hc("UC", DK.red, "left"), hc("Tehsil", DK.red, "left"), hc("NA", DK.red), hc("REF", DK.red), hc("Total", DK.red)]];
+        var mxT = top.length ? top[0].m[d[0]].missed : 0;
         top.forEach(function (g, i) {
-          rows.push([bc(i + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(g.teh, { align: "left" }), bc(n0(g.m[d[0]].stNA)), bc(n0(g.m[d[0]].stREF)), bc(n0(g.m[d[0]].missed), { bold: true })]);
+          rows.push([bc(i + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(g.teh, { align: "left" }), bc(n0(g.m[d[0]].stNA)), bc(n0(g.m[d[0]].stREF)), hv(n0(g.m[d[0]].missed), g.m[d[0]].missed, mxT)]);
         });
         pTable(s10, rows, { x: d[1], y: 1.2, w: 4.6, rowH: .25, fontSize: 9, colW: [.35, 1.55, .85, .65, .65, .55] });
       });
@@ -628,8 +673,9 @@
         st.addShape(pp.ShapeType.rect, { x: .3, y: .85, w: 9.4, h: .38, fill: { color: DK.blue }, line: { color: DK.blue } });
         st.addText(tn + " TEHSIL - STILL MISSED (fIPV & OPV)", { x: .3, y: .85, w: 9.4, h: .38, fontFace: DFONT, fontSize: 14, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
         var urows = [[hc("#", DK.blue), hc("UC", DK.blue, "left"), hc("fIPV HH cov %", DK.blue), hc("fIPV still NA", DK.blue), hc("fIPV still REF", DK.blue), hc("fIPV still missed", DK.blue), hc("OPV HH cov %", DK.blue), hc("OPV still missed", DK.blue)]];
+        var mxI = gs[0].m.ipv.missed, mxO = 0; gs.forEach(function (g) { mxO = Math.max(mxO, g.m.opv.missed); });
         gs.forEach(function (g, i) {
-          urows.push([bc(i + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(pct1(g.m.ipv.hhPct)), bc(n0(g.m.ipv.stNA)), bc(n0(g.m.ipv.stREF)), bc(n0(g.m.ipv.missed), { bold: true }), bc(pct1(g.m.opv.hhPct)), bc(n0(g.m.opv.missed), { bold: true })]);
+          urows.push([bc(i + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(pct1(g.m.ipv.hhPct)), bc(n0(g.m.ipv.stNA)), bc(n0(g.m.ipv.stREF)), hv(n0(g.m.ipv.missed), g.m.ipv.missed, mxI), bc(pct1(g.m.opv.hhPct)), hv(n0(g.m.opv.missed), g.m.opv.missed, mxO)]);
         });
         pTable(st, urows, { x: .3, y: 1.35, w: 9.4, rowH: .25, colW: [.5, 2.6, 1.0, 1.0, 1.0, 1.1, 1.0, 1.2] });
       });
