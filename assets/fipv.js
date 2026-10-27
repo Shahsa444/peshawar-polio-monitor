@@ -7,7 +7,7 @@
   var DATA = { rows: "data/fipv_rows.csv", cud: "data/fipv_cud.csv", tg: "data/fipv_targets.csv", upd: "data/fipv.updated.txt", geo: "data/geo.json" };
   var ROWS = null, CUD = [], TG = [], GEO = null, STAMP = "", LOADING = null;
   var F = { day: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", q: "", sk: "missed", sd: -1, bench: 0.9 };
-  var GOOD = "#BDF2CF", BAD = "#8E1B1B", NODATA = "#DDD9E6", OUTSIDE = "#E9EBF2";
+  var GOOD = "#25A765", BAD = "#A3161B", NODATA = "#DDD9E6", OUTSIDE = "#E9EBF2";
   var EX = {};
   var MOTION_OFF = function () { return document.documentElement.classList.contains("motion-off"); };
 
@@ -24,7 +24,8 @@
     ".pf-fl{display:flex;flex-direction:column;gap:4px;min-width:130px}",
     ".pf-fl label{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#4B5B76}",
     ".pf-sel,.pf-q{appearance:none;-webkit-appearance:none;border:0;border-radius:16px;padding:11px 36px 11px 14px;background:linear-gradient(180deg,#4FA36B,#2E7D4F) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 13px center;font:inherit;font-weight:700;font-size:14px;color:#fff;box-shadow:0 12px 22px -14px rgba(20,80,40,.85),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer}",
-    ".pf-sel option{color:#14213D;background:#fff}",
+    ".pf .pf-sel{background-color:#2E7D4F !important;color:#fff !important;-webkit-text-fill-color:#fff}",
+    ".pf .pf-sel option{color:#14213D !important;background:#fff !important;-webkit-text-fill-color:#14213D}",
     ".pf-sel:disabled{opacity:.55;cursor:not-allowed}",
     ".pf-q{background:#fff;color:#14213D;border:1px solid #D5DDEB;box-shadow:none;padding:10px 13px;min-width:200px;cursor:text}",
     ".pf-reset{border:0;background:none;color:#2F5BD3;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:10px 4px}",
@@ -53,7 +54,7 @@
     ".sx-k em{display:inline-block;font-style:normal;font-size:12.5px;font-weight:700;margin-top:4px}",
     ".sx-line{height:3px;border-radius:9px;margin:16px 0 14px;opacity:.7}",
     ".c-red{color:#B42318}.c-amb{color:#C27A00}.c-blu{color:#2F5BD3}.c-grn{color:#15803D}.c-ink{color:#14213D}",
-    ".bm-ok{display:inline-block;padding:2px 9px;border-radius:99px;background:" + GOOD + ";color:#0F5132;font-style:normal;font-weight:800;font-size:12px}",
+    ".bm-ok{display:inline-block;padding:2px 9px;border-radius:99px;background:" + GOOD + ";color:#fff;font-style:normal;font-weight:800;font-size:12px}",
     ".bm-no{display:inline-block;padding:2px 9px;border-radius:99px;background:" + BAD + ";color:#fff;font-style:normal;font-weight:800;font-size:12px}",
     ".bm-na{display:inline-block;padding:2px 9px;border-radius:99px;background:#E3E6EE;color:#4B5B76;font-style:normal;font-weight:700;font-size:12px}",
     ".pf-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}",
@@ -229,7 +230,7 @@
     if (p == null || !isFinite(p)) return "<em class=\"bm-na\">–</em>";
     return "<em class=\"" + (onBench(p) ? "bm-ok" : "bm-no") + "\">" + (txt || pc(p)) + "</em>";
   }
-  function bmColor(p) { return onBench(p) ? "#34C27A" : BAD; }
+  function bmColor(p) { return onBench(p) ? GOOD : BAD; }
 
   /* ---- map ---- */
   var LAT0 = 34 * Math.PI / 180;
