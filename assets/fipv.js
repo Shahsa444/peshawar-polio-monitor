@@ -45,6 +45,9 @@
     ".pf-hbtn{margin-left:auto}",
     ".dlb{border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.75);border-radius:12px;padding:6px 11px;font:inherit;font-size:12px;font-weight:700;color:#1F3A5F;cursor:pointer;box-shadow:0 6px 14px -10px rgba(20,30,60,.5)}",
     ".dlb:hover{background:#fff}",
+    ".erm-btn{border:1px solid rgba(255,255,255,.45);border-radius:12px;padding:8px 14px;font:inherit;font-size:13px;font-weight:800;color:#fff;cursor:pointer;background:linear-gradient(180deg,#F25A4F,#C62828);box-shadow:0 10px 20px -12px rgba(183,28,28,.9),inset 0 1px 0 rgba(255,255,255,.35)}",
+    ".erm-btn:hover{filter:brightness(1.06)}",
+    ".erm-btn:disabled{opacity:.55;cursor:default}",
     ".sx-title{font-family:var(--display);font-size:clamp(20px,2.2vw,26px);font-weight:800;letter-spacing:-.02em}",
     ".sx-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}",
     ".sx-head span{font-size:12.5px;font-weight:700;color:#4B5B76}",
@@ -381,10 +384,16 @@
   }
   // The deck follows the page filters. A chosen day gives two columns: that day, and all days to date.
   // No day chosen gives every day, then all days to date.
-  function deckScope() {
-    var inArea = function (r) { return (F.dist === "All" || r.dist === F.dist) && (F.teh === "All" || r.teh === F.teh); };
-    var target = F.day !== "All" ? +F.day : null;
-    if (!target && F.date !== "All") { var hit = ROWS.filter(function (r) { return r.dayDate === F.date; })[0]; if (hit) target = +hit.dayN; }
+  function deckScope(opt) {
+    opt = opt || {};
+    var dist = opt.dist !== undefined ? opt.dist : F.dist, teh = opt.teh !== undefined ? opt.teh : F.teh;
+    var inArea = function (r) { return (dist === "All" || r.dist === dist) && (teh === "All" || r.teh === teh); };
+    var target;
+    if (opt.mode) target = opt.mode === "full" ? null : (+opt.day || null);
+    else {
+      target = F.day !== "All" ? +F.day : null;
+      if (!target && F.date !== "All") { var hit = ROWS.filter(function (r) { return r.dayDate === F.date; })[0]; if (hit) target = +hit.dayN; }
+    }
     var all = ROWS.filter(inArea);
     var days = uniq(all.map(function (r) { return r.dayN; })).filter(function (d) { return d !== "0"; }).sort(function (a, b) { return a - b; });
     if (target) {
@@ -401,8 +410,11 @@
       return { d: d, h: "Day " + d + sd, m: metrics(dr, [], false), groups: ucGroups(dr, [], false), total: false };
     });
     var total = { h: "All days", m: metrics(rs, cs, !target), groups: ucGroups(rs, cs, !target), total: true };
-    var panels = (target ? dayPanels.filter(function (p) { return +p.d === target; }) : dayPanels).concat([total]);
-    return { target: target, days: days, rs: rs, cs: cs, trend: dayPanels, panels: panels, cols: panels, groups: total.groups };
+    var panels;
+    if (target && opt.mode === "upto") panels = [{ d: null, h: (target === 1 ? "Day 1" : "Days 1–" + target), m: metrics(rs, [], false), groups: ucGroups(rs, [], false), total: false }, total];
+    else if (target) panels = dayPanels.filter(function (p) { return +p.d === target; }).concat([total]);
+    else panels = dayPanels.concat([total]);
+    return { target: target, mode: opt.mode || "", days: days, rs: rs, cs: cs, trend: dayPanels, panels: panels, cols: panels, groups: total.groups };
   }
   function cw(n) { var r = (9.4 - 3.1) / Math.max(n, 1); var a = [3.1]; for (var i = 0; i < n; i++) a.push(r); return a; }
   function hc(t, fill, align) { return { text: t, options: { bold: true, color: DK.ink, fill: { color: DK.hdr }, align: align || "center", valign: "middle" } }; }
@@ -460,7 +472,7 @@
     ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
   }
   // One map panel in the Post Campaign Review style: title pill, coverage bubble, UC shapes with names, legend.
-  function mapPanel(key, groups, label, distVal) {
+  function mapPanel(key, groups, label, distVal, scope) {
     return new Promise(function (resolve) {
       if (!GEO || !GEO.length) return resolve(null);
       var M = MAPM[key];
@@ -468,7 +480,8 @@
       var good = function (v) { return M.inv ? v <= thr : v >= thr; };
       var byKey = {};
       groups.forEach(function (g) { byKey[g.uc + "|" + g.dist] = g; });
-      var inScope = function (f) { return (F.dist === "All" || f.d === F.dist) && (F.teh === "All" || f.t === F.teh); };
+      var sdist = scope ? scope.dist : F.dist, steh = scope ? scope.teh : F.teh;
+      var inScope = function (f) { return (sdist === "All" || f.d === sdist) && (steh === "All" || f.t === steh); };
       var shown = GEO.filter(inScope), box = shown.length ? shown : GEO;
       var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
       box.forEach(function (f) { f.r.forEach(function (ring) { ring.forEach(function (p) { var q = proj(p); minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); }); }); });
@@ -534,18 +547,22 @@
       resolve({ data: cv.toDataURL("image/png"), ratio: W / H });
     });
   }
-  function buildErmDeck() {
-    var sc = deckScope();
+  function buildErmDeck(opt) {
+    opt = opt || {};
+    var sc = deckScope(opt);
+    var dist = opt.dist !== undefined ? opt.dist : F.dist, teh = opt.teh !== undefined ? opt.teh : F.teh;
+    var scope = { dist: dist, teh: teh };
+    var inc = opt.slides || { summary: true, maps: true, daily: true, top: true, tehsil: true };
     var mdef = [["ipv_hh", "fIPV HH coverage by UC", "fIPV"], ["opv_hh", "OPV HH coverage by UC", "OPV"], ["ipv_miss", "fIPV still missed by UC", "fIPV"], ["opv_miss", "OPV still missed by UC", "OPV"]];
     var mapPanels = [sc.panels[sc.panels.length - 1]]; // all days only
     var mapJobs = mdef.map(function (d) {
-      return Promise.all(mapPanels.map(function (p) { return mapPanel(d[0], p.groups, p.h, MAPM[d[0]].f(p.m)); }));
+      return Promise.all(mapPanels.map(function (p) { return mapPanel(d[0], p.groups, p.h, MAPM[d[0]].f(p.m), scope); }));
     });
     return Promise.all([loadPptx(), dataUrl("assets/logo-pei.jpg"), dataUrl("assets/logo-kp.png"), Promise.all(mapJobs)]).then(function (a) {
       var pei = a[1], kp = a[2], mapPics = a[3];
-      var distName = F.dist === "All" ? "Peshawar Division" : F.dist.charAt(0) + F.dist.slice(1).toLowerCase();
-      var period = sc.target ? "Day " + sc.target : "all days to date";
-      var asOf = STAMP ? dateLabel(STAMP.slice(0, 10)) : dateLabel(new Date().toISOString().slice(0, 10));
+      var distName = dist === "All" ? "Peshawar Division" : dist.charAt(0) + dist.slice(1).toLowerCase();
+      var period = sc.target ? (sc.mode === "upto" ? (sc.target === 1 ? "Day 1" : "Days 1–" + sc.target) : "Day " + sc.target) : "all days to date";
+      var asOf = opt.date ? dateLabel(opt.date) : (STAMP ? dateLabel(STAMP.slice(0, 10)) : dateLabel(new Date().toISOString().slice(0, 10)));
       var tot = sc.panels[sc.panels.length - 1].m;
       var pp = new PptxGenJS();
       pp.layout = "LAYOUT_16x9"; pp.author = "ERU Peshawar Dashboard"; pp.title = "ERM fIPV " + distName + " " + period;
@@ -562,10 +579,11 @@
       t.addText("Polio Booster Campaign (fIPV & OPV) · " + period, { x: .5, y: 3.25, w: 9, h: .4, fontFace: DFONT, fontSize: 16, bold: true, color: "FFFFFF" });
       t.addText(asOf.toUpperCase(), { x: .5, y: 4.9, w: 9, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: "FFFFFF" });
 
+      if (inc.summary) {
       // 2-3. coverage summaries: chosen day and all days (or every day and all days)
-      var s2 = frame("Summary of fIPV coverage - " + (sc.target ? "Day " + sc.target + " and all days" : "day-wise and all days"), "fIPV");
+      var s2 = frame("Summary of fIPV coverage - " + (sc.target ? (sc.mode === "upto" ? (sc.target === 1 ? "Day 1" : "Days 1–" + sc.target) : "Day " + sc.target) + " and all days" : "day-wise and all days"), "fIPV");
       pTable(s2, summaryRows(sc.cols, "ipv"), { x: .3, y: .9, w: 9.4, colW: cw(sc.cols.length) });
-      var s3 = frame("Summary of OPV coverage - " + (sc.target ? "Day " + sc.target + " and all days" : "day-wise and all days"), "OPV");
+      var s3 = frame("Summary of OPV coverage - " + (sc.target ? (sc.mode === "upto" ? (sc.target === 1 ? "Day 1" : "Days 1–" + sc.target) : "Day " + sc.target) + " and all days" : "day-wise and all days"), "OPV");
       pTable(s3, summaryRows(sc.cols, "opv"), { x: .3, y: .9, w: 9.4, colW: cw(sc.cols.length) });
 
       // 4. still missed children, all days to date
@@ -579,6 +597,8 @@
       pTable(s4, m4, { x: .3, y: .9, w: 6.2, colW: [3.2, 1.5, 1.5] });
       s4.addText("Figures to date (all days up to the selected day, catch-up included when the day is All). Refusals and NA as recorded in the workbook.", { x: .3, y: 3.7, w: 9.4, h: .5, fontFace: DFONT, fontSize: 10, italic: true, color: DK.mute });
 
+      }
+      if (inc.maps) {
       // 5-8. UC maps: chosen day beside all days (three panels per slide at most)
       mdef.forEach(function (d, mi) {
         var pics = mapPics[mi];
@@ -610,6 +630,8 @@
         }
       });
 
+      }
+      if (inc.daily) {
       // 9. daily progress, days up to the chosen day
       var dayCols = sc.trend;
       if (dayCols.length) {
@@ -625,6 +647,8 @@
         pTable(s9, drow, { x: .3, y: 3.6, w: 9.4, colW: cw(dayCols.length) });
       }
 
+      }
+      if (inc.top) {
       // 9b. still NA and still refusals, top 10 UCs, all days to date (PDF sitrep style), one slide per indicator
       [["ipv", "fIPV"], ["opv", "OPV"]].forEach(function (ind) {
         var sx = frame(ind[1] + " - highest still NA and still refusals UCs, all days to date", "NA and refusals");
@@ -654,6 +678,8 @@
         pTable(s10, rows, { x: d[1], y: 1.2, w: 4.6, rowH: .25, fontSize: 9, colW: [.35, 1.55, .85, .65, .65, .55] });
       });
 
+      }
+      if (inc.tehsil) {
       // 11. tehsil summary, all days to date
       var tehs = uniq(sc.rs.map(function (r) { return r.teh; })).sort();
       var s11 = frame("Tehsil-wise coverage and still missed - fIPV and OPV, all days to date", "Tehsils");
@@ -680,19 +706,87 @@
         pTable(st, urows, { x: .3, y: 1.35, w: 9.4, rowH: .25, colW: [.5, 2.6, 1.0, 1.0, 1.0, 1.1, 1.0, 1.2] });
       });
 
+      }
       var fname = ("ERM fIPV " + distName + " " + period + " " + asOf + ".pptx").replace(/[\\/:*?"<>|]/g, "-");
       return pp.writeFile({ fileName: fname });
     });
   }
-  function ermDeck(btn) {
-    if (btn.disabled) return;
-    btn.disabled = true;
-    var old = btn.textContent;
-    btn.textContent = "Building PowerPoint…";
-    buildErmDeck().then(function () { btn.textContent = old; btn.disabled = false; })
-      .catch(function (e) { console.error(e); btn.textContent = "Could not build – try again"; btn.disabled = false; });
+  function ermDeck(btn, opt) {
+    if (btn) { btn.disabled = true; }
+    var old = btn ? btn.textContent : "";
+    if (btn) btn.textContent = "Building PowerPoint…";
+    return buildErmDeck(opt).then(function () { if (btn) { btn.textContent = old; btn.disabled = false; } })
+      .catch(function (e) { console.error(e); if (btn) { btn.textContent = "Could not build – try again"; btn.disabled = false; } throw e; });
   }
-
+  // The same dialog as the main dashboard's ERM deck (site modal and styles): district, campaign, meeting date,
+  // which day, what the deck covers, and the slides to include.
+  function openErmDialog(btn) {
+    var dists = uniq(ROWS.map(function (r) { return r.dist; })).filter(Boolean).sort();
+    var distSel = F.dist !== "All" && dists.indexOf(F.dist) >= 0 ? F.dist : "All";
+    if (typeof openModal !== "function") { ermDeck(btn, { dist: distSel, mode: "only", day: null, slides: null }); return; }
+    var daysOf = function (dist) {
+      return uniq(ROWS.filter(function (r) { return (dist === "All" || r.dist === dist) && r.dayN !== "0"; }).map(function (r) { return +r.dayN; }))
+        .filter(function (n) { return n > 0; }).sort(function (a, b) { return a - b; });
+    };
+    var capName = function (d) { return d === "All" ? "All districts" : d.charAt(0) + d.slice(1).toLowerCase(); };
+    var today = new Date().toISOString().slice(0, 10);
+    var html = '<div class="card-h"><div><h3 id="modal-h">Evening Review Meeting deck</h3><p>Builds the fIPV &amp; OPV ERM PowerPoint from the live data — ready in a few seconds</p></div>' +
+      '<button class="ibtn" data-close aria-label="Close">' + (typeof X_ICON !== "undefined" ? X_ICON : "×") + '</button></div>' +
+      '<div class="card-b derm"><div class="frow">' +
+      '<div class="fld"><label for="dm-d">District</label><select id="dm-d">' +
+        '<option value="All"' + (distSel === "All" ? " selected" : "") + '>All districts</option>' +
+        dists.map(function (d) { return '<option value="' + d + '"' + (d === distSel ? " selected" : "") + '>' + capName(d) + '</option>'; }).join("") + '</select></div>' +
+      '<div class="fld"><label for="dm-c">Campaign</label><select id="dm-c"><option>fIPV &amp; OPV Booster</option></select></div>' +
+      '<div class="fld"><label for="dm-dt">Meeting date</label><input class="inp" id="dm-dt" type="date" value="' + today + '"></div>' +
+      '</div>' +
+      '<div id="dm-info" class="dm-info"></div>' +
+      '<div class="dm-sec"><div class="dm-l">Which day?</div><div class="chips" id="dm-days"></div></div>' +
+      '<div class="dm-sec"><div class="dm-l">What should the deck cover?</div><div class="dm-opts" id="dm-mode">' +
+        '<label class="dm-o"><input type="radio" name="dm-m" value="upto" checked><span><b id="dm-up-t">Days 1–N together</b><small>Every slide shows the days done so far, plus all days</small></span></label>' +
+        '<label class="dm-o"><input type="radio" name="dm-m" value="only"><span><b id="dm-only-t">Day N only</b><small>Only the selected day, beside all days</small></span></label>' +
+        '<label class="dm-o"><input type="radio" name="dm-m" value="full"><span><b>Full campaign, all days</b><small>Every campaign day as its own column, plus all days</small></span></label>' +
+      '</div></div>' +
+      '<div class="dm-sec"><div class="dm-l">Slides to include</div><div class="dm-chk">' +
+        '<label><input type="checkbox" id="dm-s1" checked> Coverage summary and missed children</label>' +
+        '<label><input type="checkbox" id="dm-s2" checked> UC maps (fIPV and OPV)</label>' +
+        '<label><input type="checkbox" id="dm-s3" checked> Daily progress</label>' +
+        '<label><input type="checkbox" id="dm-s4" checked> Highest still NA, refusals and missed UCs</label>' +
+        '<label><input type="checkbox" id="dm-s5" checked> Tehsil tables and tehsil slides</label>' +
+      '</div></div>' +
+      '<div class="dm-foot"><span class="note" id="dm-msg"></span><button class="btn pri dm-go" id="dm-go" type="button"><span>Download PowerPoint</span></button></div></div>';
+    openModal(html, function (card) {
+      var q = function (id) { return card.querySelector("#" + id); };
+      var st = { dist: distSel, day: null, mode: "upto" };
+      var refresh = function (keepDay) {
+        var ds = daysOf(st.dist), max = ds.length ? ds[ds.length - 1] : 1;
+        if (!keepDay || !st.day || st.day > max) st.day = max;
+        var chips = ""; for (var n = 1; n <= max; n++) chips += '<button type="button" class="chip" data-dd="' + n + '" aria-pressed="' + (n === st.day) + '"' + (st.mode === "full" ? " disabled" : "") + '>Day ' + n + '</button>';
+        q("dm-days").innerHTML = chips;
+        q("dm-only-t").textContent = "Day " + st.day + " only";
+        q("dm-up-t").textContent = st.day === 1 ? "Day 1" : "Days 1–" + st.day + " together";
+        var hit = ROWS.filter(function (r) { return +r.dayN === st.day && (st.dist === "All" || r.dist === st.dist); })[0];
+        var dt = hit && /^\d{4}-\d{2}-\d{2}$/.test(hit.dayDate) ? ' <span class="note">(' + dateLabel(hit.dayDate) + ')</span>' : "";
+        q("dm-info").innerHTML = "<b>" + capName(st.dist) + "</b> · campaign data up to <b>Day " + max + "</b> · selected Day " + st.day + dt;
+        q("dm-go").disabled = !ds.length;
+      };
+      q("dm-d").onchange = function () { st.dist = this.value; st.day = null; refresh(false); };
+      q("dm-days").onclick = function (e) { var b = e.target.closest("[data-dd]"); if (b && !b.disabled) { st.day = +b.getAttribute("data-dd"); refresh(true); } };
+      Array.prototype.forEach.call(card.querySelectorAll('input[name="dm-m"]'), function (r) {
+        r.onchange = function () { st.mode = r.value; refresh(true); };
+      });
+      var go = q("dm-go"), msg = q("dm-msg");
+      go.onclick = function () {
+        var opt = { dist: st.dist, teh: "All", day: st.mode === "full" ? null : st.day, mode: st.mode, date: q("dm-dt").value || today,
+          slides: { summary: q("dm-s1").checked, maps: q("dm-s2").checked, daily: q("dm-s3").checked, top: q("dm-s4").checked, tehsil: q("dm-s5").checked } };
+        msg.textContent = "Building the PowerPoint…";
+        ermDeck(go, opt).then(function () {
+          msg.textContent = "";
+          var x = card.querySelector("[data-close]"); if (x) x.click();
+        }).catch(function () { msg.textContent = "Could not build the PowerPoint – try again."; });
+      };
+      refresh(false);
+    });
+  }
   function pv(p) { return p == null ? "" : (p * 100).toFixed(1); }
   var UC_HEAD = ["District", "Tehsil", "UC", "fIPV HH target", "fIPV HH coverage %", "fIPV admin coverage %", "fIPV still NA", "fIPV still REF", "fIPV still missed", "fIPV still missed %", "fIPV school covered",
     "OPV HH target", "OPV HH coverage %", "OPV admin coverage %", "OPV still NA", "OPV still REF", "OPV still missed", "OPV still missed %", "OPV school covered"];
@@ -911,7 +1005,7 @@
       sel2("pf-uc", "UC", d.ucs, F.uc, "All UCs") +
       bench +
       "<button class=\"pf-reset\" id=\"pf-reset\" type=\"button\">Reset</button>" +
-      "<button class=\"dlb\" id=\"pf-erm\" type=\"button\" title=\"Build the fIPV evening-review PowerPoint for the district, tehsil and day chosen above\">⬇ ERM PPT</button>";
+      "<button class=\"erm-btn\" id=\"pf-erm\" type=\"button\" title=\"Build the fIPV evening-review PowerPoint: choose district, day and slides\">⬇ ERM PPT</button>";
     return "<div class=\"pf-top\"><div><div class=\"pf-eb\">Polio Booster Campaign · fIPV &amp; OPV</div><h2>Peshawar Block Daily Sitrep</h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
   }
 
@@ -956,7 +1050,7 @@
     if (bn) bn.addEventListener("change", function () { F.bench = parseFloat(bn.value) || 0.9; draw(root); });
     var rs = $("#pf-reset", root);
     if (rs) rs.addEventListener("click", function () { F.day = "All"; F.date = "All"; F.dist = "All"; F.teh = "All"; F.uc = "All"; F.q = ""; draw(root); });
-    var em = $("#pf-erm", root); if (em) em.addEventListener("click", function () { ermDeck(em); });
+    var em = $("#pf-erm", root); if (em) em.addEventListener("click", function () { openErmDialog(em); });
     var mp = $("#pf-map", root); if (mp) mp.addEventListener("change", function () { F.map = mp.value; draw(root); });
     var cu = $("#pf-clearuc", root); if (cu) cu.addEventListener("click", function () { F.uc = "All"; draw(root); });
     Array.prototype.forEach.call(root.querySelectorAll(".dlb"), function (b) {
