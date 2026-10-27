@@ -1,90 +1,106 @@
-/* Polio Booster Campaign (fIPV & OPV) page. Loaded only when the page is opened.
+/* Polio Booster Campaign (fIPV & OPV) page - "Block sitrep" design. Loaded only when the page is opened.
    Data: data/fipv_rows.csv, data/fipv_cud.csv, data/fipv_targets.csv (exported from the fIPV workbook on save).
-   The sums follow the workbook's Calc sheet: catch-up rows are added only when Day = All. */
+   The sums follow the workbook's Calc sheet: catch-up rows are added only when Day = All.
+   Benchmark: coverage at or above the benchmark shows light green; below it shows dark red. Chosen on the page. */
 (function () {
   "use strict";
   var DATA = { rows: "data/fipv_rows.csv", cud: "data/fipv_cud.csv", tg: "data/fipv_targets.csv", upd: "data/fipv.updated.txt", geo: "data/geo.json" };
   var ROWS = null, CUD = [], TG = [], GEO = null, STAMP = "", LOADING = null;
-  var F = { day: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", vac: "ipv", q: "", sk: "missed", sd: -1 };
+  var F = { day: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", q: "", sk: "missed", sd: -1, bench: 0.9 };
+  var GOOD = "#BDF2CF", BAD = "#8E1B1B", NODATA = "#DDD9E6", OUTSIDE = "#E9EBF2";
+  var EX = {};
   var MOTION_OFF = function () { return document.documentElement.classList.contains("motion-off"); };
 
   var CSS = [
-    ".pf{color:#14213D;font-family:var(--body);background:#F4F7FC;border-radius:28px;padding:clamp(14px,2vw,24px);border:1px solid #E2E8F3;}",
+    ".pf{position:relative;color:#14213D;font-family:var(--body);border-radius:32px;padding:clamp(14px,2vw,26px);overflow:hidden;border:1px solid #DCE3F0;" +
+      "background:radial-gradient(900px 520px at 0% 0%,#D6E6FF 0%,transparent 60%),radial-gradient(760px 480px at 100% 0%,#FFE6B5 0%,transparent 55%),radial-gradient(820px 520px at 60% 100%,#C9F2DA 0%,transparent 60%),linear-gradient(180deg,#EEF2FA,#E6ECF6)}",
     ".pf h1,.pf h2,.pf h3{color:#14213D}",
     ".pf *{box-sizing:border-box}",
-    ".pf-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:6px 0 16px}",
-    ".pf-top h2{margin:0;font-size:clamp(24px,2.6vw,32px);font-weight:760;letter-spacing:-.03em;line-height:1.1}",
-    ".pf-top h2 em{font-style:normal;color:#1F6FD1}",
-    ".pf-sub{margin:6px 0 0;color:#5A6A85;font-size:13.5px}",
+    ".pf-top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:4px 0 16px}",
+    ".pf-eb{font-size:11.5px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#4E5FD6}",
+    ".pf-top h2{margin:4px 0 0;font-family:var(--display);font-size:clamp(26px,3vw,38px);font-weight:800;letter-spacing:-.03em;line-height:1.05}",
+    ".pf-sub{margin:6px 0 0;color:#4B5B76;font-size:13px}",
     ".pf-fil{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}",
-    ".pf-fl{display:flex;flex-direction:column;gap:4px;min-width:140px}",
-    ".pf-fl label{font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:#5A6A85}",
-    ".pf-sel,.pf-q{appearance:none;-webkit-appearance:none;border:1px solid #DCE2EE;border-radius:14px;padding:10px 34px 10px 13px;background:#fff url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236B7280' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 12px center;font:inherit;font-weight:600;font-size:14px;color:#14213D;box-shadow:0 1px 2px rgba(20,30,60,.05);cursor:pointer}",
+    ".pf-fl{display:flex;flex-direction:column;gap:4px;min-width:130px}",
+    ".pf-fl label{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:#4B5B76}",
+    ".pf-sel,.pf-q{appearance:none;-webkit-appearance:none;border:0;border-radius:16px;padding:11px 36px 11px 14px;background:linear-gradient(180deg,#4FA36B,#2E7D4F) url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='white' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E\") no-repeat right 13px center;font:inherit;font-weight:700;font-size:14px;color:#fff;box-shadow:0 12px 22px -14px rgba(20,80,40,.85),inset 0 1px 0 rgba(255,255,255,.35);cursor:pointer}",
+    ".pf-sel option{color:#14213D;background:#fff}",
     ".pf-sel:disabled{opacity:.55;cursor:not-allowed}",
-    ".pf-q{background:#fff;padding:10px 13px;min-width:200px;cursor:text}",
-    ".pf-reset{border:0;background:none;color:#1F6FD1;font-weight:650;font:inherit;font-size:13px;cursor:pointer;padding:10px 4px}",
-    ".pf-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:14px}",
-    ".pf-c{background:#fff;border:1px solid #E4E8F1;border-radius:22px;padding:18px 18px 16px;box-shadow:0 1px 2px rgba(20,30,60,.04),0 16px 34px -26px rgba(20,30,60,.38);min-width:0;position:relative;overflow:hidden}",
-    ".s12{grid-column:span 12}.s8{grid-column:span 8}.s6{grid-column:span 6}.s4{grid-column:span 4}",
-    ".pf-vac{background:linear-gradient(180deg,#F1F4FB,#EBEFF8)}",
-    ".pf-cmp{background:linear-gradient(180deg,#FFFBEA,#FFF5D6);border-color:#F2E2A6}",
-    ".pf-oth{background:linear-gradient(180deg,#F0FAF4,#E6F5EC);border-color:#C4E8D2}",
-    ".pf-h{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:16px;font-weight:750;letter-spacing:-.01em}",
-    ".pf-h small{font-size:12px;font-weight:600;color:#5A6A85;margin-left:auto}",
-    ".pf-dot{width:11px;height:11px;border-radius:50%;display:inline-block;flex:none}",
-    ".pf-hero{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}",
-    ".pf-big{font-size:clamp(26px,3vw,36px);font-weight:780;letter-spacing:-.035em;font-variant-numeric:tabular-nums;line-height:1}",
-    ".pf-lab{font-size:12px;color:#5A6A85;font-weight:600;margin-top:6px}",
-    ".pf-kp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:14px}",
-    ".pf-k{background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.9);border-radius:16px;padding:10px 11px}",
-    ".pf-k b{display:block;font-size:19px;font-weight:750;letter-spacing:-.02em;font-variant-numeric:tabular-nums}",
-    ".pf-k span{display:block;font-size:11.5px;color:#5A6A85;font-weight:600}",
-    ".pf-k em{font-style:normal;font-size:12px;font-weight:700}",
-    ".red{color:#E5484D}.grn{color:#2E9E5B}.blu{color:#1F6FD1}.amb{color:#C98A0B}",
-    ".pf-bars{display:grid;gap:10px;margin-top:14px}",
-    ".pf-br{display:grid;grid-template-columns:118px 1fr 58px;align-items:center;gap:10px;font-size:12.5px;font-weight:600}",
-    ".pf-br b{font-variant-numeric:tabular-nums;text-align:right}",
-    ".pf-track{height:10px;border-radius:99px;background:rgba(20,30,60,.08);overflow:hidden}",
-    ".pf-fill{height:100%;width:0;border-radius:99px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}",
-    ".pf-ring{display:flex;align-items:center;gap:16px}",
-    ".pf-ring svg{width:112px;height:112px;flex:none}",
+    ".pf-q{background:#fff;color:#14213D;border:1px solid #D5DDEB;box-shadow:none;padding:10px 13px;min-width:200px;cursor:text}",
+    ".pf-reset{border:0;background:none;color:#2F5BD3;font:inherit;font-size:13px;font-weight:700;cursor:pointer;padding:10px 4px}",
+    ".pf-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:16px}",
+    ".gl{position:relative;min-width:0;overflow:hidden;border-radius:26px;padding:18px 18px 16px;border:1px solid rgba(255,255,255,.85);" +
+      "background:linear-gradient(150deg,rgba(255,255,255,.80),rgba(255,255,255,.42));backdrop-filter:blur(18px) saturate(160%);-webkit-backdrop-filter:blur(18px) saturate(160%);" +
+      "box-shadow:0 26px 44px -30px rgba(30,40,80,.42),inset 0 1px 0 rgba(255,255,255,.95)}",
+    ".gl::before{content:\"\";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.38) 48%,transparent 62%)}",
+    ".gl > *{position:relative}",
+    ".t-blue{background:linear-gradient(150deg,rgba(206,226,255,.92),rgba(255,255,255,.45))}",
+    ".t-lilac{background:linear-gradient(150deg,rgba(228,220,255,.92),rgba(255,255,255,.45))}",
+    ".t-yellow{background:linear-gradient(150deg,rgba(255,238,178,.95),rgba(255,251,234,.5))}",
+    ".t-mint{background:linear-gradient(150deg,rgba(192,242,216,.92),rgba(240,255,247,.5))}",
+    ".s4,.s5,.s6,.s7,.s8,.s12{grid-column:span 12}",
+    ".pf-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 12px;font-family:var(--display);font-size:17px;font-weight:800;letter-spacing:-.01em}",
+    ".pf-h small{font-size:12px;font-weight:600;color:#4B5B76;margin-left:auto;font-family:var(--body)}",
+    ".pf-hbtn{margin-left:auto}",
+    ".dlb{border:1px solid rgba(255,255,255,.9);background:rgba(255,255,255,.75);border-radius:12px;padding:6px 11px;font:inherit;font-size:12px;font-weight:700;color:#1F3A5F;cursor:pointer;box-shadow:0 6px 14px -10px rgba(20,30,60,.5)}",
+    ".dlb:hover{background:#fff}",
+    ".sx-title{font-family:var(--display);font-size:clamp(20px,2.2vw,26px);font-weight:800;letter-spacing:-.02em}",
+    ".sx-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}",
+    ".sx-head span{font-size:12.5px;font-weight:700;color:#4B5B76}",
+    ".sx-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px 14px;margin-top:12px}",
+    ".sx-k span{display:block;font-size:12.5px;color:#4B5B76;font-weight:650}",
+    ".sx-k b{display:block;font-size:clamp(22px,2.5vw,31px);font-weight:800;letter-spacing:-.025em;font-variant-numeric:tabular-nums;line-height:1.1;margin-top:2px}",
+    ".sx-k em{display:inline-block;font-style:normal;font-size:12.5px;font-weight:700;margin-top:4px}",
+    ".sx-line{height:3px;border-radius:9px;margin:16px 0 14px;opacity:.7}",
+    ".c-red{color:#B42318}.c-amb{color:#C27A00}.c-blu{color:#2F5BD3}.c-grn{color:#15803D}.c-ink{color:#14213D}",
+    ".bm-ok{display:inline-block;padding:2px 9px;border-radius:99px;background:" + GOOD + ";color:#0F5132;font-style:normal;font-weight:800;font-size:12px}",
+    ".bm-no{display:inline-block;padding:2px 9px;border-radius:99px;background:" + BAD + ";color:#fff;font-style:normal;font-weight:800;font-size:12px}",
+    ".bm-na{display:inline-block;padding:2px 9px;border-radius:99px;background:#E3E6EE;color:#4B5B76;font-style:normal;font-weight:700;font-size:12px}",
+    ".pf-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}",
+    ".pf-two h4{margin:0 0 8px;font-size:13.5px;font-weight:800;text-align:center;color:#34435E}",
+    ".pf-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}",
+    ".pf-cell{background:rgba(255,255,255,.7);border:1px solid rgba(255,255,255,.9);border-radius:16px;padding:10px 12px;box-shadow:0 8px 18px -16px rgba(20,30,60,.5)}",
+    ".pf-cell span{display:block;font-size:11.5px;color:#4B5B76;font-weight:650}",
+    ".pf-cell b{display:block;font-size:21px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}",
+    ".pf-cell i{font-style:normal;font-size:12px;font-weight:700;margin-left:6px}",
+    ".pf-ring{display:flex;flex-direction:column;align-items:center;gap:4px}",
+    ".pf-ring svg{width:124px;height:124px;flex:none}",
     ".pf-ring circle.bg{stroke:rgba(20,30,60,.08)}",
     ".pf-ring circle.fg{transition:stroke-dasharray 1.4s cubic-bezier(.2,.8,.2,1);stroke-linecap:round}",
-    ".pf-ring text{font-weight:760;font-size:17px;fill:#14213D;font-variant-numeric:tabular-nums}",
-    ".pf-ring .rs{font-size:9px;font-weight:600;fill:#5A6A85}",
-    ".pf-mini{display:grid;grid-template-columns:1fr 1fr;gap:10px}",
-    ".pf-two{display:grid;grid-template-columns:1fr 1fr;gap:14px}",
-    ".pf-two h4{margin:0 0 8px;font-size:13px;font-weight:750;text-align:center;color:#34435E}",
-    ".pf-cell{background:rgba(255,255,255,.75);border-radius:16px;padding:10px 12px;text-align:left}",
-    ".pf-cell span{display:block;font-size:11.5px;color:#5A6A85;font-weight:600}",
-    ".pf-cell b{display:block;font-size:21px;font-weight:760;letter-spacing:-.02em;font-variant-numeric:tabular-nums}",
-    ".pf-cell i{font-style:normal;font-size:12px;font-weight:700;margin-left:6px}",
+    ".pf-ring text{font-weight:800;font-size:18px;fill:#14213D;font-variant-numeric:tabular-nums}",
+    ".pf-ring .rs{font-size:9px;font-weight:650;fill:#4B5B76}",
+    ".pf-lab{font-size:12.5px;color:#4B5B76;font-weight:700}",
     ".pf-mapw{position:relative}",
-    ".pf-map{width:100%;height:auto;display:block;max-height:520px}",
+    ".pf-map{width:100%;height:auto;display:block;max-height:560px}",
     ".pf-map path{transition:fill .8s ease}",
-    ".pf-map .u{stroke:#FFFFFF}",
-    ".pf .legend,.pf-mapw + .legend{color:#5A6A85}",
-    ".pf-leg{display:flex;align-items:center;gap:10px;font-size:12px;color:#5A6A85;font-weight:600;margin-top:10px;flex-wrap:wrap}",
-    ".pf-bar-leg{height:10px;width:200px;border-radius:99px;background:linear-gradient(90deg,#E5484D,#F5B52E,#2E9E5B)}",
-    ".pf-seg{display:inline-flex;background:#EEF1F7;border-radius:14px;padding:3px;gap:2px;flex-wrap:wrap}",
-    ".pf-seg button{border:0;background:transparent;border-radius:11px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:650;color:#34435E;cursor:pointer}",
-    ".pf-seg button[aria-pressed=true]{background:#fff;color:#1F6FD1;box-shadow:0 2px 6px -3px rgba(20,30,60,.35)}",
+    ".pf-map .u{stroke:#FFFFFF;stroke-width:.55;vector-effect:non-scaling-stroke;cursor:pointer}",
+    ".pf-map .u:hover{stroke:#14213D;stroke-width:1.6}",
+    ".pf-map .u.sel{stroke:#14213D;stroke-width:2.6}",
+    ".pf-map .u.o{cursor:default}",
+    ".pf .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:#34435E;align-items:center;margin-top:10px;font-weight:650}",
+    ".pf .lg{display:inline-flex;align-items:center;gap:6px}",
+    ".pf .sw{width:13px;height:13px;border-radius:4px;flex:none;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08)}",
     ".pf-tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:0 0 12px}",
-    ".pf-tw{overflow:auto;max-height:430px;border-radius:14px}",
+    ".pf-seg{display:inline-flex;background:rgba(255,255,255,.6);border:1px solid rgba(255,255,255,.9);border-radius:14px;padding:3px;gap:2px;flex-wrap:wrap}",
+    ".pf-seg button{border:0;background:transparent;border-radius:11px;padding:7px 12px;font:inherit;font-size:12.5px;font-weight:700;color:#34435E;cursor:pointer}",
+    ".pf-seg button[aria-pressed=true]{background:#2E7D4F;color:#fff;box-shadow:0 8px 16px -10px rgba(20,80,40,.8)}",
+    ".pf-tw{overflow:auto;max-height:440px;border-radius:14px}",
     ".pf-t{width:100%;border-collapse:collapse;font-size:13px;font-variant-numeric:tabular-nums}",
-    ".pf-t th{position:sticky;top:0;background:#fff;text-align:left;font-size:10.5px;font-weight:750;letter-spacing:.06em;text-transform:uppercase;color:#5A6A85;padding:9px 8px;border-bottom:2px solid #CDEBD7;z-index:1;cursor:pointer;white-space:nowrap}",
+    ".pf-t th{position:sticky;top:0;background:rgba(255,255,255,.92);text-align:left;font-size:10.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:#4B5B76;padding:9px 8px;border-bottom:2px solid #C9D3E6;z-index:1;cursor:pointer;white-space:nowrap}",
     ".pf-t th.r,.pf-t td.r{text-align:right}",
-    ".pf-t td{padding:8px 8px;border-bottom:1px solid #E7F3EB;white-space:nowrap}",
-    ".pf-t td.n{color:#5A6A85;width:34px}",
-    ".pf-t td.u{font-weight:650;max-width:200px;overflow:hidden;text-overflow:ellipsis}",
-    ".pf-t tr:hover td{background:#F5FBF7}",
-    ".pf-t td.red{font-weight:700}",
+    ".pf-t td{padding:8px;border-bottom:1px solid rgba(20,30,60,.08);white-space:nowrap}",
+    ".pf-t td.n{color:#4B5B76;width:34px}",
+    ".pf-t td.u{font-weight:700;max-width:200px;overflow:hidden;text-overflow:ellipsis}",
+    ".pf-t tr:hover td{background:rgba(255,255,255,.6)}",
+    ".pf-t td.red{font-weight:800;color:#B42318}",
     ".pf-tb{width:90px}.pf-tb .pf-track{height:7px}",
-    ".pf-empty{padding:26px;text-align:center;color:#5A6A85;font-weight:600}",
-    ".pf-foot{display:flex;align-items:center;gap:14px;margin-top:16px;color:#34435E;font-size:13px;flex-wrap:wrap}",
-    ".pf-foot img{height:44px;width:auto;border-radius:6px}",
-    ".pf-foot b{color:#E5484D}",
+    ".pf-track{height:10px;border-radius:99px;background:rgba(20,30,60,.08);overflow:hidden}",
+    ".pf-fill{height:100%;width:0;border-radius:99px;transition:width 1.2s cubic-bezier(.2,.8,.2,1)}",
+    ".pf-br{display:grid;grid-template-columns:118px 1fr 58px;align-items:center;gap:10px;font-size:12.5px;font-weight:650}",
+    ".pf-br b{font-variant-numeric:tabular-nums;text-align:right}",
+    ".pf-bars{display:grid;gap:9px;margin-top:8px}",
     ".pf-day{display:flex;flex-direction:column;gap:6px}",
+    ".pf-empty{padding:26px;text-align:center;color:#4B5B76;font-weight:650}",
     ".pf-chart{width:100%;height:auto;display:block}",
     ".pf-chart .colb{transform-box:fill-box;transform-origin:50% 100%;transform:scaleY(0);transition:transform 1s cubic-bezier(.2,.8,.2,1)}",
     ".pf-chart .colb.in{transform:scaleY(1)}",
@@ -92,13 +108,14 @@
     ".pf-chart .ln.in{stroke-dashoffset:0}",
     ".pf-chart .pt{opacity:0;transition:opacity .4s ease 1.2s}",
     ".pf-chart .pt.in{opacity:1}",
-    ".pf-float{position:absolute;right:14px;top:10px;width:46px;height:46px;opacity:.9;animation:pfBob 3.6s ease-in-out infinite;pointer-events:none}",
-    "@keyframes pfBob{0%,100%{transform:translateY(0) rotate(-4deg)}50%{transform:translateY(-7px) rotate(4deg)}}",
-    "@keyframes pfPop{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}",
+    "@keyframes pfPop{from{transform:scale(.97);opacity:0}to{transform:scale(1);opacity:1}}",
     ".pf-c.pop{animation:pfPop .5s cubic-bezier(.2,.8,.2,1) both}",
-    ".pf-load{padding:40px;text-align:center;color:#5A6A85;font-weight:600}",
-    "@media (max-width:1100px){.s8,.s6,.s4{grid-column:span 12}.pf-two{grid-template-columns:1fr}}",
-    "@media (max-width:640px){.pf-kp{grid-template-columns:1fr 1fr}.pf-fl{min-width:44%;flex:1}.pf-sel{width:100%}.pf-q{min-width:0;width:100%}.pf-ring svg{width:92px;height:92px}.pf-br{grid-template-columns:90px 1fr 50px}}"
+    ".pf-load{padding:40px;text-align:center;color:#4B5B76;font-weight:650}",
+    ".pf-foot{display:flex;align-items:center;gap:14px;margin-top:16px;color:#34435E;font-size:13px;flex-wrap:wrap}",
+    ".pf-foot img{height:44px;width:auto;border-radius:6px}",
+    ".pf-foot b{color:#B42318}",
+    "@media (max-width:1100px){.pf-grid .s4,.pf-grid .s5,.pf-grid .s6,.pf-grid .s7,.pf-grid .s8{grid-column:span 12}}",
+    "@media (max-width:640px){.sx-grid{grid-template-columns:1fr 1fr}.pf-two{grid-template-columns:1fr}.pf-fl{min-width:44%;flex:1}.pf-sel{width:100%}.pf-q{min-width:0;width:100%}.pf-ring svg{width:100px;height:100px}.pf-br{grid-template-columns:90px 1fr 50px}}"
   ].join("\n");
 
   function $(s, r) { return (r || document).querySelector(s); }
@@ -192,7 +209,7 @@
         hhPct: div(hh, target), admPct: div(hh + unreg + school, target),
         stNAPct: div(stNA, target), stREFPct: div(stREF, target), missPct: div(stNA + stREF, target),
         recNAPct: div(recNA, target), recREFPct: div(recREF, target),
-        covNAPct: div(covNA, recNA), covREFPct: div(covREF, recREF)
+        covNAPct: div(covNA, recNA), covREFPct: div(covREF, recREF), schoolPct: div(school, target)
       };
     });
     return m;
@@ -205,6 +222,15 @@
       .filter(function (x) { return x.m.ipv.target > 0 || x.m.opv.target > 0; });
   }
 
+  /* ---- benchmark ---- */
+  // at or above the benchmark = light green, below = dark red
+  function onBench(p) { return p != null && isFinite(p) && p >= F.bench; }
+  function bmPill(p, txt) {
+    if (p == null || !isFinite(p)) return "<em class=\"bm-na\">–</em>";
+    return "<em class=\"" + (onBench(p) ? "bm-ok" : "bm-no") + "\">" + (txt || pc(p)) + "</em>";
+  }
+  function bmColor(p) { return onBench(p) ? "#34C27A" : BAD; }
+
   /* ---- map ---- */
   var LAT0 = 34 * Math.PI / 180;
   function proj(p) { return [p[0] * Math.cos(LAT0) * 100, -p[1] * 100]; }
@@ -216,22 +242,13 @@
     });
     return d;
   }
-  function rampColor(t, invert) {
-    t = clamp(t); if (invert) t = 1 - t;
-    var stops = [[0, [229, 72, 77]], [0.5, [245, 181, 46]], [1, [46, 158, 91]]];
-    var a = stops[0], b = stops[1];
-    for (var i = 1; i < stops.length; i++) { if (t <= stops[i][0]) { a = stops[i - 1]; b = stops[i]; break; } }
-    var k = b[0] === a[0] ? 0 : (t - a[0]) / (b[0] - a[0]);
-    var c = [0, 1, 2].map(function (j) { return Math.round(a[1][j] + (b[1][j] - a[1][j]) * k); });
-    return "rgb(" + c.join(",") + ")";
-  }
   var MAPM = {
-    ipv_hh: { t: "IPV HH coverage", inv: false, scale: 1, f: function (m) { return m.ipv.hhPct; } },
-    ipv_adm: { t: "IPV admin coverage", inv: false, scale: 1, f: function (m) { return m.ipv.admPct; } },
-    ipv_miss: { t: "IPV still missed", inv: true, scale: 0.5, f: function (m) { return m.ipv.missPct; } },
-    opv_hh: { t: "OPV HH coverage", inv: false, scale: 1, f: function (m) { return m.opv.hhPct; } },
-    opv_adm: { t: "OPV admin coverage", inv: false, scale: 1, f: function (m) { return m.opv.admPct; } },
-    opv_miss: { t: "OPV still missed", inv: true, scale: 0.5, f: function (m) { return m.opv.missPct; } }
+    ipv_hh: { t: "IPV HH coverage", inv: false, f: function (m) { return m.ipv.hhPct; } },
+    ipv_adm: { t: "IPV admin coverage", inv: false, f: function (m) { return m.ipv.admPct; } },
+    ipv_miss: { t: "IPV still missed", inv: true, f: function (m) { return m.ipv.missPct; } },
+    opv_hh: { t: "OPV HH coverage", inv: false, f: function (m) { return m.opv.hhPct; } },
+    opv_adm: { t: "OPV admin coverage", inv: false, f: function (m) { return m.opv.admPct; } },
+    opv_miss: { t: "OPV still missed", inv: true, f: function (m) { return m.opv.missPct; } }
   };
   function mapHTML(groups) {
     if (!GEO || !GEO.length) return "<div class=\"pf-empty\">Map shapes are not available.</div>";
@@ -246,17 +263,9 @@
     var vb = [minx - pad, miny - pad, maxx - minx + 2 * pad, maxy - miny + 2 * pad];
     var M = MAPM[F.map];
     var hasAny = groups.length > 0;
-    // colour bands are quartiles of the UCs in view, so the map always uses the full palette
-    var vals = [];
-    GEO.forEach(function (f) {
-      var g = byKey[f.n + "|" + f.d];
-      var v = g ? M.f(g.m) : null;
-      if (inScope(f) && v != null && isFinite(v) && v > 0) vals.push(v);
-    });
-    vals.sort(function (a, b) { return a - b; });
-    var qt = function (p) { return vals[Math.min(vals.length - 1, Math.floor(p * vals.length))]; };
-    var breaks = vals.length ? [qt(0.25), qt(0.5), qt(0.75)] : [];
-    var band = function (v) { var b = 0; while (b < breaks.length && v > breaks[b]) b++; return Math.min(4, b + 1); };
+    // for "still missed" a UC is on track when missed is at or below (100% - benchmark)
+    var thr = M.inv ? 1 - F.bench : F.bench;
+    var good = function (v) { return M.inv ? v <= thr : v >= thr; };
     var paths = GEO.map(function (f) {
       var g = byKey[f.n + "|" + f.d];
       var v = g ? M.f(g.m) : null;
@@ -264,171 +273,252 @@
       var inView = inScope(f);
       var sel = F.uc !== "All" && f.n === F.uc && f.d === F.dist;
       var fill, cls = "u";
-      if (!inView) { fill = "#EBE9F1"; cls += " o"; }
-      else if (!has) { fill = "#DDD9E6"; cls += " o"; }
-      else { fill = v <= 0 ? "#EEE7FA" : ["#D2BFF1", "#AC8BE0", "#8157C6", "#4F2A92"][band(v) - 1]; }
+      if (!inView) { fill = OUTSIDE; cls += " o"; }
+      else if (!has) { fill = NODATA; cls += " o"; }
+      else { fill = good(v) ? GOOD : BAD; }
       if (sel) cls += " sel";
+      var status = !has ? "" : (good(v) ? (M.inv ? "on track" : "at or above benchmark") : (M.inv ? "above the missed limit" : "below benchmark"));
       var tip = "<h4>" + esc(f.n) + "</h4><div class=\"w\">" + esc(f.t ? f.t + " · " : "") + esc(f.d) + "</div>" +
-        (has ? "<div class=\"w\">" + esc(M.t) + ": <b>" + pc(v) + "</b></div>" : "<div class=\"w\">No data for this selection</div>");
+        (has ? "<div class=\"w\">" + esc(M.t) + ": <b>" + pc(v) + "</b> · " + esc(status) + "</div>" : "<div class=\"w\">No data for this selection</div>");
       return "<path class=\"" + cls + "\" fill=\"" + fill + "\" d=\"" + ringPath(f.r) + "\" data-d=\"" + esc(f.d) + "\" data-t=\"" + esc(f.t || "") + "\" data-n=\"" + esc(f.n) + "\" data-tip=\"" + esc(tip) + "\"" + (g ? "" : " data-none=\"1\"") + "></path>";
     }).join("");
     var lg = function (c, t) { return "<span class=\"lg\"><span class=\"sw\" style=\"background:" + c + "\"></span>" + t + "</span>"; };
-    var leg = "<div class=\"legend\">" + lg("#EEE7FA", "0%");
-    if (breaks.length === 3) {
-      leg += lg("#D2BFF1", "up to " + pc(breaks[0], 0)) +
-        lg("#AC8BE0", pc(breaks[0], 0) + "–" + pc(breaks[1], 0)) +
-        lg("#8157C6", pc(breaks[1], 0) + "–" + pc(breaks[2], 0)) +
-        lg("#4F2A92", "above " + pc(breaks[2], 0));
-    }
-    leg += lg("#DDD9E6", "No data") + (hasAny ? "" : "<span class=\"note\">no UC data for this selection yet</span>") + "</div>";
+    var leg = "<div class=\"legend\">" +
+      lg(GOOD, M.inv ? "On track: missed ≤ " + pc(thr, 0) : "At or above " + pc(thr, 0) + " (benchmark)") +
+      lg(BAD, M.inv ? "Above the missed limit (> " + pc(thr, 0) + ")" : "Below " + pc(thr, 0) + " (dark red)") +
+      lg(NODATA, "No data") + (hasAny ? "" : "<span class=\"note\">no UC data for this selection yet</span>") + "</div>";
     return "<div class=\"pf-mapw\"><svg class=\"msvg pf-map\" viewBox=\"" + vb.map(function (x) { return x.toFixed(2); }).join(" ") + "\" role=\"img\" aria-label=\"UC coverage map\">" + paths + "</svg></div>" + leg;
+  }
+  // draws the current map as a PNG picture (title, map and legend)
+  function exportMapPNG(root) {
+    var svg = root.querySelector("svg.pf-map");
+    if (!svg) return;
+    var vb = svg.getAttribute("viewBox").split(/[\s,]+/).map(Number);
+    var clone = svg.cloneNode(true);
+    clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+    clone.setAttribute("width", "1600"); clone.setAttribute("height", String(Math.round(1600 * vb[3] / vb[2])));
+    Array.prototype.forEach.call(clone.querySelectorAll("path"), function (p) {
+      p.setAttribute("stroke", p.classList.contains("sel") ? "#14213D" : "#FFFFFF");
+      p.setAttribute("stroke-width", p.classList.contains("sel") ? "3" : "1");
+      p.setAttribute("stroke-linejoin", "round");
+    });
+    var url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(clone));
+    var img = new Image();
+    img.onload = function () {
+      var W = 1600, mapH = Math.round(1600 * vb[3] / vb[2]), legH = 120, topH = 130;
+      var cv = document.createElement("canvas"); cv.width = W; cv.height = topH + mapH + legH;
+      var ctx = cv.getContext("2d");
+      ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, cv.width, cv.height);
+      var metric = MAPM[F.map].t;
+      ctx.fillStyle = "#14213D"; ctx.font = "700 46px Arial, sans-serif"; ctx.fillText("Polio Booster Campaign · UC coverage map", 40, 62);
+      ctx.fillStyle = "#4B5B76"; ctx.font = "500 28px Arial, sans-serif";
+      ctx.fillText(metric + " · benchmark " + pc(F.bench, 0) + " · " + (F.dist === "All" ? "all districts" : F.dist) + (F.teh === "All" ? "" : " · " + F.teh) + (F.uc === "All" ? "" : " · " + F.uc), 40, 108);
+      ctx.drawImage(img, 0, topH, W, mapH);
+      var items = Array.prototype.map.call(root.querySelectorAll(".pf-mapw + .legend .lg"), function (lg) {
+        return { c: getComputedStyle(lg.querySelector(".sw")).backgroundColor, t: lg.textContent };
+      });
+      var x = 40, y = topH + mapH + 36;
+      ctx.font = "500 28px Arial, sans-serif";
+      items.forEach(function (it) {
+        ctx.fillStyle = it.c; ctx.fillRect(x, y - 24, 28, 28);
+        ctx.fillStyle = "#34435E"; ctx.fillText(it.t, x + 40, y);
+        x += ctx.measureText(it.t).width + 90;
+      });
+      cv.toBlob(function (blob) { saveBlob(blob, "fipv-uc-map.png"); }, "image/png");
+    };
+    img.src = url;
+  }
+
+  /* ---- downloads (CSV, opens in Excel) ---- */
+  function saveBlob(blob, name) {
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+  }
+  function saveCSV(name, rows) {
+    var csv = rows.map(function (r) {
+      return r.map(function (c) { var s = c == null ? "" : String(c); return /[",\n\r]/.test(s) ? "\"" + s.replace(/"/g, "\"\"") + "\"" : s; }).join(",");
+    }).join("\r\n");
+    saveBlob(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }), name);
+  }
+  function pv(p) { return p == null ? "" : (p * 100).toFixed(1); }
+  var UC_HEAD = ["District", "Tehsil", "UC", "fIPV HH target", "fIPV HH coverage %", "fIPV admin coverage %", "fIPV still NA", "fIPV still REF", "fIPV still missed", "fIPV still missed %", "fIPV school covered",
+    "OPV HH target", "OPV HH coverage %", "OPV admin coverage %", "OPV still NA", "OPV still REF", "OPV still missed", "OPV still missed %", "OPV school covered"];
+  function ucRows(groups) {
+    return groups.map(function (g) {
+      var i = g.m.ipv, o = g.m.opv;
+      return [g.dist, g.teh, g.uc, Math.round(i.target), pv(i.hhPct), pv(i.admPct), Math.round(i.stNA), Math.round(i.stREF), Math.round(i.missed), pv(i.missPct), Math.round(i.school),
+        Math.round(o.target), pv(o.hhPct), pv(o.admPct), Math.round(o.stNA), Math.round(o.stREF), Math.round(o.missed), pv(o.missPct), Math.round(o.school)];
+    });
   }
 
   /* ---- small pieces ---- */
-  function kpi(label, val, sub, cls) {
-    return "<div class=\"pf-k\"><span>" + label + "</span><b class=\"" + (cls || "") + "\" data-count=\"" + (val == null ? "" : Math.round(val)) + "\" data-fmt=\"n\">" + (val == null ? "–" : nf(val)) + "</b>" + (sub ? "<em class=\"" + (sub.c || "") + "\">" + esc(sub.t) + "</em>" : "") + "</div>";
-  }
-  function pctKpi(label, p, cls) {
-    return "<div class=\"pf-k\"><span>" + label + "</span><b class=\"" + (cls || "") + "\" data-count=\"" + (p == null ? "" : (p * 100).toFixed(1)) + "\" data-fmt=\"p\">" + pc(p) + "</b></div>";
-  }
-  function ring(p, color, label, sub) {
+  function ring(p, color, label) {
     var v = p == null ? 0 : clamp(p) * 100;
     return "<div class=\"pf-ring\"><svg viewBox=\"0 0 120 120\" aria-hidden=\"true\"><circle class=\"bg\" cx=\"60\" cy=\"60\" r=\"48\" fill=\"none\" stroke-width=\"12\"/>" +
       "<circle class=\"fg\" data-v=\"" + v.toFixed(2) + "\" cx=\"60\" cy=\"60\" r=\"48\" fill=\"none\" stroke=\"" + color + "\" stroke-width=\"12\" pathLength=\"100\" stroke-dasharray=\"0 100\" transform=\"rotate(-90 60 60)\"/>" +
-      "<text x=\"60\" y=\"62\" text-anchor=\"middle\" data-count=\"" + (p == null ? "" : (p * 100).toFixed(1)) + "\" data-fmt=\"p\">" + pc(p) + "</text>" +
-      "<text class=\"rs\" x=\"60\" y=\"78\" text-anchor=\"middle\">" + esc(sub || "") + "</text></svg><div><div class=\"pf-lab\" style=\"margin:0\">" + esc(label) + "</div></div></div>";
+      "<text x=\"60\" y=\"62\" text-anchor=\"middle\" data-count=\"" + (p == null ? "" : (p * 100).toFixed(1)) + "\" data-fmt=\"p\">" + pc(p) + "</text></svg>" +
+      "<div class=\"pf-lab\">" + esc(label) + "</div></div>";
   }
-  function bar(label, p, color, val) {
+  function bar(label, p, color) {
     var w = p == null ? 0 : clamp(p) * 100;
     return "<div class=\"pf-br\"><span>" + esc(label) + "</span><div class=\"pf-track\"><div class=\"pf-fill\" data-w=\"" + w.toFixed(2) + "\" style=\"background:" + color + "\"></div></div><b>" + pc(p) + "</b></div>";
   }
-  function fl(id, label, opts, val, all, labelFn) {
+  function sel2(id, label, opts, val, all, labelFn) {
     var h = "<div class=\"pf-fl\"><label for=\"" + id + "\">" + label + "</label><select class=\"pf-sel\" id=\"" + id + "\">";
     h += "<option value=\"All\"" + (val === "All" ? " selected" : "") + ">" + all + "</option>";
     opts.forEach(function (o) { h += "<option value=\"" + esc(o) + "\"" + (String(val) === String(o) ? " selected" : "") + ">" + esc(labelFn ? labelFn(o) : o) + "</option>"; });
     return h + "</select></div>";
   }
+  function dlBtn(key, label) { return "<button type=\"button\" class=\"dlb\" data-ex=\"" + key + "\">⬇ " + label + "</button>"; }
 
   /* ---- sections ---- */
-  function vacCard(v, m, title, color, soft) {
+  // fIPV / OPV headline card: big numbers, benchmark pills, still NA / refusal in orange / red
+  function sitCard(v, m, title, accent, tint) {
     var x = m[v];
-    var hh = x.hhPct, adm = x.admPct;
-    return "<section class=\"pf-c pf-vac s6 pop\" style=\"--c:" + color + "\">" +
-      "<div class=\"pf-h\"><span class=\"pf-dot\" style=\"background:" + color + "\"></span>" + title + "<small>" + nf(x.target) + " children recorded</small></div>" +
-      "<div class=\"pf-hero\"><div><div class=\"pf-lab\" style=\"margin:0 0 4px\">HH target</div><div class=\"pf-big\" data-count=\"" + Math.round(x.target) + "\" data-fmt=\"n\">" + nf(x.target) + "</div></div>" +
-      ring(adm, color, "Admin coverage", pc(adm, 1)) + "</div>" +
-      "<div class=\"pf-kp\">" +
-      kpi("Admin coverage", x.admin, { t: pc(adm), c: "blu" }, "blu") +
-      kpi("HH coverage", x.hh, { t: pc(hh), c: "grn" }, "") +
-      kpi("Still missed", x.missed, { t: pc(x.missPct), c: "red" }, "red") +
+    return "<section class=\"pf-c gl " + tint + " s6 pop\">" +
+      "<div class=\"sx-head\"><span class=\"sx-title\" style=\"color:" + accent + "\">" + title + "</span><span>" + nf(x.target) + " children recorded</span></div>" +
+      "<div class=\"sx-grid\">" +
+        "<div class=\"sx-k\"><span>HH Target</span><b class=\"c-ink\" data-count=\"" + Math.round(x.target) + "\" data-fmt=\"n\">" + nf(x.target) + "</b></div>" +
+        "<div class=\"sx-k\"><span>Still NA</span><b class=\"c-amb\" data-count=\"" + Math.round(x.stNA) + "\" data-fmt=\"n\">" + nf(x.stNA) + "</b><em class=\"c-amb\">" + pc(x.stNAPct) + "</em></div>" +
+        "<div class=\"sx-k\"><span>Still refusal</span><b class=\"c-red\" data-count=\"" + Math.round(x.stREF) + "\" data-fmt=\"n\">" + nf(x.stREF) + "</b><em class=\"c-red\">" + pc(x.stREFPct) + "</em></div>" +
       "</div>" +
-      "<div class=\"pf-bars\">" + bar("Still NA", x.stNAPct, "#F5A524") + bar("Still refusal", x.stREFPct, "#E5484D") + bar("Unregistered", div(x.unreg, x.target), "#1F6FD1") + "</div>" +
-      "</section>";
+      "<div class=\"sx-line\" style=\"background:" + accent + "\"></div>" +
+      "<div class=\"sx-grid\">" +
+        "<div class=\"sx-k\"><span>Admin coverage</span><b class=\"c-blu\" data-count=\"" + Math.round(x.admin) + "\" data-fmt=\"n\">" + nf(x.admin) + "</b>" + bmPill(x.admPct) + "</div>" +
+        "<div class=\"sx-k\"><span>HH coverage</span><b class=\"c-grn\" data-count=\"" + Math.round(x.hh) + "\" data-fmt=\"n\">" + nf(x.hh) + "</b>" + bmPill(x.hhPct) + "</div>" +
+        "<div class=\"sx-k\"><span>Still missed</span><b class=\"c-red\" data-count=\"" + Math.round(x.missed) + "\" data-fmt=\"n\">" + nf(x.missed) + "</b><em class=\"c-red\">" + pc(x.missPct) + "</em></div>" +
+      "</div></section>";
   }
   function cmpCard(m) {
     function col(v, title) {
       var x = m[v];
       return "<div><h4>" + title + "</h4><div class=\"pf-mini\">" +
-        "<div class=\"pf-cell\"><span>Rec NA</span><b class=\"red\" data-count=\"" + Math.round(x.recNA) + "\" data-fmt=\"n\">" + nf(x.recNA) + "</b><i class=\"red\">" + pc(x.recNAPct, 0) + "</i></div>" +
-        "<div class=\"pf-cell\"><span>Cov NA</span><b class=\"blu\" data-count=\"" + Math.round(x.covNA) + "\" data-fmt=\"n\">" + nf(x.covNA) + "</b><i class=\"blu\">" + pc(x.covNAPct, 0) + "</i></div>" +
-        "<div class=\"pf-cell\"><span>Rec REF</span><b class=\"red\" data-count=\"" + Math.round(x.recREF) + "\" data-fmt=\"n\">" + nf(x.recREF) + "</b><i class=\"red\">" + pc(x.recREFPct, 0) + "</i></div>" +
-        "<div class=\"pf-cell\"><span>Cov REF</span><b class=\"blu\" data-count=\"" + Math.round(x.covREF) + "\" data-fmt=\"n\">" + nf(x.covREF) + "</b><i class=\"blu\">" + pc(x.covREFPct, 0) + "</i></div>" +
+        "<div class=\"pf-cell\"><span>Rec NA</span><b class=\"c-red\" data-count=\"" + Math.round(x.recNA) + "\" data-fmt=\"n\">" + nf(x.recNA) + "</b><i class=\"c-red\">" + pc(x.recNAPct, 0) + "</i></div>" +
+        "<div class=\"pf-cell\"><span>Cov NA</span><b class=\"c-blu\" data-count=\"" + Math.round(x.covNA) + "\" data-fmt=\"n\">" + nf(x.covNA) + "</b><i class=\"c-blu\">" + pc(x.covNAPct, 0) + "</i></div>" +
+        "<div class=\"pf-cell\"><span>Rec REF</span><b class=\"c-red\" data-count=\"" + Math.round(x.recREF) + "\" data-fmt=\"n\">" + nf(x.recREF) + "</b><i class=\"c-red\">" + pc(x.recREFPct, 0) + "</i></div>" +
+        "<div class=\"pf-cell\"><span>Cov REF</span><b class=\"c-blu\" data-count=\"" + Math.round(x.covREF) + "\" data-fmt=\"n\">" + nf(x.covREF) + "</b><i class=\"c-blu\">" + pc(x.covREFPct, 0) + "</i></div>" +
         "</div></div>";
     }
-    return "<section class=\"pf-c pf-cmp s4 pop\"><div class=\"pf-h\">Missed children comparison</div><div class=\"pf-two\">" + col("ipv", "fIPV") + col("opv", "OPV") + "</div>" +
+    return "<section class=\"pf-c gl t-yellow s6 pop\"><div class=\"pf-h\">Missed children comparison</div><div class=\"pf-two\">" + col("ipv", "fIPV") + col("opv", "OPV") + "</div>" +
       "<div class=\"pf-lab\" style=\"margin-top:12px\">Rec = children recorded as not vaccinated (NA = not at home, REF = refused). Cov = those later covered. Rec % is of the HH target, Cov % is of Rec.</div></section>";
   }
   function otherCard(m) {
-    var ip = div(m.ipv.school, m.ipv.target), op = div(m.opv.school, m.opv.target);
-    return "<section class=\"pf-c pf-oth s4 pop\"><div class=\"pf-h\">Other coverages · school</div>" +
-      "<div class=\"pf-two\">" +
-      "<div style=\"text-align:center\">" + ring(ip, "#2E9E5B", "fIPV school", "") + "</div>" +
-      "<div style=\"text-align:center\">" + ring(op, "#1F6FD1", "OPV school", "") + "</div></div>" +
-      "<div class=\"pf-mini\" style=\"margin-top:12px\">" +
-      "<div class=\"pf-cell\"><span>fIPV school covered</span><b class=\"blu\" data-count=\"" + Math.round(m.ipv.school) + "\" data-fmt=\"n\">" + nf(m.ipv.school) + "</b></div>" +
-      "<div class=\"pf-cell\"><span>OPV school covered</span><b class=\"blu\" data-count=\"" + Math.round(m.opv.school) + "\" data-fmt=\"n\">" + nf(m.opv.school) + "</b></div></div></section>";
+    var ip = m.ipv.schoolPct, op = m.opv.schoolPct;
+    return "<section class=\"pf-c gl t-mint s6 pop\"><div class=\"pf-h\">Other coverages · school</div>" +
+      "<div class=\"pf-two\" style=\"justify-items:center\">" +
+      ring(ip, bmColor(ip), "fIPV school") + ring(op, bmColor(op), "OPV school") + "</div>" +
+      "<div class=\"pf-mini\" style=\"margin-top:14px\">" +
+      "<div class=\"pf-cell\"><span>fIPV school covered</span><b class=\"c-blu\" data-count=\"" + Math.round(m.ipv.school) + "\" data-fmt=\"n\">" + nf(m.ipv.school) + "</b></div>" +
+      "<div class=\"pf-cell\"><span>OPV school covered</span><b class=\"c-blu\" data-count=\"" + Math.round(m.opv.school) + "\" data-fmt=\"n\">" + nf(m.opv.school) + "</b></div></div></section>";
   }
-  function dailyCard() {
+  function dailyRows() {
     var days = uniq(ROWS.map(function (r) { return r.dayN; })).filter(function (d) { return d !== "0"; }).sort(function (a, b) { return a - b; });
-    var W = 640, H = 230, padL = 36, padB = 34, padT = 14;
-    if (!days.length) return "<section class=\"pf-c s12 pop\"><div class=\"pf-h\">Daily progress</div><div class=\"pf-empty\">No campaign days yet.</div></section>";
     var rows = ROWS.filter(function (r) { return (F.dist === "All" || r.dist === F.dist) && (F.teh === "All" || r.teh === F.teh) && (F.uc === "All" || r.uc === F.uc); });
-    var per = days.map(function (d) {
-      var rs = rows.filter(function (r) { return r.dayN === d; });
-      var m = metrics(rs, [], false);
-      return { d: d, adm: m.ipv.admin, tgt: m.ipv.target };
-    });
     var cum = 0, cumT = 0;
-    per.forEach(function (p) { cum += p.adm; cumT += p.tgt; p.cumPct = div(cum, cumT); });
+    return days.map(function (d) {
+      var m = metrics(rows.filter(function (r) { return r.dayN === d; }), [], false);
+      cum += m.ipv.admin; cumT += m.ipv.target;
+      return { d: d, adm: m.ipv.admin, tgt: m.ipv.target, cumPct: div(cum, cumT) };
+    });
+  }
+  function dailyCard(cls) {
+    var W = 640, H = 230, padL = 36, padB = 34, padT = 14;
+    var per = dailyRows();
+    if (!per.length) return "<section class=\"pf-c gl " + cls + " pop\"><div class=\"pf-h\">Daily progress</div><div class=\"pf-empty\">No campaign days yet.</div></section>";
     var maxA = Math.max.apply(null, per.map(function (p) { return p.adm; }).concat([1]));
     var n = per.length, slot = (W - padL - 10) / n, bw = Math.min(70, slot * 0.55);
     var bars = "", pts = "", dots = "";
     per.forEach(function (p, i) {
       var cx = padL + slot * i + slot / 2, h = (p.adm / maxA) * (H - padT - padB);
       var y = H - padB - h;
-      bars += "<rect class=\"colb\" style=\"transition-delay:" + (i * 120) + "ms\" x=\"" + (cx - bw / 2) + "\" y=\"" + y + "\" width=\"" + bw + "\" height=\"" + h + "\" rx=\"10\" fill=\"#8EB8F0\"><title>Day " + p.d + ": " + nf(p.adm) + " admin covered</title></rect>";
-      bars = bars.replace("\"colb\"", "\"colb\"");
+      bars += "<rect class=\"colb\" style=\"transition-delay:" + (i * 120) + "ms\" x=\"" + (cx - bw / 2) + "\" y=\"" + y + "\" width=\"" + bw + "\" height=\"" + h + "\" rx=\"10\" fill=\"#5B8DEF\" fill-opacity=\".78\"><title>Day " + p.d + ": " + nf(p.adm) + " admin covered</title></rect>";
       var py = padT + (1 - clamp(p.cumPct || 0)) * (H - padT - padB);
       pts += (i ? " " : "") + cx.toFixed(1) + "," + py.toFixed(1);
-      dots += "<circle class=\"pt\" style=\"transition-delay:" + (1200 + i * 150) + "ms\" cx=\"" + cx.toFixed(1) + "\" cy=\"" + py.toFixed(1) + "\" r=\"6\" fill=\"#2E9E5B\" stroke=\"#fff\" stroke-width=\"2\"/>";
-      bars += "<text x=\"" + cx.toFixed(1) + "\" y=\"" + (H - 12) + "\" text-anchor=\"middle\" font-size=\"12\" fill=\"#6B7280\" font-weight=\"600\">Day " + p.d + "</text>";
+      dots += "<circle class=\"pt\" style=\"transition-delay:" + (1200 + i * 150) + "ms\" cx=\"" + cx.toFixed(1) + "\" cy=\"" + py.toFixed(1) + "\" r=\"6\" fill=\"#15803D\" stroke=\"#fff\" stroke-width=\"2\"/>";
+      bars += "<text x=\"" + cx.toFixed(1) + "\" y=\"" + (H - 12) + "\" text-anchor=\"middle\" font-size=\"12\" fill=\"#4B5B76\" font-weight=\"700\">Day " + p.d + "</text>";
     });
     var grid = "";
-    [0, 0.5, 1].forEach(function (g) { var y = padT + (1 - g) * (H - padT - padB); grid += "<line x1=\"" + padL + "\" x2=\"" + (W - 6) + "\" y1=\"" + y + "\" y2=\"" + y + "\" stroke=\"#E7EAF2\" stroke-dasharray=\"4 5\"/><text x=\"" + (padL - 6) + "\" y=\"" + (y + 4) + "\" text-anchor=\"end\" font-size=\"11\" fill=\"#9AA3B5\">" + (g * 100) + "%</text>"; });
-    var len = 900;
-    return "<section class=\"pf-c s12 pop\"><div class=\"pf-h\">Daily progress<small>bars = admin covered per day · line = cumulative % of HH target (fIPV)</small></div>" +
+    [0, 0.5, 1].forEach(function (g) { var y = padT + (1 - g) * (H - padT - padB); grid += "<line x1=\"" + padL + "\" x2=\"" + (W - 6) + "\" y1=\"" + y + "\" y2=\"" + y + "\" stroke=\"#C9D3E6\" stroke-dasharray=\"4 5\"/><text x=\"" + (padL - 6) + "\" y=\"" + (y + 4) + "\" text-anchor=\"end\" font-size=\"11\" fill=\"#6B7A93\">" + (g * 100) + "%</text>"; });
+    EX.daily = function () {
+      saveCSV("fipv-daily-progress.csv", [["Day", "Admin covered (fIPV)", "fIPV HH target", "Cumulative % of target"]].concat(per.map(function (p) { return [p.d, Math.round(p.adm), Math.round(p.tgt), pv(p.cumPct)]; })));
+    };
+    return "<section class=\"pf-c gl " + cls + " pop\"><div class=\"pf-h\">Daily progress" + dlBtn("daily", "CSV") + "</div>" +
       "<svg class=\"pf-chart\" viewBox=\"0 0 " + W + " " + H + "\" role=\"img\" aria-label=\"Daily progress chart\">" + grid + bars +
-      "<polyline class=\"ln\" style=\"--len:" + len + "\" fill=\"none\" stroke=\"#2E9E5B\" stroke-width=\"3.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\" points=\"" + pts + "\"/>" + dots + "</svg>" +
-      "<div class=\"pf-lab\">Campaign days so far: " + n + ". Catch-up rows are added to the totals only on the All-days view, as in the workbook.</div></section>";
+      "<polyline class=\"ln\" style=\"--len:900\" fill=\"none\" stroke=\"#15803D\" stroke-width=\"3.5\" stroke-linejoin=\"round\" stroke-linecap=\"round\" points=\"" + pts + "\"/>" + dots + "</svg>" +
+      "<div class=\"pf-lab\">Bars = admin covered per day · line = cumulative % of fIPV HH target. Campaign days so far: " + n + ". Catch-up rows count only on the All-days view.</div></section>";
   }
-  function districtCard() {
+  function districtCard(cls) {
     var rows = ROWS.filter(function (r) { return F.day === "All" || r.dayN === F.day; });
     var ds = uniq(rows.map(function (r) { return r.dist; }));
-    var html = "";
+    var html = "", out = [["District", "fIPV admin coverage %", "fIPV still missed %", "OPV admin coverage %", "OPV still missed %"]];
     ds.forEach(function (d) {
-      var m = metrics(rows.filter(function (r) { return r.dist === d; }), [], false);
       var cs = CUD.filter(function (r) { return r.dist === d && (F.day === "All"); });
       var mm = metrics(rows.filter(function (r) { return r.dist === d; }), cs, F.day === "All");
-      html += "<div class=\"pf-day\" style=\"margin-bottom:14px\"><div class=\"pf-lab\" style=\"margin:0 0 6px;color:#14213D;font-weight:750;font-size:13.5px\">" + esc(d.charAt(0) + d.slice(1).toLowerCase()) + "</div>" +
-        "<div class=\"pf-bars\" style=\"margin-top:0\">" + bar("fIPV admin", mm.ipv.admPct, "#1F6FD1") + bar("OPV admin", mm.opv.admPct, "#2E9E5B") + bar("fIPV still missed", mm.ipv.missPct, "#E5484D") + bar("OPV still missed", mm.opv.missPct, "#F5A524") + "</div></div>";
+      out.push([d, pv(mm.ipv.admPct), pv(mm.ipv.missPct), pv(mm.opv.admPct), pv(mm.opv.missPct)]);
+      html += "<div class=\"pf-day\" style=\"margin-bottom:14px\"><div class=\"pf-lab\" style=\"margin:0 0 4px;color:#14213D;font-weight:800;font-size:14px\">" + esc(d.charAt(0) + d.slice(1).toLowerCase()) + "</div>" +
+        "<div class=\"pf-bars\" style=\"margin-top:0\">" + bar("fIPV admin", mm.ipv.admPct, bmColor(mm.ipv.admPct)) + bar("OPV admin", mm.opv.admPct, bmColor(mm.opv.admPct)) + bar("fIPV still missed", mm.ipv.missPct, "#B42318") + bar("OPV still missed", mm.opv.missPct, "#F59E0B") + "</div></div>";
     });
-    return "<section class=\"pf-c s4 pop\"><div class=\"pf-h\">District comparison</div>" + (html || "<div class=\"pf-empty\">No data.</div>") + "</section>";
+    EX.district = function () { saveCSV("fipv-district-summary.csv", out); };
+    return "<section class=\"pf-c gl " + cls + " pop\"><div class=\"pf-h\">District comparison" + dlBtn("district", "CSV") + "</div>" + (html || "<div class=\"pf-empty\">No data.</div>") + "</section>";
   }
   function mapCard(groups) {
     var opts = Object.keys(MAPM).map(function (k) { return "<option value=\"" + k + "\"" + (F.map === k ? " selected" : "") + ">" + MAPM[k].t + "</option>"; }).join("");
-    return "<section class=\"pf-c s8 pop\"><div class=\"pf-h\">UC coverage map<small>click a UC to focus it</small></div>" +
-      "<div class=\"pf-tools\"><select class=\"pf-sel\" id=\"pf-map\" aria-label=\"Map metric\">" + opts + "</select>" +
-      (F.uc !== "All" ? "<button class=\"pf-reset\" id=\"pf-clearuc\">Clear UC</button>" : "") + "</div>" +
+    EX.map = function () { exportMapPNG(document.getElementById("fipv-root") || document); };
+    return "<section class=\"pf-c gl s7 pop\"><div class=\"pf-h\">UC coverage map<small>click a UC to focus it</small></div>" +
+      "<div class=\"pf-tools\"><select class=\"pf-sel\" id=\"pf-map\" aria-label=\"Map metric\" style=\"padding-right:34px\">" + opts + "</select>" +
+      (F.uc !== "All" ? "<button class=\"pf-reset\" id=\"pf-clearuc\">Clear UC</button>" : "") +
+      "<span class=\"pf-hbtn\" style=\"margin-left:auto;display:flex;gap:8px\">" + dlBtn("map", "Map (PNG)") + dlBtn("all", "All data (CSV)") + "</span></div>" +
       mapHTML(groups) + "</section>";
   }
   var RANKS = {
-    missed: { t: "Most children missed", f: function (x) { return x.missed; }, fmt: "n" },
-    na: { t: "Most still NA", f: function (x) { return x.stNA; }, fmt: "n" },
-    ref: { t: "Most refusals", f: function (x) { return x.stREF; }, fmt: "n" },
-    lowhh: { t: "Lowest HH coverage", f: function (x) { return x.hhPct == null ? 9 : -x.hhPct; }, fmt: "p" }
+    missed: { t: "Most children missed", f: function (x) { return x.missed; } },
+    na: { t: "Most still NA", f: function (x) { return x.stNA; } },
+    ref: { t: "Most refusals", f: function (x) { return x.stREF; } },
+    lowhh: { t: "Lowest HH coverage", f: function (x) { return x.hhPct == null ? 9 : -x.hhPct; } }
   };
-  function rankTable(groups, v, rank) {
+  function rankList(groups, v, rank, n) {
     var R = RANKS[rank];
-    var list = groups.map(function (g) { var x = g.m[v]; return { uc: g.uc, teh: g.teh, dist: g.dist, target: x.target, hhPct: x.hhPct, missed: x.missed, stNA: x.stNA, stREF: x.stREF, stNAPct: x.stNAPct, missPct: x.missPct, val: R.f(x) }; })
+    var list = groups.map(function (g) { var x = g.m[v]; return { uc: g.uc, teh: g.teh, dist: g.dist, target: x.target, hhPct: x.hhPct, missed: x.missed, stNA: x.stNA, stREF: x.stREF, val: R.f(x) }; })
       .filter(function (x) { return x.target > 0; });
     if (rank === "lowhh") list.sort(function (a, b) { return a.val - b.val; }); else list.sort(function (a, b) { return b.val - a.val; });
-    list = list.slice(0, 15);
-    var max = list.length ? Math.max.apply(null, list.map(function (x) { return Math.abs(x.val); })) || 1 : 1;
+    return list.slice(0, n || 15);
+  }
+  function rankTable(groups, v, rank, n) {
+    var list = rankList(groups, v, rank, n);
     if (!list.length) return "<div class=\"pf-empty\">No UCs reporting for this selection.</div>";
-    var h = "<div class=\"pf-tw\"><table class=\"pf-t\"><thead><tr><th>#</th><th>UC</th><th class=\"r\">" + (rank === "lowhh" ? "HH cov" : "Still") + "</th><th></th></tr></thead><tbody>";
+    var lowhh = rank === "lowhh";
+    var max = Math.max.apply(null, list.map(function (x) { return Math.abs(x.val); })) || 1;
+    var h = "<div class=\"pf-tw\"><table class=\"pf-t\"><thead><tr><th class=\"n\">#</th><th>UC</th><th class=\"r\">" + (lowhh ? "HH cov" : "Still") + "</th><th></th></tr></thead><tbody>";
     list.forEach(function (x, i) {
-      var shown = rank === "lowhh" ? pc(x.hhPct) : (rank === "missed" ? nf(x.missed) : rank === "na" ? nf(x.stNA) : nf(x.stREF));
-      var bw = rank === "lowhh" ? clamp(x.hhPct || 0) * 100 : clamp(Math.abs(x.val) / max) * 100;
-      h += "<tr data-uc=\"" + esc(x.uc) + "\" data-d=\"" + esc(x.dist) + "\" data-t=\"" + esc(x.teh) + "\"><td class=\"n\">" + (i + 1) + "</td><td class=\"u\" title=\"" + esc(x.teh) + "\">" + esc(x.uc) + "</td><td class=\"r " + (rank === "lowhh" ? "" : "red") + "\">" + shown + "</td><td class=\"pf-tb\"><div class=\"pf-track\"><div class=\"pf-fill\" data-w=\"" + bw.toFixed(1) + "\" style=\"background:" + (rank === "lowhh" ? "#2E9E5B" : "#E5484D") + "\"></div></div></td></tr>";
+      var shown = lowhh ? pc(x.hhPct) : rank === "missed" ? nf(x.missed) : rank === "na" ? nf(x.stNA) : nf(x.stREF);
+      var bw = lowhh ? clamp(x.hhPct || 0) * 100 : clamp(Math.abs(x.val) / max) * 100;
+      var col = lowhh ? bmColor(x.hhPct) : BAD;
+      h += "<tr data-uc=\"" + esc(x.uc) + "\" data-d=\"" + esc(x.dist) + "\" data-t=\"" + esc(x.teh) + "\"><td class=\"n\">" + (i + 1) + "</td><td class=\"u\" title=\"" + esc(x.teh) + "\">" + esc(x.uc) + "</td><td class=\"r " + (lowhh ? "" : "red") + "\">" + shown + "</td><td class=\"pf-tb\"><div class=\"pf-track\"><div class=\"pf-fill\" data-w=\"" + bw.toFixed(1) + "\" style=\"background:" + col + "\"></div></div></td></tr>";
     });
     return h + "</tbody></table></div>";
   }
+  function missCard(groups, v, title, accent) {
+    var key = "miss-" + v;
+    EX[key] = function () {
+      saveCSV("fipv-" + v + "-most-missed.csv", [["Rank", "District", "Tehsil", "UC", "Still missed", "Still NA", "Still REF", "HH target"]].concat(
+        rankList(groups, v, "missed", 9999).map(function (x, i) { return [i + 1, x.dist, x.teh, x.uc, Math.round(x.missed), Math.round(x.stNA), Math.round(x.stREF), Math.round(x.target)]; })));
+    };
+    return "<section class=\"pf-c gl t-yellow pop\"><div class=\"pf-h\" style=\"color:" + accent + "\">Highest missed children · " + title + dlBtn(key, "CSV") + "</div>" + rankTable(groups, v, "missed", 10) + "</section>";
+  }
   function rankCard(groups) {
     var seg = Object.keys(RANKS).map(function (k) { return "<button type=\"button\" data-rank=\"" + k + "\" aria-pressed=\"" + (F.rank === k) + "\">" + RANKS[k].t + "</button>"; }).join("");
-    return "<section class=\"pf-c s12 pop\"><div class=\"pf-h\">UC rankings<small>top 15 UCs in the current selection</small></div>" +
+    EX.rank = function () {
+      saveCSV("fipv-uc-ranking-" + F.rank + ".csv", [["Rank", "District", "Tehsil", "UC", "Vaccine", "HH target", "HH coverage %", "Still missed", "Still NA", "Still REF"]].concat(
+        ["ipv", "opv"].reduce(function (a, v) {
+          return a.concat(rankList(groups, v, F.rank, 9999).map(function (x, i) { return [i + 1, x.dist, x.teh, x.uc, v.toUpperCase(), Math.round(x.target), pv(x.hhPct), Math.round(x.missed), Math.round(x.stNA), Math.round(x.stREF)]; }));
+        }, [])));
+    };
+    return "<section class=\"pf-c gl s12 pop\"><div class=\"pf-h\">UC rankings<small>top 15 UCs in the current selection</small>" + dlBtn("rank", "CSV") + "</div>" +
       "<div class=\"pf-tools\"><div class=\"pf-seg\">" + seg + "</div></div>" +
-      "<div class=\"pf-two\"><div><h4 style=\"text-align:left;color:#1F6FD1\">fIPV</h4>" + rankTable(groups, "ipv", F.rank) + "</div>" +
-      "<div><h4 style=\"text-align:left;color:#2E9E5B\">OPV</h4>" + rankTable(groups, "opv", F.rank) + "</div></div></section>";
+      "<div class=\"pf-two\"><div><h4 style=\"text-align:left;color:#2F5BD3\">fIPV</h4>" + rankTable(groups, "ipv", F.rank, 15) + "</div>" +
+      "<div><h4 style=\"text-align:left;color:#15803D\">OPV</h4>" + rankTable(groups, "opv", F.rank, 15) + "</div></div></section>";
   }
   function ucTable(groups) {
     var cols = [["uc", "UC", "t"], ["teh", "Tehsil", "t"], ["ipvT", "fIPV target", "r"], ["ipvH", "fIPV HH %", "r"], ["ipvA", "fIPV admin %", "r"], ["ipvM", "fIPV missed", "r"], ["opvT", "OPV target", "r"], ["opvH", "OPV HH %", "r"], ["opvA", "OPV admin %", "r"], ["opvM", "OPV missed", "r"]];
@@ -437,36 +527,39 @@
       return { uc: g.uc, teh: g.teh, dist: g.dist, ipvT: i.target, ipvH: i.hhPct, ipvA: i.admPct, ipvM: i.missed, opvT: o.target, opvH: o.hhPct, opvA: o.admPct, opvM: o.missed };
     }).filter(function (x) { return !F.q || (x.uc + " " + x.teh + " " + x.dist).toLowerCase().indexOf(F.q.toLowerCase()) >= 0; });
     list.sort(function (a, b) { var va = a[F.sk], vb = b[F.sk]; if (typeof va === "string") return F.sd * va.localeCompare(vb); return F.sd * ((va == null ? -1 : va) - (vb == null ? -1 : vb)); });
+    EX.uctable = function () { saveCSV("fipv-all-uc-table.csv", [UC_HEAD].concat(ucRows(groups))); };
     var h = "<div class=\"pf-tools\"><input class=\"pf-q\" id=\"pf-q\" placeholder=\"Search UC or tehsil\" value=\"" + esc(F.q) + "\" aria-label=\"Search UC\"><span class=\"pf-lab\" style=\"margin:0\">" + list.length + " UCs</span></div>";
     h += "<div class=\"pf-tw\" style=\"max-height:520px\"><table class=\"pf-t\"><thead><tr><th class=\"n\">#</th>";
     cols.forEach(function (c) { h += "<th class=\"" + c[2] + "\" data-sk=\"" + c[0] + "\">" + c[1] + (F.sk === c[0] ? (F.sd > 0 ? " ▲" : " ▼") : "") + "</th>"; });
     h += "</tr></thead><tbody>";
     list.forEach(function (x, i) {
       h += "<tr><td class=\"n\">" + (i + 1) + "</td><td class=\"u\">" + esc(x.uc) + "</td><td>" + esc(x.teh) + "</td>";
-      h += "<td class=\"r\">" + nf(x.ipvT) + "</td><td class=\"r grn\">" + pc(x.ipvH) + "</td><td class=\"r blu\">" + pc(x.ipvA) + "</td><td class=\"r red\">" + nf(x.ipvM) + "</td>";
-      h += "<td class=\"r\">" + nf(x.opvT) + "</td><td class=\"r grn\">" + pc(x.opvH) + "</td><td class=\"r blu\">" + pc(x.opvA) + "</td><td class=\"r red\">" + nf(x.opvM) + "</td></tr>";
+      h += "<td class=\"r\">" + nf(x.ipvT) + "</td><td class=\"r\">" + bmPill(x.ipvH) + "</td><td class=\"r\">" + bmPill(x.ipvA) + "</td><td class=\"r red\">" + nf(x.ipvM) + "</td>";
+      h += "<td class=\"r\">" + nf(x.opvT) + "</td><td class=\"r\">" + bmPill(x.opvH) + "</td><td class=\"r\">" + bmPill(x.opvA) + "</td><td class=\"r red\">" + nf(x.opvM) + "</td></tr>";
     });
     if (!list.length) h += "<tr><td colspan=\"11\" class=\"pf-empty\">No UCs match.</td></tr>";
     return h + "</tbody></table></div>";
   }
   function tableCard(groups) {
-    return "<section class=\"pf-c s12 pop\"><div class=\"pf-h\">All UCs in this selection<small>click a column to sort</small></div>" + ucTable(groups) + "</section>";
+    return "<section class=\"pf-c gl s12 pop\"><div class=\"pf-h\">All UCs in this selection<small>click a column to sort</small>" + dlBtn("uctable", "CSV") + "</div>" + ucTable(groups) + "</section>";
   }
 
   function header(rs, groups) {
     var d = options();
     var planned = TG.filter(function (t) { return (F.dist === "All" || t.dist === F.dist) && (F.teh === "All" || t.teh === F.teh); }).length;
-    var reporting = groups.length;
     var upd = "";
     if (STAMP) { var s = STAMP.replace("T", " "); upd = s.slice(0, 16); }
-    var sub = "fIPV &amp; OPV · Peshawar Division · " + (F.dist === "All" ? "all districts" : esc(F.dist)) + " · " + (F.day === "All" ? "all campaign days" : esc(dayLabel(F.day))) +
-      " · " + reporting + " UCs reporting" + (planned ? " of " + planned + " planned" : "") + (upd ? " · updated " + esc(upd) : "");
-    var filters = fl("pf-day", "Day", d.days, F.day, "All days", dayLabel) +
-      fl("pf-dist", "District", d.dists, F.dist, "All districts") +
-      fl("pf-teh", "Tehsil", d.tehs, F.teh, "All tehsils") +
-      fl("pf-uc", "UC", d.ucs, F.uc, "All UCs") +
+    var sub = "Peshawar Division · " + (F.dist === "All" ? "all districts" : esc(F.dist)) + " · " + (F.day === "All" ? "all campaign days" : esc(dayLabel(F.day))) +
+      " · " + groups.length + " UCs reporting" + (planned ? " of " + planned + " planned" : "") + (upd ? " · updated " + esc(upd) : "");
+    var bench = "<div class=\"pf-fl\"><label for=\"pf-bench\">Benchmark</label><select class=\"pf-sel\" id=\"pf-bench\">" +
+      ["0.8", "0.85", "0.9", "0.95"].map(function (o) { return "<option value=\"" + o + "\"" + (+o === F.bench ? " selected" : "") + ">" + pc(+o, 0) + "</option>"; }).join("") + "</select></div>";
+    var filters = sel2("pf-day", "Day", d.days, F.day, "All days", dayLabel) +
+      sel2("pf-dist", "District", d.dists, F.dist, "All districts") +
+      sel2("pf-teh", "Tehsil", d.tehs, F.teh, "All tehsils") +
+      sel2("pf-uc", "UC", d.ucs, F.uc, "All UCs") +
+      bench +
       "<button class=\"pf-reset\" id=\"pf-reset\" type=\"button\">Reset</button>";
-    return "<div class=\"pf-top\"><div><h2>Polio Booster Campaign <em>fIPV &amp; OPV</em></h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
+    return "<div class=\"pf-top\"><div><div class=\"pf-eb\">Polio Booster Campaign · fIPV &amp; OPV</div><h2>Peshawar Block Daily Sitrep</h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
   }
 
   function draw(root) {
@@ -475,15 +568,19 @@
     var cs = withCud ? CUD.filter(function (r) { return okRow(r, F); }) : [];
     var m = metrics(rs, cs, withCud);
     var groups = ucGroups(rs, cs, withCud);
-    var html = "<div class=\"pf\">" + header(rs, groups) +
+    EX = {};
+    EX.all = function () { saveCSV("fipv-" + (F.dist === "All" ? "all-districts" : F.dist.toLowerCase()) + "-uc-data.csv", [UC_HEAD].concat(ucRows(groups))); };
+    var html = "<div class=\"pf\" id=\"fipv-root\">" + header(rs, groups) +
       "<div class=\"pf-grid\">" +
-      vacCard("ipv", m, "fIPV", "#1F6FD1") + vacCard("opv", m, "OPV", "#2E9E5B") +
-      cmpCard(m) + otherCard(m) + mapCard(groups) + districtCard() +
+      sitCard("ipv", m, "fIPV", "#2F5BD3", "t-blue") + sitCard("opv", m, "OPV", "#7C3AED", "t-lilac") +
+      cmpCard(m) + otherCard(m) +
+      mapCard(groups) +
+      "<div class=\"s5\" style=\"display:flex;flex-direction:column;gap:16px;min-width:0\">" + missCard(groups, "ipv", "fIPV", "#B42318") + missCard(groups, "opv", "OPV", "#B42318") + "</div>" +
+      dailyCard("s8") + districtCard("s4") +
       rankCard(groups) +
       tableCard(groups) +
-      dailyCard() +
       "</div>" +
-      "<div class=\"pf-foot\"><img src=\"assets/logo-pei.jpg\" alt=\"Pakistan Polio Eradication Programme\" width=\"120\" height=\"44\"><span>Source: <b>District Emergency Operation Center, Peshawar</b></span><span class=\"pf-lab\" style=\"margin:0\">Figures update automatically when the fIPV workbook is saved.</span></div>" +
+      "<div class=\"pf-foot\"><img src=\"assets/logo-pei.jpg\" alt=\"Pakistan Polio Eradication Programme\" width=\"120\" height=\"44\"><span>Source: <b>District Emergency Operation Center, Peshawar</b></span><span class=\"pf-lab\" style=\"margin:0\">Figures update automatically when the fIPV workbook is saved. Benchmark " + pc(F.bench, 0) + ": at or above = light green, below = dark red.</span></div>" +
       "</div>";
     root.innerHTML = html;
     wire(root);
@@ -502,10 +599,15 @@
       });
     }
     onSel("pf-day", "day"); onSel("pf-dist", "dist"); onSel("pf-teh", "teh"); onSel("pf-uc", "uc");
+    var bn = $("#pf-bench", root);
+    if (bn) bn.addEventListener("change", function () { F.bench = parseFloat(bn.value) || 0.9; draw(root); });
     var rs = $("#pf-reset", root);
     if (rs) rs.addEventListener("click", function () { F.day = "All"; F.dist = "All"; F.teh = "All"; F.uc = "All"; F.q = ""; draw(root); });
     var mp = $("#pf-map", root); if (mp) mp.addEventListener("change", function () { F.map = mp.value; draw(root); });
     var cu = $("#pf-clearuc", root); if (cu) cu.addEventListener("click", function () { F.uc = "All"; draw(root); });
+    Array.prototype.forEach.call(root.querySelectorAll(".dlb"), function (b) {
+      b.addEventListener("click", function () { var f = EX[b.getAttribute("data-ex")]; if (f) f(); });
+    });
     Array.prototype.forEach.call(root.querySelectorAll(".pf-seg button"), function (b) {
       b.addEventListener("click", function () { F.rank = b.getAttribute("data-rank"); draw(root); });
     });
@@ -539,7 +641,7 @@
       function step(ts) {
         if (t0 == null) t0 = ts;
         var k = Math.min(1, (ts - t0) / dur), e = 1 - Math.pow(1 - k, 3), v = to * e;
-        el.textContent = fmt === "p" ? (v).toFixed(1) + "%" : nf(v);
+        el.textContent = fmt === "p" ? v.toFixed(1) + "%" : nf(v);
         if (k < 1) requestAnimationFrame(step);
       }
       requestAnimationFrame(step);
