@@ -6,7 +6,7 @@
   "use strict";
   var DATA = { rows: "data/fipv_rows.csv", cud: "data/fipv_cud.csv", tg: "data/fipv_targets.csv", upd: "data/fipv.updated.txt", geo: "data/geo.json" };
   var ROWS = null, CUD = [], TG = [], GEO = null, STAMP = "", LOADING = null;
-  var F = { day: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", q: "", sk: "missed", sd: -1, bench: 0.9 };
+  var F = { day: "All", date: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", q: "", sk: "missed", sd: -1, bench: 0.9 };
   var GOOD = "#25A765", BAD = "#A3161B", NODATA = "#DDD9E6", OUTSIDE = "#E9EBF2";
   var EX = {};
   var MOTION_OFF = function () { return document.documentElement.classList.contains("motion-off"); };
@@ -168,7 +168,7 @@
 
   /* ---- filters ---- */
   function okRow(r, f) {
-    return (f.day === "All" || r.dayN === f.day) && (f.dist === "All" || r.dist === f.dist) &&
+    return (f.day === "All" || r.dayN === f.day) && (f.date === "All" || r.dayDate === f.date) && (f.dist === "All" || r.dist === f.dist) &&
            (f.teh === "All" || r.teh === f.teh) && (f.uc === "All" || r.uc === f.uc);
   }
   function uniq(a) { return a.filter(function (v, i, s) { return v && s.indexOf(v) === i; }).sort(); }
@@ -178,7 +178,12 @@
     var dists = uniq(ROWS.map(function (r) { return r.dist; }));
     var tehs = uniq(ROWS.filter(function (r) { return F.dist === "All" || r.dist === F.dist; }).map(function (r) { return r.teh; }));
     var ucs = uniq(ROWS.filter(function (r) { return (F.dist === "All" || r.dist === F.dist) && (F.teh === "All" || r.teh === F.teh); }).map(function (r) { return r.uc; }));
-    return { days: days, dists: dists, tehs: tehs, ucs: ucs };
+    var dates = uniq(ROWS.map(function (r) { return r.dayDate; })).filter(function (x) { return /^\d{4}-\d{2}-\d{2}$/.test(x); });
+    return { days: days, dates: dates, dists: dists, tehs: tehs, ucs: ucs };
+  }
+  function dateLabel(d) {
+    var dt = new Date(d + "T00:00:00");
+    return isNaN(dt) ? d : dt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
   function dayLabel(d) {
     var r = ROWS.filter(function (x) { return x.dayN === d && x.dayDate; })[0];
@@ -550,11 +555,12 @@
     var planned = TG.filter(function (t) { return (F.dist === "All" || t.dist === F.dist) && (F.teh === "All" || t.teh === F.teh); }).length;
     var upd = "";
     if (STAMP) { var s = STAMP.replace("T", " "); upd = s.slice(0, 16); }
-    var sub = "Peshawar Division · " + (F.dist === "All" ? "all districts" : esc(F.dist)) + " · " + (F.day === "All" ? "all campaign days" : esc(dayLabel(F.day))) +
+    var sub = "Peshawar Division · " + (F.dist === "All" ? "all districts" : esc(F.dist)) + " · " + (F.day === "All" ? "all campaign days" : esc(dayLabel(F.day))) + (F.date === "All" ? "" : " · date " + esc(dateLabel(F.date))) +
       " · " + groups.length + " UCs reporting" + (planned ? " of " + planned + " planned" : "") + (upd ? " · updated " + esc(upd) : "");
     var bench = "<div class=\"pf-fl\"><label for=\"pf-bench\">Benchmark</label><select class=\"pf-sel\" id=\"pf-bench\">" +
       ["0.8", "0.85", "0.9", "0.95"].map(function (o) { return "<option value=\"" + o + "\"" + (+o === F.bench ? " selected" : "") + ">" + pc(+o, 0) + "</option>"; }).join("") + "</select></div>";
-    var filters = sel2("pf-day", "Day", d.days, F.day, "All days", dayLabel) +
+    var filters = sel2("pf-day", "Campaign day", d.days, F.day, "All days", dayLabel) +
+      sel2("pf-date", "Date", d.dates, F.date, "All dates", dateLabel) +
       sel2("pf-dist", "District", d.dists, F.dist, "All districts") +
       sel2("pf-teh", "Tehsil", d.tehs, F.teh, "All tehsils") +
       sel2("pf-uc", "UC", d.ucs, F.uc, "All UCs") +
@@ -565,7 +571,7 @@
 
   function draw(root) {
     var rs = ROWS.filter(function (r) { return okRow(r, F); });
-    var withCud = F.day === "All";
+    var withCud = F.day === "All" && F.date === "All";
     var cs = withCud ? CUD.filter(function (r) { return okRow(r, F); }) : [];
     var m = metrics(rs, cs, withCud);
     var groups = ucGroups(rs, cs, withCud);
@@ -599,11 +605,11 @@
         draw(root);
       });
     }
-    onSel("pf-day", "day"); onSel("pf-dist", "dist"); onSel("pf-teh", "teh"); onSel("pf-uc", "uc");
+    onSel("pf-day", "day"); onSel("pf-date", "date"); onSel("pf-dist", "dist"); onSel("pf-teh", "teh"); onSel("pf-uc", "uc");
     var bn = $("#pf-bench", root);
     if (bn) bn.addEventListener("change", function () { F.bench = parseFloat(bn.value) || 0.9; draw(root); });
     var rs = $("#pf-reset", root);
-    if (rs) rs.addEventListener("click", function () { F.day = "All"; F.dist = "All"; F.teh = "All"; F.uc = "All"; F.q = ""; draw(root); });
+    if (rs) rs.addEventListener("click", function () { F.day = "All"; F.date = "All"; F.dist = "All"; F.teh = "All"; F.uc = "All"; F.q = ""; draw(root); });
     var mp = $("#pf-map", root); if (mp) mp.addEventListener("change", function () { F.map = mp.value; draw(root); });
     var cu = $("#pf-clearuc", root); if (cu) cu.addEventListener("click", function () { F.uc = "All"; draw(root); });
     Array.prototype.forEach.call(root.querySelectorAll(".dlb"), function (b) {
