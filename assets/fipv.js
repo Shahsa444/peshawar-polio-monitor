@@ -61,10 +61,9 @@
     ".pf-cell i{font-style:normal;font-size:12px;font-weight:700;margin-left:6px}",
     ".pf-mapw{position:relative}",
     ".pf-map{width:100%;height:auto;display:block;max-height:520px}",
-    ".pf-map path{stroke:#fff;stroke-width:.5;transition:fill .8s ease,opacity .4s ease;cursor:pointer}",
-    ".pf-map path.off{fill:#E9ECF3;stroke:#fff;cursor:default}",
-    ".pf-map path.sel{stroke:#1F2A44;stroke-width:1.4}",
-    ".pf-map path:hover{opacity:.82}",
+    ".pf-map path{transition:fill .8s ease}",
+    ".pf-map .u{stroke:#FFFFFF}",
+    ".pf .legend,.pf-mapw + .legend{color:#5A6A85}",
     ".pf-leg{display:flex;align-items:center;gap:10px;font-size:12px;color:#5A6A85;font-weight:600;margin-top:10px;flex-wrap:wrap}",
     ".pf-bar-leg{height:10px;width:200px;border-radius:99px;background:linear-gradient(90deg,#E5484D,#F5B52E,#2E9E5B)}",
     ".pf-seg{display:inline-flex;background:#EEF1F7;border-radius:14px;padding:3px;gap:2px;flex-wrap:wrap}",
@@ -238,9 +237,8 @@
     if (!GEO || !GEO.length) return "<div class=\"pf-empty\">Map shapes are not available.</div>";
     var byKey = {};
     groups.forEach(function (g) { byKey[g.uc + "|" + g.dist] = g; });
-    var shown = GEO.filter(function (f) {
-      return (F.dist === "All" || f.d === F.dist) && (F.teh === "All" || f.t === F.teh);
-    });
+    var inScope = function (f) { return (F.dist === "All" || f.d === F.dist) && (F.teh === "All" || f.t === F.teh); };
+    var shown = GEO.filter(inScope);
     var box = shown.length ? shown : GEO;
     var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
     box.forEach(function (f) { f.r.forEach(function (ring) { ring.forEach(function (p) { var q = proj(p); minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); }); }); });
@@ -248,22 +246,42 @@
     var vb = [minx - pad, miny - pad, maxx - minx + 2 * pad, maxy - miny + 2 * pad];
     var M = MAPM[F.map];
     var hasAny = groups.length > 0;
+    // colour bands are quartiles of the UCs in view, so the map always uses the full palette
+    var vals = [];
+    GEO.forEach(function (f) {
+      var g = byKey[f.n + "|" + f.d];
+      var v = g ? M.f(g.m) : null;
+      if (inScope(f) && v != null && isFinite(v) && v > 0) vals.push(v);
+    });
+    vals.sort(function (a, b) { return a - b; });
+    var qt = function (p) { return vals[Math.min(vals.length - 1, Math.floor(p * vals.length))]; };
+    var breaks = vals.length ? [qt(0.25), qt(0.5), qt(0.75)] : [];
+    var band = function (v) { var b = 0; while (b < breaks.length && v > breaks[b]) b++; return Math.min(4, b + 1); };
     var paths = GEO.map(function (f) {
       var g = byKey[f.n + "|" + f.d];
-      var inView = (F.dist === "All" || f.d === F.dist) && (F.teh === "All" || f.t === F.teh);
+      var v = g ? M.f(g.m) : null;
+      var has = v != null && isFinite(v);
+      var inView = inScope(f);
       var sel = F.uc !== "All" && f.n === F.uc && f.d === F.dist;
-      var fill = "#E9ECF3", cls = "";
-      var val = g ? M.f(g.m) : null;
-      if (g && val != null) fill = rampColor(val / M.scale, M.inv);
-      else cls = " off";
-      if (!inView) { cls = " off"; fill = "#EEF1F6"; }
-      var tip = f.n + " (" + f.d + (f.t ? ", " + f.t : "") + ")";
-      if (g && val != null) tip += " · " + M.t + ": " + pc(val);
-      return "<path class=\"" + (cls + (sel ? " sel" : "")).trim() + "\" fill=\"" + fill + "\" d=\"" + ringPath(f.r) + "\" data-d=\"" + esc(f.d) + "\" data-t=\"" + esc(f.t || "") + "\" data-n=\"" + esc(f.n) + "\"" + (g ? "" : " data-none=\"1\"") + "><title>" + esc(tip) + "</title></path>";
+      var fill, cls = "u";
+      if (!inView) { fill = "#EBE9F1"; cls += " o"; }
+      else if (!has) { fill = "#DDD9E6"; cls += " o"; }
+      else { fill = v <= 0 ? "#EEE7FA" : ["#D2BFF1", "#AC8BE0", "#8157C6", "#4F2A92"][band(v) - 1]; }
+      if (sel) cls += " sel";
+      var tip = "<h4>" + esc(f.n) + "</h4><div class=\"w\">" + esc(f.t ? f.t + " · " : "") + esc(f.d) + "</div>" +
+        (has ? "<div class=\"w\">" + esc(M.t) + ": <b>" + pc(v) + "</b></div>" : "<div class=\"w\">No data for this selection</div>");
+      return "<path class=\"" + cls + "\" fill=\"" + fill + "\" d=\"" + ringPath(f.r) + "\" data-d=\"" + esc(f.d) + "\" data-t=\"" + esc(f.t || "") + "\" data-n=\"" + esc(f.n) + "\" data-tip=\"" + esc(tip) + "\"" + (g ? "" : " data-none=\"1\"") + "></path>";
     }).join("");
-    var leg = "<div class=\"pf-leg\"><span>" + (M.inv ? "Lower is better" : "Higher is better") + "</span><span class=\"pf-bar-leg\"></span><span>" + (M.inv ? "0% → " + pc(M.scale, 0) + "+" : "0% → 100%") + "</span>" +
-      (hasAny ? "" : "<span>· no UC data for this selection yet</span>") + "</div>";
-    return "<div class=\"pf-mapw\"><svg class=\"pf-map\" viewBox=\"" + vb.map(function (x) { return x.toFixed(2); }).join(" ") + "\" role=\"img\" aria-label=\"UC coverage map\">" + paths + "</svg></div>" + leg;
+    var lg = function (c, t) { return "<span class=\"lg\"><span class=\"sw\" style=\"background:" + c + "\"></span>" + t + "</span>"; };
+    var leg = "<div class=\"legend\">" + lg("#EEE7FA", "0%");
+    if (breaks.length === 3) {
+      leg += lg("#D2BFF1", "up to " + pc(breaks[0], 0)) +
+        lg("#AC8BE0", pc(breaks[0], 0) + "–" + pc(breaks[1], 0)) +
+        lg("#8157C6", pc(breaks[1], 0) + "–" + pc(breaks[2], 0)) +
+        lg("#4F2A92", "above " + pc(breaks[2], 0));
+    }
+    leg += lg("#DDD9E6", "No data") + (hasAny ? "" : "<span class=\"note\">no UC data for this selection yet</span>") + "</div>";
+    return "<div class=\"pf-mapw\"><svg class=\"msvg pf-map\" viewBox=\"" + vb.map(function (x) { return x.toFixed(2); }).join(" ") + "\" role=\"img\" aria-label=\"UC coverage map\">" + paths + "</svg></div>" + leg;
   }
 
   /* ---- small pieces ---- */
@@ -490,6 +508,10 @@
     var cu = $("#pf-clearuc", root); if (cu) cu.addEventListener("click", function () { F.uc = "All"; draw(root); });
     Array.prototype.forEach.call(root.querySelectorAll(".pf-seg button"), function (b) {
       b.addEventListener("click", function () { F.rank = b.getAttribute("data-rank"); draw(root); });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll(".pf-map path[data-tip]"), function (p) {
+      p.addEventListener("mousemove", function (ev) { if (window.showTip) window.showTip(ev, p.getAttribute("data-tip")); });
+      p.addEventListener("mouseleave", function () { if (window.hideTip) window.hideTip(); });
     });
     Array.prototype.forEach.call(root.querySelectorAll("path[data-n]"), function (p) {
       if (p.hasAttribute("data-none")) return;
