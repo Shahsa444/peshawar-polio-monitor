@@ -372,28 +372,36 @@
     }).catch(function () { return null; });
   }
   function n0(x) { return x == null || !isFinite(x) ? "–" : Math.round(x).toLocaleString("en-US"); }
+  function pct0(x) { return x == null || !isFinite(x) ? "–" : Math.round(x * 100) + "%"; }
   function pct1(x) { return pc(x, 1); }
   function shortDate(iso) {
     var dt = new Date(iso + "T00:00:00");
     return isNaN(dt) ? "" : dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
   }
-  // the rows the deck covers: district and tehsil chosen on the page, days up to the chosen day
+  // The deck follows the page filters. A chosen day gives two columns: that day, and all days to date.
+  // No day chosen gives every day, then all days to date.
   function deckScope() {
     var inArea = function (r) { return (F.dist === "All" || r.dist === F.dist) && (F.teh === "All" || r.teh === F.teh); };
     var target = F.day !== "All" ? +F.day : null;
     if (!target && F.date !== "All") { var hit = ROWS.filter(function (r) { return r.dayDate === F.date; })[0]; if (hit) target = +hit.dayN; }
     var all = ROWS.filter(inArea);
     var days = uniq(all.map(function (r) { return r.dayN; })).filter(function (d) { return d !== "0"; }).sort(function (a, b) { return a - b; });
-    if (target) days = days.filter(function (d) { return +d <= target; });
+    if (target) {
+      days = days.filter(function (d) { return +d <= target; });
+      // the chosen day always gets its column, even when this district has no rows for it yet
+      if (days.indexOf(String(target)) < 0) days.push(String(target));
+      days.sort(function (a, b) { return a - b; });
+    }
     var rs = all.filter(function (r) { return days.indexOf(r.dayN) >= 0; });
     var cs = target ? [] : CUD.filter(inArea);
-    var cols = days.map(function (d) {
+    var dayPanels = days.map(function (d) {
       var dr = rs.filter(function (r) { return r.dayN === d; });
       var sd = dr.length && /^\d{4}-\d{2}-\d{2}$/.test(dr[0].dayDate) ? " · " + shortDate(dr[0].dayDate) : "";
-      return { h: "Day " + d + sd, m: metrics(dr, [], false) };
+      return { d: d, h: "Day " + d + sd, m: metrics(dr, [], false), groups: ucGroups(dr, [], false), total: false };
     });
-    cols.push({ h: target ? "To date (Day 1–" + target + ")" : "To date", m: metrics(rs, cs, !target), total: true });
-    return { target: target, days: days, rs: rs, cs: cs, cols: cols, groups: ucGroups(rs, cs, !target) };
+    var total = { h: target ? "All days to Day " + target : "All days", m: metrics(rs, cs, !target), groups: ucGroups(rs, cs, !target), total: true };
+    var panels = (target ? dayPanels.filter(function (p) { return +p.d === target; }) : dayPanels).concat([total]);
+    return { target: target, days: days, rs: rs, cs: cs, trend: dayPanels, panels: panels, cols: panels, groups: total.groups };
   }
   function cw(n) { var r = (9.4 - 3.1) / Math.max(n, 1); var a = [3.1]; for (var i = 0; i < n; i++) a.push(r); return a; }
   function hc(t, fill, align) { return { text: t, options: { bold: true, color: "FFFFFF", fill: { color: fill }, align: align || "center", valign: "middle" } }; }
@@ -442,8 +450,13 @@
     });
     return [head].concat(body);
   }
-  // a UC map as a picture, same colours and benchmark rule as the page map
-  function mapPicture(key, groups) {
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h); ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r); ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y); ctx.closePath();
+  }
+  // One map panel in the Post Campaign Review style: title pill, coverage bubble, UC shapes with names, legend.
+  function mapPanel(key, groups, label, distVal) {
     return new Promise(function (resolve) {
       if (!GEO || !GEO.length) return resolve(null);
       var M = MAPM[key];
@@ -455,44 +468,71 @@
       var shown = GEO.filter(inScope), box = shown.length ? shown : GEO;
       var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
       box.forEach(function (f) { f.r.forEach(function (ring) { ring.forEach(function (p) { var q = proj(p); minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); }); }); });
-      var pad = Math.max(maxx - minx, maxy - miny) * 0.04;
-      var vb = [minx - pad, miny - pad, maxx - minx + 2 * pad, maxy - miny + 2 * pad];
-      var paths = GEO.map(function (f) {
+      var pad = Math.max(maxx - minx, maxy - miny) * 0.03;
+      var vx = minx - pad, vy = miny - pad, vw = maxx - minx + 2 * pad, vh = maxy - miny + 2 * pad;
+      var W = 1000, TOP = 120, BOT = 110, AW = W - 60, AH = 760;
+      var s = Math.min(AW / vw, AH / vh);
+      var mh = Math.round(vh * s), ox = (W - vw * s) / 2, oy = TOP;
+      var H = TOP + mh + BOT;
+      var cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+      var ctx = cv.getContext("2d");
+      ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, W, H);
+      ctx.strokeStyle = "#9AA3B2"; ctx.lineWidth = 3; ctx.strokeRect(1.5, 1.5, W - 3, H - 3);
+      var TX = function (x) { return ox + (x - vx) * s; }, TY = function (y) { return oy + (y - vy) * s; };
+      var labels = [];
+      GEO.forEach(function (f) {
         var g = byKey[f.n + "|" + f.d], v = g ? M.f(g.m) : null, has = v != null && isFinite(v);
-        var fill = !inScope(f) ? OUTSIDE : !has ? NODATA : (good(v) ? GOOD : BAD);
-        return "<path fill=\"" + fill + "\" stroke=\"#FFFFFF\" stroke-width=\"1\" stroke-linejoin=\"round\" d=\"" + ringPath(f.r) + "\"/>";
-      }).join("");
-      var W = 1600, mapH = Math.round(W * vb[3] / vb[2]), topH = 120, legH = 110;
-      var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + W + "\" height=\"" + mapH + "\" viewBox=\"" + vb.map(function (x) { return x.toFixed(2); }).join(" ") + "\">" + paths + "</svg>";
-      var img = new Image();
-      img.onload = function () {
-        var cv = document.createElement("canvas"); cv.width = W; cv.height = topH + mapH + legH;
-        var ctx = cv.getContext("2d");
-        ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, cv.width, cv.height);
-        ctx.fillStyle = "#14213D"; ctx.font = "700 44px Arial, sans-serif"; ctx.fillText(M.t + " by UC", 40, 60);
-        ctx.fillStyle = "#4B5B76"; ctx.font = "500 26px Arial, sans-serif";
-        ctx.fillText("Benchmark " + pc(F.bench, 0) + " · " + (F.dist === "All" ? "all districts" : F.dist) + (F.teh === "All" ? "" : " · " + F.teh), 40, 100);
-        ctx.drawImage(img, 0, topH, W, mapH);
-        var items = [[GOOD, M.inv ? "On track: missed ≤ " + pc(thr, 0) : "At or above " + pc(thr, 0) + " (benchmark)"], [BAD, M.inv ? "Above the missed limit" : "Below " + pc(thr, 0)], [NODATA, "No data"]];
-        var x = 40, y = topH + mapH + 50;
-        ctx.font = "500 26px Arial, sans-serif";
-        items.forEach(function (it) { ctx.fillStyle = it[0]; ctx.fillRect(x, y - 22, 26, 26); ctx.fillStyle = "#34435E"; ctx.fillText(it[1], x + 38, y); x += ctx.measureText(it[1]).width + 100; });
-        resolve({ data: cv.toDataURL("image/png"), ratio: cv.width / cv.height });
-      };
-      img.onerror = function () { resolve(null); };
-      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+        var fill = !inScope(f) ? "#EEF0F5" : !has ? NODATA : (good(v) ? GOOD : BAD);
+        ctx.beginPath();
+        f.r.forEach(function (ring) {
+          ring.forEach(function (p, i) { var q = proj(p); if (i) ctx.lineTo(TX(q[0]), TY(q[1])); else ctx.moveTo(TX(q[0]), TY(q[1])); });
+          ctx.closePath();
+        });
+        ctx.fillStyle = fill; ctx.fill("nonzero");
+        ctx.strokeStyle = "#3D4350"; ctx.lineWidth = 1.2; ctx.stroke();
+        if (inScope(f) && f.r[0] && f.r[0].length) {
+          var sx = 0, sy = 0; f.r[0].forEach(function (p) { var q = proj(p); sx += q[0]; sy += q[1]; });
+          labels.push({ x: TX(sx / f.r[0].length), y: TY(sy / f.r[0].length), t: f.n, dark: has && !good(v) });
+        }
+      });
+      ctx.font = "700 15px Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      labels.forEach(function (l) { ctx.fillStyle = l.dark ? "#FFFFFF" : "#14213D"; ctx.fillText(l.t, l.x, l.y); });
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      // title pill
+      ctx.font = "700 30px Arial, sans-serif";
+      var pw = ctx.measureText(label).width + 56;
+      roundRect(ctx, 20, 22, pw, 66, 33); ctx.fillStyle = "#FFFFFF"; ctx.fill(); ctx.strokeStyle = "#7A8497"; ctx.lineWidth = 2; ctx.stroke();
+      ctx.fillStyle = "#14213D"; ctx.fillText(label, 48, 66);
+      // coverage bubble for the whole panel
+      var bx = W - 120, by = 55;
+      ctx.beginPath(); ctx.ellipse(bx, by, 100, 40, 0, 0, Math.PI * 2); ctx.fillStyle = (distVal != null && isFinite(distVal) && good(distVal)) ? GOOD : BAD; ctx.fill();
+      ctx.fillStyle = "#FFFFFF"; ctx.font = "700 36px Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(pct0(distVal), bx, by + 2);
+      ctx.textAlign = "left"; ctx.textBaseline = "alphabetic";
+      // legend
+      var items = [[GOOD, M.inv ? "Missed ≤ " + pc(thr, 0) + " (on track)" : "≥ " + pc(thr, 0) + " (benchmark)"], [BAD, M.inv ? "Missed > " + pc(thr, 0) : "< " + pc(thr, 0)], [NODATA, "No data"]];
+      ctx.font = "500 26px Arial, sans-serif";
+      var x = 60, y = H - 42;
+      items.forEach(function (it) {
+        ctx.fillStyle = it[0]; ctx.fillRect(x, y - 22, 26, 26);
+        ctx.fillStyle = "#34435E"; ctx.fillText(it[1], x + 38, y);
+        x += ctx.measureText(it[1]).width + 90;
+      });
+      resolve({ data: cv.toDataURL("image/png"), ratio: W / H });
     });
   }
   function buildErmDeck() {
     var sc = deckScope();
-    return Promise.all([loadPptx(), dataUrl("assets/logo-pei.jpg"), dataUrl("assets/logo-kp.png"),
-      mapPicture("ipv_hh", sc.groups), mapPicture("opv_hh", sc.groups), mapPicture("ipv_miss", sc.groups), mapPicture("opv_miss", sc.groups)]).then(function (a) {
-      var pei = a[1], kp = a[2], maps = [a[3], a[4], a[5], a[6]];
+    var mdef = [["ipv_hh", "fIPV HH coverage by UC", "fIPV"], ["opv_hh", "OPV HH coverage by UC", "OPV"], ["ipv_miss", "fIPV still missed by UC", "fIPV"], ["opv_miss", "OPV still missed by UC", "OPV"]];
+    var mapJobs = mdef.map(function (d) {
+      return Promise.all(sc.panels.map(function (p) { return mapPanel(d[0], p.groups, p.h, MAPM[d[0]].f(p.m)); }));
+    });
+    return Promise.all([loadPptx(), dataUrl("assets/logo-pei.jpg"), dataUrl("assets/logo-kp.png"), Promise.all(mapJobs)]).then(function (a) {
+      var pei = a[1], kp = a[2], mapPics = a[3];
       var distName = F.dist === "All" ? "Peshawar Division" : F.dist.charAt(0) + F.dist.slice(1).toLowerCase();
       var period = sc.target ? "Day " + sc.target : "all days to date";
       var asOf = STAMP ? dateLabel(STAMP.slice(0, 10)) : dateLabel(new Date().toISOString().slice(0, 10));
-      var tot = sc.cols[sc.cols.length - 1].m;
-      var dayCols = sc.cols.slice(0, -1);
+      var tot = sc.panels[sc.panels.length - 1].m;
       var pp = new PptxGenJS();
       pp.layout = "LAYOUT_16x9"; pp.author = "ERU Peshawar Dashboard"; pp.title = "ERM fIPV " + distName + " " + period;
       var sn = 1;
@@ -508,14 +548,14 @@
       t.addText("Polio Booster Campaign (fIPV & OPV) · " + period, { x: .5, y: 3.25, w: 9, h: .4, fontFace: DFONT, fontSize: 16, bold: true, color: "FFFFFF" });
       t.addText(asOf.toUpperCase(), { x: .5, y: 4.9, w: 9, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: "FFFFFF" });
 
-      // 2-3. coverage summaries, day by day and to date
-      var s2 = frame("Summary of fIPV coverage - day-wise and to date", "fIPV");
+      // 2-3. coverage summaries: chosen day and all days (or every day and all days)
+      var s2 = frame("Summary of fIPV coverage - " + (sc.target ? "Day " + sc.target + " and all days" : "day-wise and all days"), "fIPV");
       pTable(s2, summaryRows(sc.cols, "ipv"), { x: .3, y: .9, w: 9.4, colW: cw(sc.cols.length) });
-      var s3 = frame("Summary of OPV coverage - day-wise and to date", "OPV");
+      var s3 = frame("Summary of OPV coverage - " + (sc.target ? "Day " + sc.target + " and all days" : "day-wise and all days"), "OPV");
       pTable(s3, summaryRows(sc.cols, "opv"), { x: .3, y: .9, w: 9.4, colW: cw(sc.cols.length) });
 
-      // 4. still missed children, to date
-      var s4 = frame("Summary of missed children - fIPV and OPV, to date", "Missed children");
+      // 4. still missed children, all days to date
+      var s4 = frame("Summary of missed children - fIPV and OPV, all days to date", "Missed children");
       var mrows = [["Recorded NA", "recNA"], ["Covered NA", "covNA"], ["Still NA", "stNA", 1], ["Recorded refusals", "recREF"], ["Covered refusals", "covREF"], ["Still refusals", "stREF", 1], ["Total still missed", "missed", 1], ["Still missed % of HH target", "missPct", 1, 1]];
       var m4 = [[hc("Indicator", DK.head, "left"), hc("fIPV", DK.head), hc("OPV", DK.head)]].concat(mrows.map(function (r) {
         var b = !!r[2];
@@ -525,28 +565,25 @@
       pTable(s4, m4, { x: .3, y: .9, w: 6.2, colW: [3.2, 1.5, 1.5] });
       s4.addText("Figures to date (all days up to the selected day, catch-up included when the day is All). Refusals and NA as recorded in the workbook.", { x: .3, y: 3.7, w: 9.4, h: .5, fontFace: DFONT, fontSize: 10, italic: true, color: DK.mute });
 
-      // 5-8. maps
-      var mdef = [["fIPV HH coverage by UC", "fIPV"], ["OPV HH coverage by UC", "OPV"], ["fIPV still missed by UC", "fIPV"], ["OPV still missed by UC", "OPV"]];
-      var mkeys = ["ipv_hh", "opv_hh", "ipv_miss", "opv_miss"];
-      mdef.forEach(function (d, i) {
-        var s = frame(d[0], d[1]), pic = maps[i], M = MAPM[mkeys[i]];
-        if (!pic) { s.addText("No UC map data for this selection", { x: .3, y: 2.4, w: 9.4, h: .5, fontFace: DFONT, fontSize: 12, italic: true, color: DK.mute, align: "center" }); return; }
-        var w = Math.min(4.9, 4.4 * pic.ratio), h = w / pic.ratio;
-        s.addImage({ data: pic.data, x: .3, y: .85, w: w, h: h });
-        // the ten UCs to act on first, beside the map
-        var ranked = sc.groups.filter(function (g) { var v = M.f(g.m); return v != null && isFinite(v); })
-          .sort(function (a, b) { return M.inv ? M.f(b.m) - M.f(a.m) : M.f(a.m) - M.f(b.m); }).slice(0, 10);
-        var tx = .3 + w + .3, tw = 9.7 - tx;
-        var rows = [[hc("#", DK.head), hc("UC", DK.head, "left"), hc("Tehsil", DK.head, "left"), hc(M.inv ? "Still missed %" : "Coverage %", DK.head)]];
-        ranked.forEach(function (g, k) {
-          var v = M.f(g.m);
-          rows.push([bc(k + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(g.teh, { align: "left" }), bc(pct1(v), { bold: true, color: (M.inv ? v <= 1 - F.bench : v >= F.bench) ? "0F6B3A" : DK.red })]);
-        });
-        s.addText(M.inv ? "UCs with the highest share still missed" : "UCs with the lowest coverage", { x: tx, y: .85, w: tw, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: DK.ink });
-        if (rows.length > 1) pTable(s, rows, { x: tx, y: 1.2, w: tw, rowH: .26, fontSize: 9.5, colW: [.4, tw * .42, tw * .3, tw * .28 - .4] });
+      // 5-8. UC maps: chosen day beside all days (three panels per slide at most)
+      mdef.forEach(function (d, mi) {
+        var pics = mapPics[mi];
+        for (var k = 0; k < sc.panels.length; k += 3) {
+          var chunk = sc.panels.slice(k, k + 3), cp = pics.slice(k, k + 3);
+          var title = d[1] + (sc.panels.length > 3 ? " (" + (Math.floor(k / 3) + 1) + "/" + Math.ceil(sc.panels.length / 3) + ")" : "");
+          var s = frame(title, d[2]);
+          var slot = 9.4 / chunk.length;
+          chunk.forEach(function (p, i) {
+            var pic = cp[i];
+            if (!pic) { s.addText("No UC map data", { x: .3 + i * slot, y: 2.4, w: slot, h: .5, fontFace: DFONT, fontSize: 12, italic: true, color: DK.mute, align: "center" }); return; }
+            var h = Math.min(4.35, (slot - .25) / pic.ratio), w = h * pic.ratio;
+            s.addImage({ data: pic.data, x: .3 + i * slot + (slot - w) / 2, y: .88, w: w, h: h });
+          });
+        }
       });
 
-      // 9. daily progress
+      // 9. daily progress, days up to the chosen day
+      var dayCols = sc.trend;
       if (dayCols.length) {
         var s9 = frame("Daily progress - admin coverage by day", "Daily");
         s9.addChart(pp.ChartType.bar, [
@@ -560,7 +597,7 @@
         pTable(s9, drow, { x: .3, y: 3.6, w: 9.4, colW: cw(dayCols.length) });
       }
 
-      // 10. highest still missed UCs
+      // 10. highest still missed UCs, all days to date
       var s10 = frame("Highest still missed UCs - fIPV and OPV", "Missed children");
       [["ipv", .3, "fIPV - top 10 UCs by still missed"], ["opv", 5.1, "OPV - top 10 UCs by still missed"]].forEach(function (d) {
         s10.addText(d[2], { x: d[1], y: .85, w: 4.6, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: DK.ink });
@@ -572,9 +609,9 @@
         pTable(s10, rows, { x: d[1], y: 1.2, w: 4.6, rowH: .25, fontSize: 9, colW: [.35, 1.55, .85, .65, .65, .55] });
       });
 
-      // 11. tehsil summary
+      // 11. tehsil summary, all days to date
       var tehs = uniq(sc.rs.map(function (r) { return r.teh; })).sort();
-      var s11 = frame("Tehsil-wise coverage and still missed - fIPV and OPV", "Tehsils");
+      var s11 = frame("Tehsil-wise coverage and still missed - fIPV and OPV, all days to date", "Tehsils");
       var trows = [[hc("Tehsil", DK.head, "left"), hc("fIPV target", DK.head), hc("fIPV HH cov %", DK.head), hc("fIPV still missed", DK.head), hc("OPV HH cov %", DK.head), hc("OPV still missed", DK.head)]];
       tehs.forEach(function (tn) {
         var m = metrics(sc.rs.filter(function (r) { return r.teh === tn; }), sc.cs.filter(function (r) { return r.teh === tn; }), !sc.target);
@@ -583,7 +620,7 @@
       trows.push([bc("Total", { align: "left", bold: true, fill: { color: DK.tot } }), bc(n0(tot.ipv.target), { bold: true, fill: { color: DK.tot } }), bc(pct1(tot.ipv.hhPct), { bold: true, fill: { color: DK.tot } }), bc(n0(tot.ipv.missed), { bold: true, fill: { color: DK.tot } }), bc(pct1(tot.opv.hhPct), { bold: true, fill: { color: DK.tot } }), bc(n0(tot.opv.missed), { bold: true, fill: { color: DK.tot } })]);
       pTable(s11, trows, { x: .3, y: .9, w: 9.4, colW: [2.4, 1.4, 1.4, 1.4, 1.4, 1.4] });
 
-      // 12+. one slide per tehsil: top UCs
+      // 12+. one slide per tehsil: top UCs, all days to date
       tehs.forEach(function (tn) {
         var gs = sc.groups.filter(function (g) { return g.teh === tn; }).sort(function (a, b) { return b.m.ipv.missed - a.m.ipv.missed; }).slice(0, 12);
         if (!gs.length) return;
