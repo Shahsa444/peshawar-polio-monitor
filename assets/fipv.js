@@ -757,20 +757,36 @@
     openModal(html, function (card) {
       var q = function (id) { return card.querySelector("#" + id); };
       var st = { dist: distSel, day: null, mode: "upto" };
+      // Day 1 to Day 7 always shown (days with no data are greyed out), plus All days (full campaign).
+      var setMode = function () {
+        Array.prototype.forEach.call(card.querySelectorAll('input[name="dm-m"]'), function (r) { r.checked = r.value === st.mode; });
+      };
       var refresh = function (keepDay) {
-        var ds = daysOf(st.dist), max = ds.length ? ds[ds.length - 1] : 1;
-        if (!keepDay || !st.day || st.day > max) st.day = max;
-        var chips = ""; for (var n = 1; n <= max; n++) chips += '<button type="button" class="chip" data-dd="' + n + '" aria-pressed="' + (n === st.day) + '"' + (st.mode === "full" ? " disabled" : "") + '>Day ' + n + '</button>';
+        var ds = daysOf(st.dist), maxData = ds.length ? ds[ds.length - 1] : 1;
+        var N = Math.max(7, maxData);
+        if (!keepDay || !st.day || st.day > N || (ds.length && ds.indexOf(st.day) < 0)) st.day = maxData;
+        var full = st.mode === "full", chips = "";
+        for (var n = 1; n <= N; n++) {
+          var has = ds.indexOf(n) >= 0;
+          chips += '<button type="button" class="chip" data-dd="' + n + '" aria-pressed="' + (!full && n === st.day) + '"' + (has ? "" : ' disabled title="No data for this day yet"') + '>Day ' + n + '</button>';
+        }
+        chips += '<button type="button" class="chip" data-all="1" aria-pressed="' + full + '">All days</button>';
         q("dm-days").innerHTML = chips;
         q("dm-only-t").textContent = "Day " + st.day + " only";
-        q("dm-up-t").textContent = st.day === 1 ? "Day 1" : "Days 1–" + st.day + " together";
+        q("dm-up-t").textContent = st.day === 1 ? "Day 1" : "Days 1\u2013" + st.day + " together";
         var hit = ROWS.filter(function (r) { return +r.dayN === st.day && (st.dist === "All" || r.dist === st.dist); })[0];
         var dt = hit && /^\d{4}-\d{2}-\d{2}$/.test(hit.dayDate) ? ' <span class="note">(' + dateLabel(hit.dayDate) + ')</span>' : "";
-        q("dm-info").innerHTML = "<b>" + capName(st.dist) + "</b> · campaign data up to <b>Day " + max + "</b> · selected Day " + st.day + dt;
+        q("dm-info").innerHTML = "<b>" + capName(st.dist) + "</b> \u00b7 campaign data up to <b>Day " + maxData + "</b> \u00b7 selected Day " + st.day + dt;
         q("dm-go").disabled = !ds.length;
       };
       q("dm-d").onchange = function () { st.dist = this.value; st.day = null; refresh(false); };
-      q("dm-days").onclick = function (e) { var b = e.target.closest("[data-dd]"); if (b && !b.disabled) { st.day = +b.getAttribute("data-dd"); refresh(true); } };
+      q("dm-days").onclick = function (e) {
+        var b = e.target.closest("[data-dd],[data-all]");
+        if (!b || b.disabled) return;
+        if (b.hasAttribute("data-all")) st.mode = "full";
+        else { st.day = +b.getAttribute("data-dd"); if (st.mode === "full") st.mode = "only"; }
+        setMode(); refresh(true);
+      };
       Array.prototype.forEach.call(card.querySelectorAll('input[name="dm-m"]'), function (r) {
         r.onchange = function () { st.mode = r.value; refresh(true); };
       });
