@@ -348,6 +348,268 @@
     }).join("\r\n");
     saveBlob(new Blob(["﻿" + csv], { type: "text/csv;charset=utf-8" }), name);
   }
+  /* ---- ERM deck (PowerPoint), same format as the district ERM deck ---- */
+  var DK = { green: "006837", gold: "C3922E", head: "274E13", tag: "EFE3D3", red: "990000", blue: "1F5C8B", grid: "BFBFBF", zebra: "F4F7F2", ink: "1A1A1A", mute: "595959", tot: "EEF5E9" };
+  var DFONT = "Calibri";
+  var pptxLoading = null;
+  function loadPptx() {
+    if (window.PptxGenJS) return Promise.resolve();
+    if (!pptxLoading) {
+      pptxLoading = new Promise(function (res, rej) {
+        var s = document.createElement("script");
+        s.src = "assets/pptxgen.bundle.js";
+        s.onload = function () { window.PptxGenJS ? res() : rej(new Error("PowerPoint library did not load")); };
+        s.onerror = function () { rej(new Error("PowerPoint library did not load")); };
+        document.head.appendChild(s);
+      });
+      pptxLoading.catch(function () { pptxLoading = null; });
+    }
+    return pptxLoading;
+  }
+  function dataUrl(url) {
+    return fetch(url).then(function (r) { return r.blob(); }).then(function (b) {
+      return new Promise(function (res) { var fr = new FileReader(); fr.onload = function () { res(fr.result); }; fr.readAsDataURL(b); });
+    }).catch(function () { return null; });
+  }
+  function n0(x) { return x == null || !isFinite(x) ? "–" : Math.round(x).toLocaleString("en-US"); }
+  function pct1(x) { return pc(x, 1); }
+  function shortDate(iso) {
+    var dt = new Date(iso + "T00:00:00");
+    return isNaN(dt) ? "" : dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  }
+  // the rows the deck covers: district and tehsil chosen on the page, days up to the chosen day
+  function deckScope() {
+    var inArea = function (r) { return (F.dist === "All" || r.dist === F.dist) && (F.teh === "All" || r.teh === F.teh); };
+    var target = F.day !== "All" ? +F.day : null;
+    if (!target && F.date !== "All") { var hit = ROWS.filter(function (r) { return r.dayDate === F.date; })[0]; if (hit) target = +hit.dayN; }
+    var all = ROWS.filter(inArea);
+    var days = uniq(all.map(function (r) { return r.dayN; })).filter(function (d) { return d !== "0"; }).sort(function (a, b) { return a - b; });
+    if (target) days = days.filter(function (d) { return +d <= target; });
+    var rs = all.filter(function (r) { return days.indexOf(r.dayN) >= 0; });
+    var cs = target ? [] : CUD.filter(inArea);
+    var cols = days.map(function (d) {
+      var dr = rs.filter(function (r) { return r.dayN === d; });
+      var sd = dr.length && /^\d{4}-\d{2}-\d{2}$/.test(dr[0].dayDate) ? " · " + shortDate(dr[0].dayDate) : "";
+      return { h: "Day " + d + sd, m: metrics(dr, [], false) };
+    });
+    cols.push({ h: target ? "To date (Day 1–" + target + ")" : "To date", m: metrics(rs, cs, !target), total: true });
+    return { target: target, days: days, rs: rs, cs: cs, cols: cols, groups: ucGroups(rs, cs, !target) };
+  }
+  function cw(n) { var r = (9.4 - 3.1) / Math.max(n, 1); var a = [3.1]; for (var i = 0; i < n; i++) a.push(r); return a; }
+  function hc(t, fill, align) { return { text: t, options: { bold: true, color: "FFFFFF", fill: { color: fill }, align: align || "center", valign: "middle" } }; }
+  function bc(t, o) { var x = { align: "right", valign: "middle" }; if (o) for (var k in o) x[k] = o[k]; return { text: String(t), options: x }; }
+  function pTable(slide, rows, opt) {
+    var o = { fontFace: DFONT, fontSize: 10, color: DK.ink, border: { type: "solid", pt: .5, color: DK.grid }, autoPage: false, rowH: .27 };
+    for (var k in opt) o[k] = opt[k];
+    slide.addTable(rows, o);
+  }
+  function slideFrame(pp, title, tag, sn, asOf) {
+    var s = pp.addSlide();
+    s.background = { color: "FFFFFF" };
+    s.addText(title, { x: .3, y: .18, w: 7.9, h: .5, fontFace: DFONT, fontSize: 19, bold: true, color: DK.ink, valign: "middle" });
+    s.addShape(pp.ShapeType.line, { x: .3, y: .72, w: 9.4, h: 0, line: { color: DK.gold, width: 1.2 } });
+    if (tag) {
+      s.addShape(pp.ShapeType.rect, { x: 8.3, y: 0, w: 1.7, h: .26, fill: { color: DK.tag }, line: { color: DK.tag } });
+      s.addText(tag, { x: 8.3, y: 0, w: 1.7, h: .26, fontFace: DFONT, fontSize: 9, color: DK.ink, align: "center", valign: "middle" });
+    }
+    s.addText("Source: District Emergency Operation Center, Peshawar · as of " + asOf + " · ERU Peshawar Dashboard", { x: .3, y: 5.3, w: 8, h: .22, fontFace: DFONT, fontSize: 8, color: DK.mute });
+    s.addText(String(sn), { x: 9.1, y: 5.3, w: .6, h: .22, fontFace: DFONT, fontSize: 9, color: DK.mute, align: "right" });
+    return s;
+  }
+  function summaryRows(cols, v) {
+    var rows = [
+      ["HH target", function (m) { return n0(m[v].target); }],
+      ["HH covered", function (m) { return n0(m[v].hh); }],
+      ["HH coverage %", function (m) { return pct1(m[v].hhPct); }, 1],
+      ["Admin covered (HH + unregistered + school)", function (m) { return n0(m[v].admin); }],
+      ["Admin coverage %", function (m) { return pct1(m[v].admPct); }, 1],
+      ["Recorded NA", function (m) { return n0(m[v].recNA); }],
+      ["Covered NA", function (m) { return n0(m[v].covNA); }],
+      ["Still NA", function (m) { return n0(m[v].stNA); }, 1],
+      ["Recorded refusals", function (m) { return n0(m[v].recREF); }],
+      ["Covered refusals", function (m) { return n0(m[v].covREF); }],
+      ["Still refusals", function (m) { return n0(m[v].stREF); }, 1],
+      ["Total still missed", function (m) { return n0(m[v].missed); }, 1],
+      ["Still missed % of HH target", function (m) { return pct1(m[v].missPct); }]
+    ];
+    var head = [hc("Indicator", DK.head, "left")].concat(cols.map(function (c) { return hc(c.h, c.total ? DK.green : DK.head); }));
+    var body = rows.map(function (r) {
+      var bold = !!r[2];
+      return [bc(r[0], { align: "left", bold: bold })].concat(cols.map(function (c) {
+        var o = { bold: bold }; if (c.total) o.fill = { color: DK.tot };
+        return bc(r[1](c.m), o);
+      }));
+    });
+    return [head].concat(body);
+  }
+  // a UC map as a picture, same colours and benchmark rule as the page map
+  function mapPicture(key, groups) {
+    return new Promise(function (resolve) {
+      if (!GEO || !GEO.length) return resolve(null);
+      var M = MAPM[key];
+      var thr = M.inv ? 1 - F.bench : F.bench;
+      var good = function (v) { return M.inv ? v <= thr : v >= thr; };
+      var byKey = {};
+      groups.forEach(function (g) { byKey[g.uc + "|" + g.dist] = g; });
+      var inScope = function (f) { return (F.dist === "All" || f.d === F.dist) && (F.teh === "All" || f.t === F.teh); };
+      var shown = GEO.filter(inScope), box = shown.length ? shown : GEO;
+      var minx = 1e9, miny = 1e9, maxx = -1e9, maxy = -1e9;
+      box.forEach(function (f) { f.r.forEach(function (ring) { ring.forEach(function (p) { var q = proj(p); minx = Math.min(minx, q[0]); maxx = Math.max(maxx, q[0]); miny = Math.min(miny, q[1]); maxy = Math.max(maxy, q[1]); }); }); });
+      var pad = Math.max(maxx - minx, maxy - miny) * 0.04;
+      var vb = [minx - pad, miny - pad, maxx - minx + 2 * pad, maxy - miny + 2 * pad];
+      var paths = GEO.map(function (f) {
+        var g = byKey[f.n + "|" + f.d], v = g ? M.f(g.m) : null, has = v != null && isFinite(v);
+        var fill = !inScope(f) ? OUTSIDE : !has ? NODATA : (good(v) ? GOOD : BAD);
+        return "<path fill=\"" + fill + "\" stroke=\"#FFFFFF\" stroke-width=\"1\" stroke-linejoin=\"round\" d=\"" + ringPath(f.r) + "\"/>";
+      }).join("");
+      var W = 1600, mapH = Math.round(W * vb[3] / vb[2]), topH = 120, legH = 110;
+      var svg = "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"" + W + "\" height=\"" + mapH + "\" viewBox=\"" + vb.map(function (x) { return x.toFixed(2); }).join(" ") + "\">" + paths + "</svg>";
+      var img = new Image();
+      img.onload = function () {
+        var cv = document.createElement("canvas"); cv.width = W; cv.height = topH + mapH + legH;
+        var ctx = cv.getContext("2d");
+        ctx.fillStyle = "#FFFFFF"; ctx.fillRect(0, 0, cv.width, cv.height);
+        ctx.fillStyle = "#14213D"; ctx.font = "700 44px Arial, sans-serif"; ctx.fillText(M.t + " by UC", 40, 60);
+        ctx.fillStyle = "#4B5B76"; ctx.font = "500 26px Arial, sans-serif";
+        ctx.fillText("Benchmark " + pc(F.bench, 0) + " · " + (F.dist === "All" ? "all districts" : F.dist) + (F.teh === "All" ? "" : " · " + F.teh), 40, 100);
+        ctx.drawImage(img, 0, topH, W, mapH);
+        var items = [[GOOD, M.inv ? "On track: missed ≤ " + pc(thr, 0) : "At or above " + pc(thr, 0) + " (benchmark)"], [BAD, M.inv ? "Above the missed limit" : "Below " + pc(thr, 0)], [NODATA, "No data"]];
+        var x = 40, y = topH + mapH + 50;
+        ctx.font = "500 26px Arial, sans-serif";
+        items.forEach(function (it) { ctx.fillStyle = it[0]; ctx.fillRect(x, y - 22, 26, 26); ctx.fillStyle = "#34435E"; ctx.fillText(it[1], x + 38, y); x += ctx.measureText(it[1]).width + 100; });
+        resolve({ data: cv.toDataURL("image/png"), ratio: cv.width / cv.height });
+      };
+      img.onerror = function () { resolve(null); };
+      img.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svg);
+    });
+  }
+  function buildErmDeck() {
+    var sc = deckScope();
+    return Promise.all([loadPptx(), dataUrl("assets/logo-pei.jpg"), dataUrl("assets/logo-kp.png"),
+      mapPicture("ipv_hh", sc.groups), mapPicture("opv_hh", sc.groups), mapPicture("ipv_miss", sc.groups), mapPicture("opv_miss", sc.groups)]).then(function (a) {
+      var pei = a[1], kp = a[2], maps = [a[3], a[4], a[5], a[6]];
+      var distName = F.dist === "All" ? "Peshawar Division" : F.dist.charAt(0) + F.dist.slice(1).toLowerCase();
+      var period = sc.target ? "Day " + sc.target : "all days to date";
+      var asOf = STAMP ? dateLabel(STAMP.slice(0, 10)) : dateLabel(new Date().toISOString().slice(0, 10));
+      var tot = sc.cols[sc.cols.length - 1].m;
+      var dayCols = sc.cols.slice(0, -1);
+      var pp = new PptxGenJS();
+      pp.layout = "LAYOUT_16x9"; pp.author = "ERU Peshawar Dashboard"; pp.title = "ERM fIPV " + distName + " " + period;
+      var sn = 1;
+      var frame = function (title, tag) { sn++; return slideFrame(pp, title, tag, sn, asOf); };
+
+      // 1. title
+      var t = pp.addSlide(); t.background = { color: "FFFFFF" };
+      if (pei) t.addImage({ data: pei, x: .25, y: .25, w: 2, h: .64 });
+      if (kp) t.addImage({ data: kp, x: 8.75, y: .1, w: 1.08, h: 1.12 });
+      t.addShape(pp.ShapeType.rect, { x: 0, y: 1.9, w: 10, h: .13, fill: { color: DK.gold }, line: { color: DK.gold } });
+      t.addShape(pp.ShapeType.rect, { x: 0, y: 2.02, w: 10, h: 3.61, fill: { color: DK.green }, line: { color: DK.green } });
+      t.addText("Evening Review Meeting - District " + distName, { x: .5, y: 2.5, w: 9, h: .7, fontFace: DFONT, fontSize: 28, bold: true, color: "FFFFFF" });
+      t.addText("Polio Booster Campaign (fIPV & OPV) · " + period, { x: .5, y: 3.25, w: 9, h: .4, fontFace: DFONT, fontSize: 16, bold: true, color: "FFFFFF" });
+      t.addText(asOf.toUpperCase(), { x: .5, y: 4.9, w: 9, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: "FFFFFF" });
+
+      // 2-3. coverage summaries, day by day and to date
+      var s2 = frame("Summary of fIPV coverage - day-wise and to date", "fIPV");
+      pTable(s2, summaryRows(sc.cols, "ipv"), { x: .3, y: .9, w: 9.4, colW: cw(sc.cols.length) });
+      var s3 = frame("Summary of OPV coverage - day-wise and to date", "OPV");
+      pTable(s3, summaryRows(sc.cols, "opv"), { x: .3, y: .9, w: 9.4, colW: cw(sc.cols.length) });
+
+      // 4. still missed children, to date
+      var s4 = frame("Summary of missed children - fIPV and OPV, to date", "Missed children");
+      var mrows = [["Recorded NA", "recNA"], ["Covered NA", "covNA"], ["Still NA", "stNA", 1], ["Recorded refusals", "recREF"], ["Covered refusals", "covREF"], ["Still refusals", "stREF", 1], ["Total still missed", "missed", 1], ["Still missed % of HH target", "missPct", 1, 1]];
+      var m4 = [[hc("Indicator", DK.head, "left"), hc("fIPV", DK.head), hc("OPV", DK.head)]].concat(mrows.map(function (r) {
+        var b = !!r[2];
+        var f = function (v) { return r[3] ? pct1(tot[v][r[1]]) : n0(tot[v][r[1]]); };
+        return [bc(r[0], { align: "left", bold: b }), bc(f("ipv"), { bold: b, align: "center" }), bc(f("opv"), { bold: b, align: "center" })];
+      }));
+      pTable(s4, m4, { x: .3, y: .9, w: 6.2, colW: [3.2, 1.5, 1.5] });
+      s4.addText("Figures to date (all days up to the selected day, catch-up included when the day is All). Refusals and NA as recorded in the workbook.", { x: .3, y: 3.7, w: 9.4, h: .5, fontFace: DFONT, fontSize: 10, italic: true, color: DK.mute });
+
+      // 5-8. maps
+      var mdef = [["fIPV HH coverage by UC", "fIPV"], ["OPV HH coverage by UC", "OPV"], ["fIPV still missed by UC", "fIPV"], ["OPV still missed by UC", "OPV"]];
+      var mkeys = ["ipv_hh", "opv_hh", "ipv_miss", "opv_miss"];
+      mdef.forEach(function (d, i) {
+        var s = frame(d[0], d[1]), pic = maps[i], M = MAPM[mkeys[i]];
+        if (!pic) { s.addText("No UC map data for this selection", { x: .3, y: 2.4, w: 9.4, h: .5, fontFace: DFONT, fontSize: 12, italic: true, color: DK.mute, align: "center" }); return; }
+        var w = Math.min(4.9, 4.4 * pic.ratio), h = w / pic.ratio;
+        s.addImage({ data: pic.data, x: .3, y: .85, w: w, h: h });
+        // the ten UCs to act on first, beside the map
+        var ranked = sc.groups.filter(function (g) { var v = M.f(g.m); return v != null && isFinite(v); })
+          .sort(function (a, b) { return M.inv ? M.f(b.m) - M.f(a.m) : M.f(a.m) - M.f(b.m); }).slice(0, 10);
+        var tx = .3 + w + .3, tw = 9.7 - tx;
+        var rows = [[hc("#", DK.head), hc("UC", DK.head, "left"), hc("Tehsil", DK.head, "left"), hc(M.inv ? "Still missed %" : "Coverage %", DK.head)]];
+        ranked.forEach(function (g, k) {
+          var v = M.f(g.m);
+          rows.push([bc(k + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(g.teh, { align: "left" }), bc(pct1(v), { bold: true, color: (M.inv ? v <= 1 - F.bench : v >= F.bench) ? "0F6B3A" : DK.red })]);
+        });
+        s.addText(M.inv ? "UCs with the highest share still missed" : "UCs with the lowest coverage", { x: tx, y: .85, w: tw, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: DK.ink });
+        if (rows.length > 1) pTable(s, rows, { x: tx, y: 1.2, w: tw, rowH: .26, fontSize: 9.5, colW: [.4, tw * .42, tw * .3, tw * .28 - .4] });
+      });
+
+      // 9. daily progress
+      if (dayCols.length) {
+        var s9 = frame("Daily progress - admin coverage by day", "Daily");
+        s9.addChart(pp.ChartType.bar, [
+          { name: "fIPV admin coverage %", labels: dayCols.map(function (c) { return c.h; }), values: dayCols.map(function (c) { return c.m.ipv.admPct || 0; }) },
+          { name: "OPV admin coverage %", labels: dayCols.map(function (c) { return c.h; }), values: dayCols.map(function (c) { return c.m.opv.admPct || 0; }) }
+        ], { x: .3, y: .85, w: 9.4, h: 2.7, barDir: "col", barGrouping: "clustered", chartColors: ["2F5BD3", "7C3AED"], showValue: true, dataLabelFormatCode: "0%", valAxisLabelFormatCode: "0%", valAxisMinVal: 0, showLegend: true, legendPos: "b", catAxisLabelFontSize: 10, dataLabelFontSize: 10, valGridLine: { style: "none" } });
+        var drow = [[hc("Indicator", DK.head, "left")].concat(dayCols.map(function (c) { return hc(c.h, DK.head); }))];
+        [["fIPV admin covered", "ipv", "admin"], ["fIPV still missed", "ipv", "missed"], ["OPV admin covered", "opv", "admin"], ["OPV still missed", "opv", "missed"]].forEach(function (r) {
+          drow.push([bc(r[0], { align: "left" })].concat(dayCols.map(function (c) { return bc(n0(c.m[r[1]][r[2]])); })));
+        });
+        pTable(s9, drow, { x: .3, y: 3.6, w: 9.4, colW: cw(dayCols.length) });
+      }
+
+      // 10. highest still missed UCs
+      var s10 = frame("Highest still missed UCs - fIPV and OPV", "Missed children");
+      [["ipv", .3, "fIPV - top 10 UCs by still missed"], ["opv", 5.1, "OPV - top 10 UCs by still missed"]].forEach(function (d) {
+        s10.addText(d[2], { x: d[1], y: .85, w: 4.6, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: DK.ink });
+        var top = sc.groups.filter(function (g) { return g.m[d[0]].missed > 0; }).sort(function (a, b) { return b.m[d[0]].missed - a.m[d[0]].missed; }).slice(0, 10);
+        var rows = [[hc("#", DK.red), hc("UC", DK.red, "left"), hc("Tehsil", DK.red, "left"), hc("NA", DK.red), hc("REF", DK.red), hc("Total", DK.red)]];
+        top.forEach(function (g, i) {
+          rows.push([bc(i + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(g.teh, { align: "left" }), bc(n0(g.m[d[0]].stNA)), bc(n0(g.m[d[0]].stREF)), bc(n0(g.m[d[0]].missed), { bold: true })]);
+        });
+        pTable(s10, rows, { x: d[1], y: 1.2, w: 4.6, rowH: .25, fontSize: 9, colW: [.35, 1.55, .85, .65, .65, .55] });
+      });
+
+      // 11. tehsil summary
+      var tehs = uniq(sc.rs.map(function (r) { return r.teh; })).sort();
+      var s11 = frame("Tehsil-wise coverage and still missed - fIPV and OPV", "Tehsils");
+      var trows = [[hc("Tehsil", DK.head, "left"), hc("fIPV target", DK.head), hc("fIPV HH cov %", DK.head), hc("fIPV still missed", DK.head), hc("OPV HH cov %", DK.head), hc("OPV still missed", DK.head)]];
+      tehs.forEach(function (tn) {
+        var m = metrics(sc.rs.filter(function (r) { return r.teh === tn; }), sc.cs.filter(function (r) { return r.teh === tn; }), !sc.target);
+        trows.push([bc(tn, { align: "left" }), bc(n0(m.ipv.target)), bc(pct1(m.ipv.hhPct)), bc(n0(m.ipv.missed), { bold: true }), bc(pct1(m.opv.hhPct)), bc(n0(m.opv.missed), { bold: true })]);
+      });
+      trows.push([bc("Total", { align: "left", bold: true, fill: { color: DK.tot } }), bc(n0(tot.ipv.target), { bold: true, fill: { color: DK.tot } }), bc(pct1(tot.ipv.hhPct), { bold: true, fill: { color: DK.tot } }), bc(n0(tot.ipv.missed), { bold: true, fill: { color: DK.tot } }), bc(pct1(tot.opv.hhPct), { bold: true, fill: { color: DK.tot } }), bc(n0(tot.opv.missed), { bold: true, fill: { color: DK.tot } })]);
+      pTable(s11, trows, { x: .3, y: .9, w: 9.4, colW: [2.4, 1.4, 1.4, 1.4, 1.4, 1.4] });
+
+      // 12+. one slide per tehsil: top UCs
+      tehs.forEach(function (tn) {
+        var gs = sc.groups.filter(function (g) { return g.teh === tn; }).sort(function (a, b) { return b.m.ipv.missed - a.m.ipv.missed; }).slice(0, 12);
+        if (!gs.length) return;
+        var st = frame(tn + " tehsil - UCs with still missed children", "Missed children");
+        st.addShape(pp.ShapeType.rect, { x: .3, y: .85, w: 9.4, h: .38, fill: { color: DK.blue }, line: { color: DK.blue } });
+        st.addText(tn + " TEHSIL - STILL MISSED (fIPV & OPV)", { x: .3, y: .85, w: 9.4, h: .38, fontFace: DFONT, fontSize: 14, bold: true, color: "FFFFFF", align: "center", valign: "middle" });
+        var urows = [[hc("#", DK.blue), hc("UC", DK.blue, "left"), hc("fIPV HH cov %", DK.blue), hc("fIPV still NA", DK.blue), hc("fIPV still REF", DK.blue), hc("fIPV still missed", DK.blue), hc("OPV HH cov %", DK.blue), hc("OPV still missed", DK.blue)]];
+        gs.forEach(function (g, i) {
+          urows.push([bc(i + 1, { align: "center" }), bc(g.uc, { align: "left" }), bc(pct1(g.m.ipv.hhPct)), bc(n0(g.m.ipv.stNA)), bc(n0(g.m.ipv.stREF)), bc(n0(g.m.ipv.missed), { bold: true }), bc(pct1(g.m.opv.hhPct)), bc(n0(g.m.opv.missed), { bold: true })]);
+        });
+        pTable(st, urows, { x: .3, y: 1.35, w: 9.4, rowH: .25, colW: [.5, 2.6, 1.0, 1.0, 1.0, 1.1, 1.0, 1.2] });
+      });
+
+      var fname = ("ERM fIPV " + distName + " " + period + " " + asOf + ".pptx").replace(/[\\/:*?"<>|]/g, "-");
+      return pp.writeFile({ fileName: fname });
+    });
+  }
+  function ermDeck(btn) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    var old = btn.textContent;
+    btn.textContent = "Building PowerPoint…";
+    buildErmDeck().then(function () { btn.textContent = old; btn.disabled = false; })
+      .catch(function (e) { console.error(e); btn.textContent = "Could not build – try again"; btn.disabled = false; });
+  }
+
   function pv(p) { return p == null ? "" : (p * 100).toFixed(1); }
   var UC_HEAD = ["District", "Tehsil", "UC", "fIPV HH target", "fIPV HH coverage %", "fIPV admin coverage %", "fIPV still NA", "fIPV still REF", "fIPV still missed", "fIPV still missed %", "fIPV school covered",
     "OPV HH target", "OPV HH coverage %", "OPV admin coverage %", "OPV still NA", "OPV still REF", "OPV still missed", "OPV still missed %", "OPV school covered"];
@@ -559,13 +821,14 @@
       " · " + groups.length + " UCs reporting" + (planned ? " of " + planned + " planned" : "") + (upd ? " · updated " + esc(upd) : "");
     var bench = "<div class=\"pf-fl\"><label for=\"pf-bench\">Benchmark</label><select class=\"pf-sel\" id=\"pf-bench\">" +
       ["0.8", "0.85", "0.9", "0.95"].map(function (o) { return "<option value=\"" + o + "\"" + (+o === F.bench ? " selected" : "") + ">" + pc(+o, 0) + "</option>"; }).join("") + "</select></div>";
-    var filters = sel2("pf-day", "Campaign day", d.days, F.day, "All days", dayLabel) +
+    var filters = sel2("pf-day", "Campaign day", d.days, F.day, "All days", function (x) { return "Day " + x; }) +
       sel2("pf-date", "Date", d.dates, F.date, "All dates", dateLabel) +
       sel2("pf-dist", "District", d.dists, F.dist, "All districts") +
       sel2("pf-teh", "Tehsil", d.tehs, F.teh, "All tehsils") +
       sel2("pf-uc", "UC", d.ucs, F.uc, "All UCs") +
       bench +
-      "<button class=\"pf-reset\" id=\"pf-reset\" type=\"button\">Reset</button>";
+      "<button class=\"pf-reset\" id=\"pf-reset\" type=\"button\">Reset</button>" +
+      "<button class=\"dlb\" id=\"pf-erm\" type=\"button\" title=\"Build the fIPV evening-review PowerPoint for the district, tehsil and day chosen above\">⬇ ERM PPT</button>";
     return "<div class=\"pf-top\"><div><div class=\"pf-eb\">Polio Booster Campaign · fIPV &amp; OPV</div><h2>Peshawar Block Daily Sitrep</h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
   }
 
@@ -605,11 +868,12 @@
         draw(root);
       });
     }
-    onSel("pf-day", "day"); onSel("pf-date", "date"); onSel("pf-dist", "dist"); onSel("pf-teh", "teh"); onSel("pf-uc", "uc");
+    onSel("pf-day", "day", ["date"]); onSel("pf-date", "date", ["day"]); onSel("pf-dist", "dist"); onSel("pf-teh", "teh"); onSel("pf-uc", "uc");
     var bn = $("#pf-bench", root);
     if (bn) bn.addEventListener("change", function () { F.bench = parseFloat(bn.value) || 0.9; draw(root); });
     var rs = $("#pf-reset", root);
     if (rs) rs.addEventListener("click", function () { F.day = "All"; F.date = "All"; F.dist = "All"; F.teh = "All"; F.uc = "All"; F.q = ""; draw(root); });
+    var em = $("#pf-erm", root); if (em) em.addEventListener("click", function () { ermDeck(em); });
     var mp = $("#pf-map", root); if (mp) mp.addEventListener("change", function () { F.map = mp.value; draw(root); });
     var cu = $("#pf-clearuc", root); if (cu) cu.addEventListener("click", function () { F.uc = "All"; draw(root); });
     Array.prototype.forEach.call(root.querySelectorAll(".dlb"), function (b) {
