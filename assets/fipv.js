@@ -4,9 +4,9 @@
    Benchmark: coverage at or above the benchmark shows light green; below it shows dark red. Chosen on the page. */
 (function () {
   "use strict";
-  var DATA = { rows: "data/fipv_rows.csv", cud: "data/fipv_cud.csv", tg: "data/fipv_targets.csv", upd: "data/fipv.updated.txt", geo: "data/geo.json", icm: "data/fipv_icm.csv", icmupd: "data/fipv_icm.updated.txt" };
+  var DATA = { rows: "data/fipv_rows.csv", cud: "data/fipv_cud.csv", tg: "data/fipv_targets.csv", upd: "data/fipv.updated.txt", geo: "data/geo.json", icm: "data/fipv_icm.csv", icmupd: "data/fipv_icm.updated.txt", icm10: "data/fipv_icm_u10.csv", icm10upd: "data/fipv_icm_u10.updated.txt" };
   var ROWS = null, CUD = [], TG = [], GEO = null, STAMP = "", LOADING = null;
-  var ICM = [], ICM_HEAD = [], ICMSTAMP = "", DAYDATE = {}, CAMPAIGN_START = "2026-10-26", ICM_ONLY = false;
+  var DAYDATE = {}, CAMPAIGN_START = "2026-10-26", ICM_ONLY = null;
   var F = { day: "All", date: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", q: "", sk: "missed", sd: -1, bench: 0.9 };
   var GOOD = "#25A765", BAD = "#A3161B", NODATA = "#DDD9E6", OUTSIDE = "#E9EBF2";
   var EX = {};
@@ -157,7 +157,9 @@
       getText(DATA.upd).catch(function () { return ""; }),
       fetch(DATA.geo).then(function (r) { return r.json(); }).catch(function () { return []; }),
       getText(DATA.icm).catch(function () { return ""; }),
-      getText(DATA.icmupd).catch(function () { return ""; })
+      getText(DATA.icmupd).catch(function () { return ""; }),
+      getText(DATA.icm10).catch(function () { return ""; }),
+      getText(DATA.icm10upd).catch(function () { return ""; })
     ]).then(function (a) {
       ROWS = parseCSV(a[0]).filter(function (r) { return r.dist; });
       ROWS.forEach(function (r) { r.dayN = String(parseInt(r.day, 10) || 0); });
@@ -166,21 +168,14 @@
       TG = parseCSV(a[2]).filter(function (r) { return r.dist; });
       STAMP = (a[3] || "").trim();
       GEO = (a[4] || []).filter(function (f) { return f.l === "UC"; });
-      // ICM cluster check: the PQ Data sheet of "fIPV Daily ICM Clusters v10", exported on every save of that workbook.
-      var icmText = (a[5] || "").replace(/^﻿/, "");
-      var icmLines = icmText.split(/\r?\n/).filter(function (x) { return x.length; });
-      ICM_HEAD = icmLines.length ? splitLine(icmLines[0]) : [];
-      ICM = parseCSV(icmText).filter(function (r) { return r.District; });
-      ICM.forEach(function (r) {
-        r.dayN = String(parseInt(r.Day, 10) || 0);
-        r.dist = r.District; r.teh = r.Tehsil; r.uc = r.UC;
-      });
-      ICMSTAMP = (a[6] || "").trim();
-      // Campaign day -> date, from the coverage data. A day that has ICM clusters but no coverage yet is dated
+      // ICM cluster checks (two workbooks, each re-exported on save; see the ICM block below).
+      ICM5.rows = icmRows(a[5], ICM5); ICM5.head = icmHead(a[5]); ICM5.stamp = (a[6] || "").trim();
+      ICM10.rows = icmRows(a[7], ICM10); ICM10.stamp = (a[8] || "").trim();
+      // Campaign day -> date, from the coverage data. A day with ICM clusters but no coverage yet is dated
       // from Day 1 (campaign start), so it appears in All days and in the day list with its date.
       ROWS.forEach(function (r) { if (r.dayDate && !DAYDATE[r.dayN]) DAYDATE[r.dayN] = r.dayDate; });
       var d1 = DAYDATE["1"] || CAMPAIGN_START;
-      ICM.forEach(function (r) {
+      ICM5.rows.concat(ICM10.rows).forEach(function (r) {
         if (!DAYDATE[r.dayN] && +r.dayN > 0) DAYDATE[r.dayN] = addDays(d1, +r.dayN - 1);
         r.dayDate = DAYDATE[r.dayN] || "";
       });
@@ -573,7 +568,7 @@
     var sc = deckScope(opt);
     var dist = opt.dist !== undefined ? opt.dist : F.dist, teh = opt.teh !== undefined ? opt.teh : F.teh;
     var scope = { dist: dist, teh: teh };
-    var inc = opt.slides || { summary: true, maps: true, daily: true, top: true, icm: true, tehsil: true };
+    var inc = opt.slides || { summary: true, maps: true, daily: true, top: true, icm: true, icm10: true, tehsil: true };
     var mdef = [["ipv_hh", "fIPV HH coverage by UC", "fIPV"], ["opv_hh", "OPV HH coverage by UC", "OPV"], ["ipv_miss", "fIPV still missed by UC", "fIPV"], ["opv_miss", "OPV still missed by UC", "OPV"]];
     var mapPanels = [sc.panels[sc.panels.length - 1]]; // all days only
     var mapJobs = mdef.map(function (d) {
@@ -702,9 +697,13 @@
       });
 
       }
-      if (inc.icm && ICM.length) {
-      // 10b. ICM cluster check: summary by day, reasons, top UCs
-      icmSlides(pp, sc, scope, frame);
+      if (inc.icm && ICM5.rows.length) {
+      // 10b. ICM under 5 years: summary by day, reasons, top UCs
+      icmSlides(pp, sc, scope, frame, ICM5);
+      }
+      if (inc.icm10 && ICM10.rows.length) {
+      // 10c. ICM under 10 years: same layout
+      icmSlides(pp, sc, scope, frame, ICM10);
       }
       if (inc.tehsil) {
       // 11. tehsil summary, all days to date
@@ -779,7 +778,8 @@
         '<label><input type="checkbox" id="dm-s3" checked> Daily progress</label>' +
         '<label><input type="checkbox" id="dm-s4" checked> Highest still NA, refusals and missed UCs</label>' +
         '<label><input type="checkbox" id="dm-s5" checked> Tehsil tables and tehsil slides</label>' +
-        '<label><input type="checkbox" id="dm-s6" checked> ICM cluster check (summary, reasons, top UCs)</label>' +
+        '<label><input type="checkbox" id="dm-s6" checked> ICM under 5 years (summary, reasons, top UCs)</label>' +
+        '<label><input type="checkbox" id="dm-s7" checked> ICM under 10 years (summary, reasons, top UCs)</label>' +
       '</div></div>' +
       '<div class="dm-foot"><span class="note" id="dm-msg"></span><button class="btn pri dm-go" id="dm-go" type="button"><span>Download PowerPoint</span></button></div></div>';
     openModal(html, function (card) {
@@ -821,7 +821,7 @@
       var go = q("dm-go"), msg = q("dm-msg");
       go.onclick = function () {
         var opt = { dist: st.dist, teh: "All", day: st.mode === "full" ? null : st.day, mode: st.mode, date: q("dm-dt").value || today,
-          slides: { summary: q("dm-s1").checked, maps: q("dm-s2").checked, daily: q("dm-s3").checked, top: q("dm-s4").checked, icm: q("dm-s6").checked, tehsil: q("dm-s5").checked } };
+          slides: { summary: q("dm-s1").checked, maps: q("dm-s2").checked, daily: q("dm-s3").checked, top: q("dm-s4").checked, icm: q("dm-s6").checked, icm10: q("dm-s7").checked, tehsil: q("dm-s5").checked } };
         msg.textContent = "Building the PowerPoint…";
         ermDeck(go, opt).then(function () {
           msg.textContent = "";
@@ -831,67 +831,114 @@
       refresh(false);
     });
   }
-  /* ---- ICM cluster check (fIPV). Source: data/fipv_icm.csv = PQ Data sheet of "fIPV Daily ICM Clusters v10".
-     Every add / delete of rows in that sheet reaches the page on the next save. Filters follow the page filters. ---- */
-  var ICM_MAIN = [["Team did not visit house", "Team did not visit house"], ["Team visited by missed child", "Team visited, child missed"],
-    ["Child Away (NA)", "Child away (NA)"], ["Child Refusal", "Child refusal"]];
-  var ICM_SHORT = { "Team did not visit house": "Not visited", "Team visited by missed child": "Visited, missed", "Child Away (NA)": "Away (NA)", "Child Refusal": "Refusal" };
-  var ICM_REF = ["Sick", "Mistrust on Government", "Religious", "Fear of Side Effects", "Attitude/Behavior of Team", "Physical Appearance of Team",
+  /* ---- ICM cluster checks, two datasets with the same layout:
+     ICM5  "fIPV ICM Clusters Under 5 Years"  <- data/fipv_icm.csv      (PQ Data sheet of "fIPV Daily ICM Clusters v10")
+     ICM10 "fIPV ICM Clusters Under 10 Years" <- data/fipv_icm_u10.csv  (U10_Clusters sheet of "fIPV Under 10 Yrs ICM Analysis v2")
+     Each workbook re-exports its CSV on save. No names or emails are read. Filters follow the page filters. ---- */
+  var ICM_REF5 = ["Sick", "Mistrust on Government", "Religious", "Fear of Side Effects", "Attitude/Behavior of Team", "Physical Appearance of Team",
     "Incomplete Information", "Rumors", "Others", "Refusal reason not mapped"];
+  var ICM_REF10 = ["Sick", "Reason code 2", "Reason code 3", "Reason code 4", "Reason code 5", "Reason code 6", "Reason code 7", "Reason code 8", "Reason code 9", "Reason code 10"];
+  var ICM_MAIN5 = [["Team did not visit house", "Team did not visit house"], ["Team visited by missed child", "Team visited, child missed"],
+    ["Child Away (NA)", "Child away (NA)"], ["Child Refusal", "Child refusal"]];
+  var ICM_MAIN10 = [["Team did not visit house", "Team did not visit house"], ["Other missed", "Team visited, child missed"],
+    ["Child Away (NA)", "Child away (NA)"], ["Child Refusal", "Child refusal"]];
+  var ICM_SHORT = { "Team did not visit house": "Not visited", "Team visited by missed child": "Visited, missed", "Other missed": "Visited, missed",
+    "Child Away (NA)": "Away (NA)", "Child Refusal": "Refusal" };
+  var ICM10_COLS = ["Day", "District", "Tehsil", "UC", "UC Code", "# of Cluster", "# of Houses Checked", "Total Children 0 to 59 months",
+    "Total Children 0 to 59 months vaccinated", "Total Children 4 to 59 months", "Total Children 4 to 59 months vaccinated", "Total Missed",
+    "Team did not visit house", "Other missed", "Child Away (NA)", "Child Refusal"].concat(ICM_REF10, ["Total Seen for fIPV", "Total Fingermarked for fIPV"]);
+  var ICM5 = { id: "u5", name: "fIPV ICM Clusters Under 5 Years", short: "ICM under 5", src: "fIPV Daily ICM Clusters (PQ Data sheet)",
+    pop: "Children 0–59 months", vac: "Children 0–59 months vaccinated", tile: "Vaccinated 0–59 months", main: ICM_MAIN5, ref: ICM_REF5,
+    rows: [], head: [], stamp: "", refNote: "" };
+  var ICM10 = { id: "u10", name: "fIPV ICM Clusters Under 10 Years", short: "ICM under 10", src: "fIPV Under 10 Yrs ICM Analysis (U10_Clusters sheet)",
+    pop: "Children 5–10 years", vac: "Children 5–10 years vaccinated", tile: "Vaccinated 5–10 years", main: ICM_MAIN10, ref: ICM_REF10,
+    rows: [], head: ICM10_COLS, stamp: "", refNote: "Reason codes 2–10 are shown as numbers until their labels are confirmed." };
+  function icmDS(which) { return which === "u10" ? ICM10 : ICM5; }
   function icmTitle(s) { return s ? s.charAt(0) + s.slice(1).toLowerCase() : ""; }
-  function icmSum(rs) {
+  function icmHead(text) {
+    var L = (text || "").replace(/^﻿/, "").split(/\r?\n/).filter(function (x) { return x.length; });
+    return L.length ? splitLine(L[0]) : [];
+  }
+  // Under-10 export columns -> the names the shared code uses (the same layout as the under-5 sheet).
+  function icmNormU10(r) {
+    var o = {}, n = function (k) { return num(r[k]); };
+    o.Day = r.Day; o.District = r.District; o.Tehsil = r.Tehsil; o.UC = r.UC; o["UC Code"] = r["UC Code"];
+    o["# of Cluster"] = r["# of Clusters"]; o["# of Houses Checked"] = r["# of Houses Checked"];
+    o["Total Children 0 to 59 months"] = r["Children 5 to 10 yrs"];
+    o["Total Children 0 to 59 months vaccinated"] = r["Children 5 to 10 yrs vaccinated"];
+    o["Total Children 4 to 59 months"] = r["Children 4 months to 10 yrs"];
+    o["Total Children 4 to 59 months vaccinated"] = r["Children 4 months to 10 yrs vaccinated"];
+    o["Total Missed"] = r["Total Missed"];
+    o["Team did not visit house"] = r["Team did not visit house"];
+    o["Child Away (NA)"] = r["Child Away (NA)"];
+    o["Child Refusal"] = r["Child Refusal"];
+    // missed children not in a listed reason (team visited, child still missed)
+    o["Other missed"] = String(Math.max(0, n("Total Missed") - n("Team did not visit house") - n("Child Away (NA)") - n("Child Refusal")));
+    ICM_REF10.forEach(function (k) { o[k] = r[k]; });
+    o["Total Seen for fIPV"] = r["Total Seen for fIPV (4m-10 yrs)"];
+    o["Total Fingermarked for fIPV"] = r["Total Fingermarked for fIPV (4m-10 yrs)"];
+    return o;
+  }
+  function icmRows(text, D) {
+    var rows = parseCSV((text || "").replace(/^﻿/, "")).filter(function (r) { return r.District; });
+    if (D.id === "u10") rows = rows.map(icmNormU10);
+    rows.forEach(function (r) { r.dayN = String(parseInt(r.Day, 10) || 0); r.dist = r.District; r.teh = r.Tehsil; r.uc = r.UC; });
+    return rows;
+  }
+  function icmSum(rs, D) {
     function S(k) { var t = 0; for (var i = 0; i < rs.length; i++) t += num(rs[i][k]); return t; }
     var o = { clusters: S("# of Cluster"), houses: S("# of Houses Checked"), c059: S("Total Children 0 to 59 months"),
       c059v: S("Total Children 0 to 59 months vaccinated"), missed: S("Total Missed"), seen: S("Total Seen for fIPV"),
       fm: S("Total Fingermarked for fIPV"), reasons: {}, refusal: {} };
-    ICM_MAIN.forEach(function (r) { o.reasons[r[0]] = S(r[0]); });
-    ICM_REF.forEach(function (k) { o.refusal[k] = S(k); });
+    D.main.forEach(function (r) { o.reasons[r[0]] = S(r[0]); });
+    D.ref.forEach(function (k) { o.refusal[k] = S(k); });
     o.fmPct = div(o.fm, o.seen);
     return o;
   }
-  function icmRowsSel(f) { return ICM.filter(function (r) { return okRow(r, f || F); }); }
-  function icmUCs(rs) {
+  function icmRowsSel(D, f) { return D.rows.filter(function (r) { return okRow(r, f || F); }); }
+  function icmUCs(rs, D) {
     var g = {};
     rs.forEach(function (r) { var k = r.dist + "|" + r.teh + "|" + r.uc; if (!g[k]) g[k] = { dist: r.dist, teh: r.teh, uc: r.uc, rs: [] }; g[k].rs.push(r); });
-    return Object.keys(g).map(function (k) { var x = g[k]; x.s = icmSum(x.rs); return x; })
+    return Object.keys(g).map(function (k) { var x = g[k]; x.s = icmSum(x.rs, D); return x; })
       .sort(function (a, b) { return (b.s.missed - a.s.missed) || (b.s.clusters - a.s.clusters); });
   }
-  function icmTopReason(s) {
+  function icmTopReason(s, D) {
     var best = null, bv = 0;
-    ICM_MAIN.forEach(function (r) { if (s.reasons[r[0]] > bv) { bv = s.reasons[r[0]]; best = r[0]; } });
+    D.main.forEach(function (r) { if (s.reasons[r[0]] > bv) { bv = s.reasons[r[0]]; best = r[0]; } });
     return best ? ICM_SHORT[best] : "–";
   }
-  function icmCards() {
-    var rs = icmRowsSel(F), s = icmSum(rs);
-    var stamp = ICMSTAMP ? " · updated " + esc(ICMSTAMP.slice(0, 16).replace("T", " ")) : "";
-    EX.icm = function () {
-      saveCSV("fipv-icm-clusters.csv", [ICM_HEAD].concat(rs.map(function (r) { return ICM_HEAD.map(function (h) { return r[h]; }); })));
+  function icmCards(D) {
+    var id = D.id, rs = icmRowsSel(D), s = icmSum(rs, D);
+    var stamp = D.stamp ? " · updated " + esc(D.stamp.slice(0, 16).replace("T", " ")) : "";
+    EX["icm_" + id] = function () {
+      saveCSV("fipv-" + id + "-clusters.csv", [D.head].concat(rs.map(function (r) { return D.head.map(function (h) { return r[h]; }); })));
     };
-    var head = "<div class=\"pf-h\">ICM cluster check · fIPV" + (ICM.length ? dlBtn("icm", "CSV") : "") +
-      "<small>Intra-Campaign Monitoring · clusters from the fIPV ICM sheet" + stamp + "</small></div>";
-    if (!ICM.length) return "<section class=\"pf-c gl s12 pop\">" + head + "<div class=\"pf-empty\">No ICM cluster data has been exported yet. Save the fIPV Daily ICM Clusters workbook to publish it.</div></section>";
+    var head = "<div class=\"pf-h\">" + esc(D.name) + (D.rows.length ? dlBtn("icm_" + id, "CSV") : "") +
+      "<small>Intra-Campaign Monitoring · clusters" + stamp + "</small></div>";
+    if (!D.rows.length) return "<section class=\"pf-c gl s12 pop\">" + head + "<div class=\"pf-empty\">No data has been exported yet. Save the workbook to publish it.</div></section>";
     if (!rs.length) return "<section class=\"pf-c gl s12 pop\">" + head + "<div class=\"pf-empty\">No ICM clusters for this selection.</div></section>";
 
     var tiles = "<div class=\"sx-grid\" style=\"margin-top:4px\">" +
       "<div class=\"sx-k\"><span>Clusters</span><b class=\"c-ink\">" + nf(s.clusters) + "</b></div>" +
       "<div class=\"sx-k\"><span>Houses checked</span><b class=\"c-ink\">" + nf(s.houses) + "</b></div>" +
-      "<div class=\"sx-k\"><span>Children 0–59 months</span><b class=\"c-ink\">" + nf(s.c059) + "</b></div>" +
-      "<div class=\"sx-k\"><span>Vaccinated 0–59 months</span><b class=\"c-grn\">" + nf(s.c059v) + "</b></div>" +
+      "<div class=\"sx-k\"><span>" + esc(D.pop) + "</span><b class=\"c-ink\">" + nf(s.c059) + "</b></div>" +
+      "<div class=\"sx-k\"><span>" + esc(D.tile) + "</span><b class=\"c-grn\">" + nf(s.c059v) + "</b></div>" +
       "<div class=\"sx-k\"><span>Total missed</span><b class=\"c-red\">" + nf(s.missed) + "</b></div>" +
       "<div class=\"sx-k\"><span>fIPV fingermarked</span><b class=\"c-blu\">" + pc(s.fmPct) + "</b><em class=\"c-blu\">" + nf(s.fm) + " of " + nf(s.seen) + " seen</em></div>" +
       "</div>";
 
-    var reasonBars = ICM_MAIN.map(function (r) { var v = s.reasons[r[0]]; return bar(r[1] + " · " + nf(v), s.missed ? v / s.missed : 0, "#B42318"); }).join("");
+    var reasonBars = D.main.map(function (r) { var v = s.reasons[r[0]]; return bar(r[1] + " · " + nf(v), s.missed ? v / s.missed : 0, "#B42318"); }).join("");
     var refTotal = s.reasons["Child Refusal"];
-    var refBars = ICM_REF.filter(function (k) { return s.refusal[k] > 0; })
+    var refBars = D.ref.filter(function (k) { return s.refusal[k] > 0; })
       .map(function (k) { return bar(k + " · " + nf(s.refusal[k]), refTotal ? s.refusal[k] / refTotal : 0, "#F59E0B"); }).join("");
     var reasonCard = "<section class=\"pf-c gl t-yellow s6 pop\"><div class=\"pf-h\">Why children were missed<small>share of total missed</small></div>" +
       "<div class=\"pf-bars\">" + reasonBars + "</div>" +
       "<div class=\"pf-h\" style=\"margin-top:16px;font-size:14px\">Refusal reasons<small>share of refusals</small></div>" +
-      "<div class=\"pf-bars\">" + (refBars || "<div class=\"pf-lab\">No refusals in this selection.</div>") + "</div></section>";
+      "<div class=\"pf-bars\">" + (refBars || "<div class=\"pf-lab\">No refusals in this selection.</div>") + "</div>" +
+      (D.refNote ? "<div class=\"pf-lab\" style=\"margin-top:10px\">" + esc(D.refNote) + "</div>" : "") + "</section>";
 
     var days = uniq(rs.map(function (r) { return r.dayN; })).filter(function (d) { return d !== "0"; }).sort(function (a, b) { return a - b; });
-    var dayRows = days.map(function (d) { return { d: d, s: icmSum(rs.filter(function (r) { return r.dayN === d; })) }; });
+    var dayRows = days.map(function (d) { return { d: d, s: icmSum(rs.filter(function (r) { return r.dayN === d; }), D) }; });
     var maxD = Math.max.apply(null, dayRows.map(function (x) { return x.s.missed; }).concat([1]));
     var dayTable = "<div class=\"pf-tw\"><table class=\"pf-t\"><thead><tr><th>Day</th><th class=\"r\">Clusters</th><th class=\"r\">Houses</th><th class=\"r\">Missed</th><th class=\"r\">fIPV FM %</th></tr></thead><tbody>" +
       dayRows.map(function (x) {
@@ -900,16 +947,16 @@
       }).join("") +
       "<tr><td><b>All days</b></td><td class=\"r\"><b>" + nf(s.clusters) + "</b></td><td class=\"r\"><b>" + nf(s.houses) + "</b></td><td class=\"r\"><b>" + nf(s.missed) + "</b></td><td class=\"r\"><b>" + pc(s.fmPct) + "</b></td></tr>" +
       "</tbody></table></div>";
-    var dayCard = "<section class=\"pf-c gl t-blue s6 pop\"><div class=\"pf-h\">Day-wise ICM clusters<small>darker red = more children missed</small></div>" + dayTable + "</section>";
+    var dayCard = "<section class=\"pf-c gl t-blue s6 pop\"><div class=\"pf-h\">Day-wise clusters<small>darker red = more children missed</small></div>" + dayTable + "</section>";
 
-    var ucs = icmUCs(rs);
-    EX.icmuc = function () {
-      saveCSV("fipv-icm-uc.csv", [["District", "Tehsil", "UC", "Clusters", "Houses checked", "Children 0-59 months", "Vaccinated 0-59 months", "Total missed",
-        "Team did not visit house", "Team visited, child missed", "Child away (NA)", "Child refusal", "Main reason", "fIPV seen", "fIPV fingermarked", "fIPV fingermarked %"]].concat(
+    var ucs = icmUCs(rs, D);
+    EX["icmuc_" + id] = function () {
+      saveCSV("fipv-" + id + "-uc.csv", [["District", "Tehsil", "UC", "Clusters", "Houses checked", D.pop, D.vac, "Total missed"].concat(D.main.map(function (r) { return r[1]; }),
+        ["Main reason", "fIPV seen", "fIPV fingermarked", "fIPV fingermarked %"])].concat(
         ucs.map(function (x) {
           var q = x.s;
-          return [x.dist, x.teh, x.uc, q.clusters, q.houses, q.c059, q.c059v, q.missed, q.reasons["Team did not visit house"], q.reasons["Team visited by missed child"],
-            q.reasons["Child Away (NA)"], q.reasons["Child Refusal"], icmTopReason(q), q.seen, q.fm, pv(q.fmPct)];
+          return [x.dist, x.teh, x.uc, q.clusters, q.houses, q.c059, q.c059v, q.missed].concat(D.main.map(function (r) { return q.reasons[r[0]]; }),
+            [icmTopReason(q, D), q.seen, q.fm, pv(q.fmPct)]);
         })));
     };
     var mxU = Math.max.apply(null, ucs.map(function (x) { return x.s.missed; }).concat([1]));
@@ -919,51 +966,48 @@
         return "<tr><td class=\"n\">" + (i + 1) + "</td><td class=\"u\">" + esc(x.uc) + "</td><td>" + esc(x.teh) + "</td><td>" + esc(icmTitle(x.dist)) + "</td>" +
           "<td class=\"r\">" + nf(x.s.clusters) + "</td><td class=\"r\">" + nf(x.s.houses) + "</td>" +
           "<td class=\"r red\" style=\"background:#" + heatFill(x.s.missed, mxU) + "\">" + nf(x.s.missed) + "</td>" +
-          "<td>" + esc(icmTopReason(x.s)) + "</td><td class=\"r\">" + pc(x.s.fmPct) + "</td></tr>";
+          "<td>" + esc(icmTopReason(x.s, D)) + "</td><td class=\"r\">" + pc(x.s.fmPct) + "</td></tr>";
       }).join("") +
       "</tbody></table></div>";
-    var ucCard = "<section class=\"pf-c gl s12 pop\"><div class=\"pf-h\">UC-wise ICM clusters<small>most children missed first</small>" + dlBtn("icmuc", "CSV") + "</div>" + ucTable + "</section>";
+    var ucCard = "<section class=\"pf-c gl s12 pop\"><div class=\"pf-h\">UC-wise clusters<small>most children missed first</small>" + dlBtn("icmuc_" + id, "CSV") + "</div>" + ucTable + "</section>";
 
     return "<section class=\"pf-c gl s12 pop\">" + head + tiles + "</section>" + reasonCard + dayCard + ucCard;
   }
 
-  // ICM slides in the ERM deck. Same day columns as the summary slides (chosen day, Days 1–N, or every day) plus all days.
-  // Panels come from the ICM days themselves, so a day with clusters but no coverage yet still gets its column.
-  function icmPanels(sc, scope) {
+  // ICM slides in the ERM deck. Same day columns as the summary slides (chosen day, Days 1–N, or every day), plus all days.
+  // Days with clusters but no coverage yet still get their column, so the deck and the page agree.
+  function icmPanels(sc, scope, D) {
     var inArea = function (r) { return (scope.dist === "All" || r.dist === scope.dist) && (scope.teh === "All" || r.teh === scope.teh); };
     var t = sc.target;
-    var all = ICM.filter(inArea).filter(function (r) { return !t || +r.dayN <= t; });
+    var all = D.rows.filter(inArea).filter(function (r) { return !t || +r.dayN <= t; });
     var P = [];
-    if (t && sc.mode === "upto") P.push({ h: t === 1 ? "Day 1" : "Days 1–" + t, s: icmSum(all) });
-    else if (t) P.push({ h: dayLabel(t), s: icmSum(all.filter(function (r) { return +r.dayN === t; })) });
+    if (t && sc.mode === "upto") P.push({ h: t === 1 ? "Day 1" : "Days 1–" + t, s: icmSum(all, D) });
+    else if (t) P.push({ h: dayLabel(t), s: icmSum(all.filter(function (r) { return +r.dayN === t; }), D) });
     else {
       uniq(all.map(function (r) { return r.dayN; })).filter(function (d) { return d !== "0"; })
         .sort(function (a, b) { return a - b; })
-        .forEach(function (d) { P.push({ h: dayLabel(d), s: icmSum(all.filter(function (r) { return r.dayN === d; })) }); });
+        .forEach(function (d) { P.push({ h: dayLabel(d), s: icmSum(all.filter(function (r) { return r.dayN === d; }), D) }); });
     }
-    P.push({ h: "All days", total: true, s: icmSum(all) });
-    return { P: P, all: all, tot: icmSum(all) };
+    P.push({ h: "All days", total: true, s: icmSum(all, D) });
+    return { P: P, all: all, tot: icmSum(all, D) };
   }
-  function icmSlides(pp, sc, scope, frame) {
-    var I = icmPanels(sc, scope), P = I.P, tot = I.tot;
+  function icmSlides(pp, sc, scope, frame, D) {
+    var I = icmPanels(sc, scope, D), P = I.P, tot = I.tot;
     var per = sc.target ? (sc.mode === "upto" ? (sc.target === 1 ? "Day 1" : "Days 1–" + sc.target) : "Day " + sc.target) : "";
     var period = sc.target ? per + " and all days" : "day-wise and all days";
-    // 1. ICM summary by day
-    var s1 = frame("ICM cluster check - fIPV summary, " + period, "ICM");
+    // 1. summary by day
+    var s1 = frame(D.short + " - fIPV summary, " + period, D.short);
     var defs = [
       ["Clusters", function (s) { return n0(s.clusters); }],
       ["Houses checked", function (s) { return n0(s.houses); }],
-      ["Children 0–59 months", function (s) { return n0(s.c059); }],
-      ["Children 0–59 months vaccinated", function (s) { return n0(s.c059v); }],
-      ["Total missed", function (s) { return n0(s.missed); }, 1],
-      ["Team did not visit house", function (s) { return n0(s.reasons["Team did not visit house"]); }],
-      ["Team visited, child missed", function (s) { return n0(s.reasons["Team visited by missed child"]); }],
-      ["Child away (NA)", function (s) { return n0(s.reasons["Child Away (NA)"]); }],
-      ["Child refusal", function (s) { return n0(s.reasons["Child Refusal"]); }],
-      ["fIPV children seen", function (s) { return n0(s.seen); }],
-      ["fIPV children fingermarked", function (s) { return n0(s.fm); }],
-      ["fIPV fingermarked %", function (s) { return pct1(s.fmPct); }, 1]
+      [D.pop, function (s) { return n0(s.c059); }],
+      [D.vac, function (s) { return n0(s.c059v); }],
+      ["Total missed", function (s) { return n0(s.missed); }, 1]
     ];
+    D.main.forEach(function (r) { defs.push([r[1], function (s) { return n0(s.reasons[r[0]]); }]); });
+    defs.push(["fIPV children seen", function (s) { return n0(s.seen); }]);
+    defs.push(["fIPV children fingermarked", function (s) { return n0(s.fm); }]);
+    defs.push(["fIPV fingermarked %", function (s) { return pct1(s.fmPct); }, 1]);
     var srows = [[hc("Indicator", DK.head, "left")].concat(P.map(function (c) { return hc(c.h, c.total ? DK.green : DK.head); }))];
     defs.forEach(function (d) {
       var b = !!d[2];
@@ -973,16 +1017,16 @@
       })));
     });
     pTable(s1, srows, { x: .3, y: .9, w: 9.4, colW: cw(P.length), rowH: .27 });
-    s1.addText("Source: fIPV Daily ICM Clusters (PQ Data sheet). The four missed-children reasons add up to total missed; refusal reasons are on the next slide. Fingermarked % = fingermarked ÷ seen.",
+    s1.addText("Source: " + D.src + ". The missed-children reasons add up to total missed; refusal reasons are on the next slide. Fingermarked % = fingermarked ÷ seen.",
       { x: .3, y: 4.7, w: 9.4, h: .4, fontFace: DFONT, fontSize: 9, italic: true, color: DK.mute });
 
-    // 2. why children were missed, reasons and refusal reasons, all days to date
-    var s2 = frame("ICM - why children were missed, all days to date", "ICM reasons");
+    // 2. why children were missed, all days to date
+    var s2 = frame(D.short + " - why children were missed, all days to date", D.short + " reasons");
     var m = tot.missed || 0, mxR = 0;
-    ICM_MAIN.forEach(function (r) { mxR = Math.max(mxR, tot.reasons[r[0]]); });
+    D.main.forEach(function (r) { mxR = Math.max(mxR, tot.reasons[r[0]]); });
     s2.addText("Missed children by reason", { x: .3, y: .85, w: 4.5, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: DK.red });
     var mrows = [[hc("Reason", DK.red, "left"), hc("Children", DK.red), hc("% of missed", DK.red)]];
-    ICM_MAIN.forEach(function (r) {
+    D.main.forEach(function (r) {
       var v = tot.reasons[r[0]];
       mrows.push([bc(r[1], { align: "left" }), hv(n0(v), v, mxR), bc(m ? pct0(v / m) : "–")]);
     });
@@ -990,32 +1034,34 @@
     pTable(s2, mrows, { x: .3, y: 1.2, w: 4.5, rowH: .3, fontSize: 10, colW: [2.5, 1.0, 1.0] });
 
     var refT = tot.reasons["Child Refusal"] || 0, mxF = 0;
-    ICM_REF.forEach(function (k) { mxF = Math.max(mxF, tot.refusal[k] || 0); });
+    D.ref.forEach(function (k) { mxF = Math.max(mxF, tot.refusal[k] || 0); });
     s2.addText("Refusal reasons (within child refusal)", { x: 5.1, y: .85, w: 4.6, h: .3, fontFace: DFONT, fontSize: 12, bold: true, color: DK.indigo });
     var frows = [[hc("Refusal reason", DK.indigo, "left"), hc("Children", DK.indigo), hc("% of refusals", DK.indigo)]];
-    ICM_REF.forEach(function (k) {
+    D.ref.forEach(function (k) {
       var v = tot.refusal[k] || 0;
       frows.push([bc(k === "Refusal reason not mapped" ? "Not mapped" : k, { align: "left" }), hv(n0(v), v, mxF), bc(refT ? pct0(v / refT) : "–")]);
     });
     frows.push([bc("Total refusals", { align: "left", bold: true, fill: { color: DK.tot } }), bc(n0(refT), { bold: true, fill: { color: DK.tot } }), bc("100%", { bold: true, fill: { color: DK.tot } })]);
     pTable(s2, frows, { x: 5.1, y: 1.2, w: 4.6, rowH: .26, fontSize: 9.5, colW: [2.6, 1.0, 1.0] });
+    if (D.refNote) s2.addText(D.refNote, { x: 5.1, y: 4.85, w: 4.6, h: .3, fontFace: DFONT, fontSize: 9, italic: true, color: DK.mute });
 
     // 3. top 10 UCs by missed children
-    var s3 = frame("ICM - top 10 UCs by missed children, all days to date", "ICM UCs");
-    var top = icmUCs(I.all).filter(function (x) { return x.s.missed > 0; }).slice(0, 10);
-    if (!top.length) s3.addText("No missed children recorded in ICM clusters for this selection.", { x: .3, y: 1.2, w: 9.4, h: .4, fontFace: DFONT, fontSize: 12, italic: true, color: DK.mute });
+    var s3 = frame(D.short + " - top 10 UCs by missed children, all days to date", D.short + " UCs");
+    var top = icmUCs(I.all, D).filter(function (x) { return x.s.missed > 0; }).slice(0, 10);
+    if (!top.length) s3.addText("No missed children recorded in these clusters for this selection.", { x: .3, y: 1.2, w: 9.4, h: .4, fontFace: DFONT, fontSize: 12, italic: true, color: DK.mute });
     else {
       var mxT = top[0].s.missed;
       var urows = [[hc("#", DK.red), hc("UC", DK.red, "left"), hc("Tehsil", DK.red, "left"), hc("District", DK.red, "left"), hc("Clusters", DK.red), hc("Houses", DK.red), hc("Missed", DK.red), hc("Main reason", DK.red, "left"), hc("fIPV FM %", DK.red)]];
       top.forEach(function (x, i) {
         urows.push([bc(i + 1, { align: "center" }), bc(x.uc, { align: "left" }), bc(x.teh, { align: "left" }), bc(icmTitle(x.dist), { align: "left" }),
-          bc(n0(x.s.clusters)), bc(n0(x.s.houses)), hv(n0(x.s.missed), x.s.missed, mxT), bc(icmTopReason(x.s), { align: "left" }), bc(pct1(x.s.fmPct))]);
+          bc(n0(x.s.clusters)), bc(n0(x.s.houses)), hv(n0(x.s.missed), x.s.missed, mxT), bc(icmTopReason(x.s, D), { align: "left" }), bc(pct1(x.s.fmPct))]);
       });
       pTable(s3, urows, { x: .3, y: 1.0, w: 9.4, rowH: .3, fontSize: 9.5, colW: [.35, 1.75, 1.1, 1.05, .75, .7, .7, 1.6, 1.4] });
     }
-    s3.addText("Ranked by missed children in the ICM clusters. Main reason = the largest of the four missed-children reasons for that UC.",
+    s3.addText("Ranked by missed children in these clusters. Main reason = the largest missed-children reason for that UC.",
       { x: .3, y: 4.85, w: 9.4, h: .3, fontFace: DFONT, fontSize: 9, italic: true, color: DK.mute });
   }
+
   function pv(p) { return p == null ? "" : (p * 100).toFixed(1); }
   var UC_HEAD = ["District", "Tehsil", "UC", "fIPV HH target", "fIPV HH coverage %", "fIPV admin coverage %", "fIPV still NA", "fIPV still REF", "fIPV still missed", "fIPV still missed %", "fIPV school covered",
     "OPV HH target", "OPV HH coverage %", "OPV admin coverage %", "OPV still NA", "OPV still REF", "OPV still missed", "OPV still missed %", "OPV school covered"];
@@ -1235,7 +1281,7 @@
       bench +
       "<button class=\"pf-reset\" id=\"pf-reset\" type=\"button\">Reset</button>" +
       "<button class=\"erm-btn\" id=\"pf-erm\" type=\"button\" title=\"Build the fIPV evening-review PowerPoint: choose district, day and slides\">⬇ ERM PPT</button>";
-    return "<div class=\"pf-top\"><div><div class=\"pf-eb\">Polio Booster Campaign · fIPV &amp; OPV</div><h2>" + (ICM_ONLY ? "fIPV ICM cluster check" : "Peshawar Block Daily Sitrep") + "</h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
+    return "<div class=\"pf-top\"><div><div class=\"pf-eb\">Polio Booster Campaign · fIPV &amp; OPV</div><h2>" + (ICM_ONLY ? ICM_ONLY.name : "Peshawar Block Daily Sitrep") + "</h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
   }
 
   function draw(root) {
@@ -1246,7 +1292,7 @@
     var groups = ucGroups(rs, cs, withCud);
     EX = {};
     EX.all = function () { saveCSV("fipv-" + (F.dist === "All" ? "all-districts" : F.dist.toLowerCase()) + "-uc-data.csv", [UC_HEAD].concat(ucRows(groups))); };
-    var body = ICM_ONLY ? icmCards() : (
+    var body = ICM_ONLY ? icmCards(ICM_ONLY) : (
       sitCard("ipv", m, "fIPV", "#2F5BD3", "t-blue") + sitCard("opv", m, "OPV", "#7C3AED", "t-lilac") +
       cmpCard(m) + otherCard(m) +
       mapCard(groups) +
@@ -1333,7 +1379,7 @@
 
   function mount(root, icmOnly) {
     if (!root) return;
-    ICM_ONLY = !!icmOnly;
+    ICM_ONLY = icmOnly ? icmDS(icmOnly) : null;
     var page = document.getElementById("page");
     root.innerHTML = "<div class=\"pf-load\">Loading fIPV &amp; OPV data…</div>";
     load().then(function () {
@@ -1347,5 +1393,5 @@
     });
   }
 
-  window.FIPV = { mount: function (r) { mount(r, false); }, mountICM: function (r) { mount(r, true); } };
+  window.FIPV = { mount: function (r) { mount(r, null); }, mountICM: function (r, which) { mount(r, which === "u10" ? "u10" : "u5"); } };
 })();
