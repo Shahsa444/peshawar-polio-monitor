@@ -6,7 +6,7 @@
   "use strict";
   var DATA = { rows: "data/fipv_rows.csv", cud: "data/fipv_cud.csv", tg: "data/fipv_targets.csv", upd: "data/fipv.updated.txt", geo: "data/geo.json", icm: "data/fipv_icm.csv", icmupd: "data/fipv_icm.updated.txt" };
   var ROWS = null, CUD = [], TG = [], GEO = null, STAMP = "", LOADING = null;
-  var ICM = [], ICM_HEAD = [], ICMSTAMP = "", DAYDATE = {}, CAMPAIGN_START = "2026-10-26";
+  var ICM = [], ICM_HEAD = [], ICMSTAMP = "", DAYDATE = {}, CAMPAIGN_START = "2026-10-26", ICM_ONLY = false;
   var F = { day: "All", date: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", q: "", sk: "missed", sd: -1, bench: 0.9 };
   var GOOD = "#25A765", BAD = "#A3161B", NODATA = "#DDD9E6", OUTSIDE = "#E9EBF2";
   var EX = {};
@@ -1235,7 +1235,7 @@
       bench +
       "<button class=\"pf-reset\" id=\"pf-reset\" type=\"button\">Reset</button>" +
       "<button class=\"erm-btn\" id=\"pf-erm\" type=\"button\" title=\"Build the fIPV evening-review PowerPoint: choose district, day and slides\">⬇ ERM PPT</button>";
-    return "<div class=\"pf-top\"><div><div class=\"pf-eb\">Polio Booster Campaign · fIPV &amp; OPV</div><h2>Peshawar Block Daily Sitrep</h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
+    return "<div class=\"pf-top\"><div><div class=\"pf-eb\">Polio Booster Campaign · fIPV &amp; OPV</div><h2>" + (ICM_ONLY ? "fIPV ICM cluster check" : "Peshawar Block Daily Sitrep") + "</h2><p class=\"pf-sub\">" + sub + "</p></div><div class=\"pf-fil\">" + filters + "</div></div>";
   }
 
   function draw(root) {
@@ -1246,17 +1246,16 @@
     var groups = ucGroups(rs, cs, withCud);
     EX = {};
     EX.all = function () { saveCSV("fipv-" + (F.dist === "All" ? "all-districts" : F.dist.toLowerCase()) + "-uc-data.csv", [UC_HEAD].concat(ucRows(groups))); };
-    var html = "<div class=\"pf\" id=\"fipv-root\">" + header(rs, groups) +
-      "<div class=\"pf-grid\">" +
+    var body = ICM_ONLY ? icmCards() : (
       sitCard("ipv", m, "fIPV", "#2F5BD3", "t-blue") + sitCard("opv", m, "OPV", "#7C3AED", "t-lilac") +
       cmpCard(m) + otherCard(m) +
       mapCard(groups) +
       "<div class=\"s5\" style=\"display:flex;flex-direction:column;gap:16px;min-width:0\">" + missCard(groups, "ipv", "fIPV", "#B42318") + missCard(groups, "opv", "OPV", "#B42318") + "</div>" +
       dailyCard("s8") + districtCard("s4") +
       rankCard(groups) +
-      icmCards() +
-      tableCard(groups) +
-      "</div>" +
+      tableCard(groups));
+    var html = "<div class=\"pf\" id=\"fipv-root\">" + header(rs, groups) +
+      "<div class=\"pf-grid\">" + body + "</div>" +
       "<div class=\"pf-foot\"><img src=\"assets/logo-pei.jpg\" alt=\"Pakistan Polio Eradication Programme\" width=\"120\" height=\"44\"><span>Source: <b>District Emergency Operation Center, Peshawar</b></span><span class=\"pf-lab\" style=\"margin:0\">Figures update automatically when the fIPV workbook is saved. Benchmark " + pc(F.bench, 0) + ": at or above = light green, below = dark red.</span></div>" +
       "</div>";
     root.innerHTML = html;
@@ -1332,8 +1331,9 @@
     });
   }
 
-  function mount(root) {
+  function mount(root, icmOnly) {
     if (!root) return;
+    ICM_ONLY = !!icmOnly;
     var page = document.getElementById("page");
     root.innerHTML = "<div class=\"pf-load\">Loading fIPV &amp; OPV data…</div>";
     load().then(function () {
@@ -1347,5 +1347,5 @@
     });
   }
 
-  window.FIPV = { mount: mount };
+  window.FIPV = { mount: function (r) { mount(r, false); }, mountICM: function (r) { mount(r, true); } };
 })();
