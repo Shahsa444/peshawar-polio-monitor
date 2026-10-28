@@ -6,7 +6,7 @@
   "use strict";
   var DATA = { rows: "data/fipv_rows.csv", cud: "data/fipv_cud.csv", tg: "data/fipv_targets.csv", upd: "data/fipv.updated.txt", geo: "data/geo.json", icm: "data/fipv_icm.csv", icmupd: "data/fipv_icm.updated.txt" };
   var ROWS = null, CUD = [], TG = [], GEO = null, STAMP = "", LOADING = null;
-  var ICM = [], ICM_HEAD = [], ICMSTAMP = "";
+  var ICM = [], ICM_HEAD = [], ICMSTAMP = "", DAYDATE = {}, CAMPAIGN_START = "2026-10-26";
   var F = { day: "All", date: "All", dist: "All", teh: "All", uc: "All", map: "ipv_hh", rank: "missed", q: "", sk: "missed", sd: -1, bench: 0.9 };
   var GOOD = "#25A765", BAD = "#A3161B", NODATA = "#DDD9E6", OUTSIDE = "#E9EBF2";
   var EX = {};
@@ -171,21 +171,19 @@
       var icmLines = icmText.split(/\r?\n/).filter(function (x) { return x.length; });
       ICM_HEAD = icmLines.length ? splitLine(icmLines[0]) : [];
       ICM = parseCSV(icmText).filter(function (r) { return r.District; });
-      var dayDate = {};
-      ROWS.forEach(function (r) { if (r.dayDate && !dayDate[r.dayN]) dayDate[r.dayN] = r.dayDate; });
       ICM.forEach(function (r) {
         r.dayN = String(parseInt(r.Day, 10) || 0);
         r.dist = r.District; r.teh = r.Tehsil; r.uc = r.UC;
-        r.dayDate = dayDate[r.dayN] || "";
       });
       ICMSTAMP = (a[6] || "").trim();
-      // ICM shows only the campaign days whose coverage data has been entered (any non-zero coverage value).
-      // A day appears in ICM, web and deck, as soon as its coverage rows are filled in.
-      var covDay = {};
-      ROWS.forEach(function (r) {
-        if (!covDay[r.dayN] && Object.keys(r).some(function (k) { return /^(ipv|opv)_/.test(k) && num(r[k]) > 0; })) covDay[r.dayN] = true;
+      // Campaign day -> date, from the coverage data. A day that has ICM clusters but no coverage yet is dated
+      // from Day 1 (campaign start), so it appears in All days and in the day list with its date.
+      ROWS.forEach(function (r) { if (r.dayDate && !DAYDATE[r.dayN]) DAYDATE[r.dayN] = r.dayDate; });
+      var d1 = DAYDATE["1"] || CAMPAIGN_START;
+      ICM.forEach(function (r) {
+        if (!DAYDATE[r.dayN] && +r.dayN > 0) DAYDATE[r.dayN] = addDays(d1, +r.dayN - 1);
+        r.dayDate = DAYDATE[r.dayN] || "";
       });
-      ICM = ICM.filter(function (r) { return covDay[r.dayN]; });
       return true;
     });
     LOADING.catch(function () { LOADING = null; });
@@ -211,13 +209,13 @@
     var dt = new Date(d + "T00:00:00");
     return isNaN(dt) ? d : dt.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
   }
+  function addDays(iso, n) {
+    var p = iso.split("-"), dt = new Date(+p[0], +p[1] - 1, +p[2] + n);
+    return dt.getFullYear() + "-" + String(dt.getMonth() + 1).padStart(2, "0") + "-" + String(dt.getDate()).padStart(2, "0");
+  }
   function dayLabel(d) {
-    var r = ROWS.filter(function (x) { return x.dayN === d && x.dayDate; })[0];
-    var s = "Day " + d;
-    if (r && /^\d{4}-\d{2}-\d{2}$/.test(r.dayDate)) {
-      var dt = new Date(r.dayDate + "T00:00:00");
-      s += " · " + dt.toLocaleDateString("en-GB", { day: "numeric", month: "short" });
-    }
+    var iso = DAYDATE[d], s = "Day " + d;
+    if (iso && /^\d{4}-\d{2}-\d{2}$/.test(iso)) s += " · " + new Date(iso + "T00:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
     return s;
   }
 
@@ -871,7 +869,7 @@
     };
     var head = "<div class=\"pf-h\">ICM cluster check · fIPV" + (ICM.length ? dlBtn("icm", "CSV") : "") +
       "<small>Intra-Campaign Monitoring · clusters from the fIPV ICM sheet" + stamp + "</small></div>";
-    if (!ICM.length) return "<section class=\"pf-c gl s12 pop\">" + head + "<div class=\"pf-empty\">ICM clusters appear here for each campaign day once that day's coverage data is entered.</div></section>";
+    if (!ICM.length) return "<section class=\"pf-c gl s12 pop\">" + head + "<div class=\"pf-empty\">No ICM cluster data has been exported yet. Save the fIPV Daily ICM Clusters workbook to publish it.</div></section>";
     if (!rs.length) return "<section class=\"pf-c gl s12 pop\">" + head + "<div class=\"pf-empty\">No ICM clusters for this selection.</div></section>";
 
     var tiles = "<div class=\"sx-grid\" style=\"margin-top:4px\">" +
@@ -930,13 +928,20 @@
   }
 
   // ICM slides in the ERM deck. Same day columns as the summary slides (chosen day, Days 1–N, or every day) plus all days.
+  // Panels come from the ICM days themselves, so a day with clusters but no coverage yet still gets its column.
   function icmPanels(sc, scope) {
     var inArea = function (r) { return (scope.dist === "All" || r.dist === scope.dist) && (scope.teh === "All" || r.teh === scope.teh); };
-    var all = ICM.filter(inArea).filter(function (r) { return !sc.target || +r.dayN <= sc.target; });
-    var P = sc.panels.map(function (p) {
-      var rs = (p.total || !p.d) ? all : all.filter(function (r) { return r.dayN === p.d; });
-      return { h: p.total ? "All days" : p.h, total: !!p.total, s: icmSum(rs) };
-    });
+    var t = sc.target;
+    var all = ICM.filter(inArea).filter(function (r) { return !t || +r.dayN <= t; });
+    var P = [];
+    if (t && sc.mode === "upto") P.push({ h: t === 1 ? "Day 1" : "Days 1–" + t, s: icmSum(all) });
+    else if (t) P.push({ h: dayLabel(t), s: icmSum(all.filter(function (r) { return +r.dayN === t; })) });
+    else {
+      uniq(all.map(function (r) { return r.dayN; })).filter(function (d) { return d !== "0"; })
+        .sort(function (a, b) { return a - b; })
+        .forEach(function (d) { P.push({ h: dayLabel(d), s: icmSum(all.filter(function (r) { return r.dayN === d; })) }); });
+    }
+    P.push({ h: "All days", total: true, s: icmSum(all) });
     return { P: P, all: all, tot: icmSum(all) };
   }
   function icmSlides(pp, sc, scope, frame) {
