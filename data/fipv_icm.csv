@@ -1,7 +1,9 @@
-Day,Campaign Name,Province,District,Tehsil,UC,UC Code,# of Cluster,# of Houses Checked,Total Children 0 to 59 months,Total Children 0 to 59 months vaccinated,% of Children 0 to 59 months vaccinated,Total Children 4 to 59 months,Total Children 4 to 59 months vaccinated,% of Children 4 to 59 months vaccinated,Total Missed,Team did not visit house,Team visited by missed child,Child Away (NA),Child Refusal,Sick,Mistrust on Government,Religious,Fear of Side Effects,Attitude/Behavior of Team,Physical Appearance of Team,Incomplete Information,Rumors,Others,Refusal reason not mapped,Total Seen for OPV,Total Fingermarked for OPV,Fingermarked % for OPV,Total Seen for fIPV,Total Fingermarked for fIPV,Fingermarked % for fIPV
+﻿Day,Campaign Name,Province,District,Tehsil,UC,UC Code,# of Cluster,# of Houses Checked,Total Children 0 to 59 months,Total Children 0 to 59 months vaccinated,% of Children 0 to 59 months vaccinated,Total Children 4 to 59 months,Total Children 4 to 59 months vaccinated,% of Children 4 to 59 months vaccinated,Total Missed,Team did not visit house,Team visited by missed child,Child Away (NA),Child Refusal,Sick,Mistrust on Government,Religious,Fear of Side Effects,Attitude/Behavior of Team,Physical Appearance of Team,Incomplete Information,Rumors,Others,Refusal reason not mapped,Total Seen for OPV,Total Fingermarked for OPV,Fingermarked % for OPV,Total Seen for fIPV,Total Fingermarked for fIPV,Fingermarked % for fIPV
+1,fIPV Peshawar Khyber Oct 2026,KP,KHYBER,LANDI KOTAL,LOE SHALMAN A,33404067,1,10,33,32,96.97,32,23,71.88,9,0,0,9,0,0,0,0,0,0,0,0,0,0,0,0,0,0,21,18,85.71
 1,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,KHALSA 1,33004017,1,10,22,10,45.45,20,16,80,4,0,0,4,0,0,0,0,0,0,0,0,0,0,0,0,0,0,19,19,100
 2,fIPV Peshawar Khyber Oct 2026,KP,KHYBER,LANDI KOTAL,LOE SHALMAN A,33404067,1,10,33,33,100,33,33,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,25,25,100
 2,fIPV Peshawar Khyber Oct 2026,KP,KHYBER,LANDI KOTAL,PIROKHEL,33404070,1,10,31,0,0,26,26,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,23,23,100
+2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,HASAN GARHI 1,33004010,1,10,13,0,0,12,5,41.67,7,0,0,0,7,0,0,0,0,0,0,0,0,0,7,0,0,0,13,5,38.46
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,HASAN GARHI 2,33004011,1,10,24,6,25,22,16,72.73,6,0,0,3,3,0,0,0,0,0,0,0,0,0,3,0,0,0,22,16,72.73
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,HAYAT ABAD 1,33004012,3,30,50,23,46,54,35,64.81,19,1,0,9,9,1,0,0,0,0,0,0,0,0,8,0,0,0,41,30,73.17
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,REGI,33004025,1,10,17,1,5.88,19,19,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,20,100
@@ -14,13 +16,18 @@ Day,Campaign Name,Province,District,Tehsil,UC,UC Code,# of Cluster,# of Houses C
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,HAZARKHWANI 1,33008006,1,10,19,0,0,18,8,44.44,10,0,0,4,6,1,0,0,0,0,0,0,0,0,5,0,0,0,11,9,81.82
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,LANDI ARBAB,33008009,1,10,31,12,38.71,33,13,39.39,20,0,0,11,9,0,0,0,0,0,0,0,0,0,9,0,0,0,8,8,100
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,NOTHIA QADEEM,33008011,1,10,4,2,50,27,15,55.56,12,0,0,11,1,0,0,0,0,0,0,0,0,0,1,0,0,0,10,10,100
+2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,SHAHEEN MUSLIM TWN1,33008012,1,10,16,1,6.25,16,13,81.25,3,0,0,2,1,0,0,0,0,0,0,0,0,0,1,0,0,0,13,13,100
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,SHAHEEN MUSLIM TWN2,33008013,1,10,23,0,0,26,20,76.92,6,0,0,5,1,0,0,0,0,0,0,0,0,0,1,0,0,0,14,13,92.86
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,SHEIKH JUNAID ABAD,33008014,1,10,19,17,89.47,19,17,89.47,2,0,0,0,2,2,0,0,0,0,0,0,0,0,0,0,0,0,19,17,89.47
 2,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,YAKATOOT 2,33008017,1,10,25,4,16,23,22,95.65,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,21,19,90.48
 3,fIPV Peshawar Khyber Oct 2026,KP,KHYBER,BARA,AJAB TALAB,33401103,1,10,29,0,0,26,24,92.31,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,20,20,100
 3,fIPV Peshawar Khyber Oct 2026,KP,KHYBER,JAMRUD,GHUNDI B,33402074,1,10,22,5,22.73,21,18,85.71,3,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,17,17,100
+3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,HASAN GARHI 1,33004010,1,10,17,0,0,17,17,100,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,17,17,100
 3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,HASAN GARHI 2,33004011,1,10,24,3,12.5,24,21,87.5,3,0,0,3,0,0,0,0,0,0,0,0,0,0,0,0,0,0,22,20,90.91
 3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,CITY,SUFAID DHERI,33004029,1,10,36,33,91.67,37,22,59.46,15,0,0,5,10,2,0,0,0,0,0,0,0,0,8,0,0,0,31,23,74.19
 3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SHAH ALAM,PANAM DHERI,33007018,1,10,34,0,0,31,24,77.42,7,0,0,4,3,0,0,0,0,0,0,0,0,0,3,0,0,0,19,19,100
-3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,YAKATOOT 2,33008017,1,10,32,0,0,32,28,87.5,4,0,1,0,3,0,0,0,0,0,0,0,0,0,3,0,0,0,44,41,93.18
+3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,SHAHEEN MUSLIM TWN2,33008013,1,10,11,2,18.18,11,10,90.91,1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,7,7,100
+3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,YAKATOOT 2,33008017,2,20,52,0,0,73,61,83.56,12,0,1,8,3,0,0,0,0,0,0,0,0,0,3,0,0,0,76,73,96.05
 3,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,YAKATOOT 3,33008018,1,10,29,29,100,28,27,96.43,1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,28,28,100
+4,fIPV Peshawar Khyber Oct 2026,KP,KHYBER,JAMRUD,SHAH KAS B,33402082,1,10,19,0,0,18,16,88.89,2,0,0,2,0,0,0,0,0,0,0,0,0,0,0,0,0,0,16,16,100
+4,fIPV Peshawar Khyber Oct 2026,KP,PESHAWAR,SMT,LANDI ARBAB,33008009,1,10,38,16,42.11,39,21,53.85,18,0,0,6,12,0,0,0,0,0,0,0,0,0,12,0,0,0,24,16,66.67
