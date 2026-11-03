@@ -1,5 +1,6 @@
 const DERM = {
     plan: { PESHAWAR: 7, KHYBER: 7 },
+    camp: { PESHAWAR: 5, KHYBER: 5 },
     lib: "assets/pptxgen.bundle.js",
     C: {
       green: "006837",
@@ -484,6 +485,7 @@ async function dermBuild(E, ee) {
   X(ne, `${V.replace("Day-", "Day ")} - ${campUp(z)}`);
   const MB = {
       hh: { band: [0.95, null], hb: !0 },
+      daily: { band: [0.85, 0.95], hb: !0 },
       ms: { band: [0.02, null], hb: !1 },
       icm: { band: [0.9, null], hb: !0 },
     },
@@ -965,24 +967,44 @@ async function dermBuild(E, ee) {
   }
   if (E.cov) {
     ee("Coverage maps…"), await new Promise((W) => setTimeout(W, 0));
-    const covSel = dermCov(d, z, Se(z, L, A), ucKey),
-      hhVals = new Map([...covSel].map(([k, v]) => [k, v.hhcovPct])),
-      msVals = new Map([...covSel].map(([k, v]) => [k, v.msTar]));
+    const campDays = DERM.camp[d] || 3,
+      daily = L !== "full" && A <= campDays,
+      cumSel = L === "upto" ? Se(z, L, A) : null,
+      cumName = L === "upto" ? `days 1–${A}` : "full campaign";
+    if (daily) {
+      const dayCov = dermCov(d, z, dermDaySet(d, z, "only", A), ucKey);
+      await mapPage(
+        `Daily HH coverage map — Day ${A} · ${campUp(z)}`,
+        new Map([...dayCov].map(([k, v]) => [k, v.dailyPct])),
+        MB.daily,
+        [
+          ["95% or more of daily target", "pass"],
+          ["85% to under 95%", "watch"],
+          ["Below 85%", "fail"],
+          ["No data", null],
+        ],
+        pctT,
+        "HH covered on this day ÷ the daily micro-plan target, UC by UC.",
+      );
+    } else {
+      const cov = dermCov(d, z, cumSel, ucKey);
+      await mapPage(
+        `HH coverage map — target & coverage, ${cumName} · ${campUp(z)}`,
+        new Map([...cov].map(([k, v]) => [k, v.hhcovPct])),
+        MB.hh,
+        [
+          ["95% or more of target covered", "pass"],
+          ["Below 95% covered", "fail"],
+          ["No data", null],
+        ],
+        pctT,
+        "HH covered ÷ NEAP target for the period, UC by UC.",
+      );
+    }
+    const cumMs = dermCov(d, z, cumSel, ucKey);
     await mapPage(
-      `HH coverage map — ${V} · ${campUp(z)}`,
-      hhVals,
-      MB.hh,
-      [
-        ["95% or more of target covered", "pass"],
-        ["Below 95% covered", "fail"],
-        ["No data", null],
-      ],
-      pctT,
-      "Share of the NEAP target covered by household visits, UC by UC, for the days selected in this deck.",
-    );
-    await mapPage(
-      `Still missed children map — ${V} · ${campUp(z)}`,
-      msVals,
+      `Still missed children map — ${cumName} · ${campUp(z)}`,
+      new Map([...cumMs].map(([k, v]) => [k, v.msTar])),
       MB.ms,
       [
         ["Below 2% of target still missed", "pass"],
@@ -990,143 +1012,135 @@ async function dermBuild(E, ee) {
         ["No data", null],
       ],
       (v) => (v * 100).toFixed(1) + "%",
-      "Children still missed as a share of the NEAP target, UC by UC, for the days selected in this deck.",
+      "Children still missed as a share of the NEAP target, UC by UC, for the same period.",
     );
   }
   if (E.mon) {
     ee("Team and AIC monitoring…");
     await new Promise((W) => setTimeout(W, 0));
-    const cols = w,
-      cl = cols.map((c) => campUp(c)),
-      tmA = cols.map((c) => {
-        const r = tmRowsFor(d, c);
-        return r.length ? tmAgg(r) : null;
-      }),
-      amA = cols.map((c) => {
-        const r = amRowsFor(d, c);
-        return r.length ? amAgg(r) : null;
-      }),
-      curTm = tmRowsFor(d, z),
+    const curTm = tmRowsFor(d, z),
       curAm = amRowsFor(d, z),
-      tmDefs = [
-        ["Forms filled", (a) => a.n, numT],
-        ["Monitors", (a) => a.mons, numT],
-        ["UCs monitored", (a) => a.ucs, numT],
-        ["Overall score", (a) => a.overall, pctT, MON_B],
-        ["Forms with any No", (a) => a.issuePct, pctT, IND.tmIssue],
-        ["Female member in team", (a) => a.rate[0], pctT, IND.tmFemale],
-        ["Marker quality good", (a) => a.rate[3], pctT, MON_B],
-        ["Carrier lid & seal OK", (a) => a.rate[6], pctT, MON_B],
-      ],
-      amDefs = [
-        ["Forms filled", (a) => a.n, numT],
-        ["AIC areas seen", (a) => a.areas, numT],
-        ["UCs monitored", (a) => a.ucs, numT],
-        ["Overall score", (a) => a.overall, pctT, MON_B],
-        ["Forms with any No", (a) => a.issuePct, pctT, IND.tmIssue],
-        ["Team IPC excellent", (a) => a.rate[13], pctT, IND.amIpc],
-        ["Monitoring forms done", (a) => a.rate[11], pctT, MON_B],
-        ["Finger markers (2+)", (a) => a.rate[3], pctT, MON_B],
-      ],
-      tmDayDefs = tmDefs.filter((x) => !/Monitors|Carrier/.test(x[0])),
-      amDayDefs = amDefs.filter(
-        (x) => !/Monitoring forms done|Finger/.test(x[0]),
-      ),
-      monDays = [
-        ...new Set([...curTm, ...curAm].map((r) => r.day).filter(Boolean)),
-      ]
-        .sort((a, b) => +a - +b)
-        .slice(0, 14),
+      tmT = curTm.length ? tmAgg(curTm) : null,
+      amT = curAm.length ? amAgg(curAm) : null,
       monNote =
-        "Every saved monitoring form for each campaign. Shading: green = meets the dashboard standard, amber = watch, red = below. – = no forms.",
-      monTable = (s, x, y, tw, heads, defs, aggs, fs, rh) => {
-        const fw = Math.min(2.2, tw * 0.4),
-          cw = (tw - fw) / Math.max(1, heads.length);
-        s.addTable(
+        "Full campaign, all saved forms. Share of forms answering Yes (blank and not-applicable items left out). Green = 95% or more, amber = 90% to under 95%, red = below 90% or not measured.",
+      tmOrder = [
+        "vita", "ccWater", "ccLid", "female", "OVERALL", "ccNeoc", "obs", "map",
+        "tally", "afp", "dry", "fullFinger", "newborn", "missRec", "marker",
+        "names", "doses", "target", "wastage", "finger", "vvm", "recap", "label",
+        "adult", "trained",
+      ],
+      itemVal = (a, list, key) => {
+        if (!a) return null;
+        if (key === "OVERALL") return a.overall;
+        const i = list.findIndex((x) => x[0] === key);
+        if (i < 0 || !a.v[i] || a.v[i] < a.n * 0.5) return null;
+        if (a.skip[i] && i < (list === AM_IT ? 13 : list.length)) return null;
+        const v = a.rate[i];
+        return v == null || !isFinite(v) ? null : v;
+      },
+      findings = (title, rows, valOf, label) => {
+        const s = de(title, "MON"),
+          vals = rows.map(([, key]) => valOf(key)),
+          known = vals.filter((v) => v != null),
+          lo = known.length ? Math.min(...known) : 0.9,
+          axisMin = Math.max(0, Math.floor((lo - 0.03) * 20) / 20);
+        s.addChart(
+          oe.ChartType.bar,
           [
-            [u("Indicator"), ...heads.map((h) => u(h))],
-            ...defs.map(([lab, f, fm, ind]) => [
-              e(lab, { align: "left", bold: !0 }),
-              ...aggs.map((a) => {
-                const v = a == null ? null : f(a),
-                  ok = v == null || !isFinite(v);
-                return e(ok ? "–" : fm(v), {
-                  bold: !0,
-                  fill: ok || !ind ? void 0 : monShade(ind, v),
-                });
-              }),
-            ]),
+            {
+              name: label,
+              labels: rows.map((r) => r[0]),
+              values: vals,
+            },
           ],
           {
-            x,
-            y,
-            w: tw,
-            colW: [fw, ...heads.map(() => cw)],
+            x: 0.3,
+            y: 0.85,
+            w: 6.2,
+            h: 4.15,
+            barDir: "bar",
+            catAxisOrientation: "maxMin",
+            chartColors: [n.blue],
+            valAxisMinVal: axisMin,
+            valAxisMaxVal: 1,
+            valAxisLabelFormatCode: "0%",
+            valAxisLabelFontSize: 8,
+            catAxisLabelFontSize: 8,
+            catAxisLabelFontFace: G,
+            showValue: !0,
+            dataLabelFormatCode: "0.0%",
+            dataLabelFontSize: 8,
+            dataLabelPosition: "outEnd",
+            showLegend: !1,
+            barGapWidthPct: 45,
+          },
+        );
+        const rowH = rows.length > 20 ? 0.16 : 0.22;
+        s.addTable(
+          [
+            [u("Indicator"), u("Total")],
+            ...rows.map(([lab, key], i) => {
+              const v = vals[i],
+                ok = v != null;
+              return [
+                e(lab, { align: "left", bold: key === "OVERALL" }),
+                e(ok ? pctT(v) : "–", {
+                  bold: !0,
+                  fill: ok ? monShade(MON_B, v) : { color: "FFC7CE" },
+                }),
+              ];
+            }),
+          ],
+          {
+            x: 6.65,
+            y: 0.85,
+            w: 3.05,
+            colW: [2.3, 0.75],
             fontFace: G,
-            fontSize: fs,
+            fontSize: 7,
             color: n.ink,
-            rowH: rh,
+            rowH,
+            margin: 0.02,
             border: { type: "solid", pt: 0.5, color: n.grid },
             autoPage: !1,
           },
         );
-      },
-      monCaption = (s, x, y, tw, text) =>
-        s.addText(text, {
-          x,
-          y,
-          w: tw,
-          h: 0.28,
+        s.addText(monNote, {
+          x: 0.3,
+          y: 5.1,
+          w: 9.4,
+          h: 0.22,
           fontFace: G,
-          fontSize: 11,
-          bold: !0,
-          color: n.ink,
-        }),
-      monFoot = (s, text, y = 5.0) =>
-        s.addText(text, {
-          x: 0.45,
-          y,
-          w: 9.1,
-          h: 0.25,
-          fontFace: G,
-          fontSize: 8.5,
+          fontSize: 7.5,
           italic: !0,
           color: n.mute,
         });
-    // Slide 1: results for each day of the current campaign.
-    if (monDays.length) {
-      const s = de(
-          `Team & AIC monitoring — day-wise results — ${campUp(z)}`,
-          "MON",
-        ),
-        heads = monDays.map((dy) => `Day ${dy}`),
-        tmD = monDays.map((dy) => {
-          const r = curTm.filter((x) => x.day === dy);
-          return r.length ? tmAgg(r) : null;
-        }),
-        amD = monDays.map((dy) => {
-          const r = curAm.filter((x) => x.day === dy);
-          return r.length ? amAgg(r) : null;
-        });
-      monCaption(s, 0.45, 0.9, 9.1, `Team monitoring — ${tc(d)}`);
-      monTable(s, 0.45, 1.2, 9.1, heads, tmDayDefs, tmD, 9.5, 0.24);
-      monCaption(s, 0.45, 3.0, 9.1, `AIC monitoring — ${tc(d)}`);
-      monTable(s, 0.45, 3.3, 9.1, heads, amDayDefs, amD, 9.5, 0.24);
-      monFoot(s, monNote, 5.14);
-    }
-    // Slide 2: consolidated results, previous campaigns and the current one.
-    if (tmA.some(Boolean) || amA.some(Boolean)) {
-      const s = de(
-        `Team & AIC monitoring — consolidated — ${campUp(z)}`,
-        "MON",
+      };
+    if (tmT) {
+      const rows = tmOrder.map((key) => [
+        key === "OVERALL"
+          ? "Overall %"
+          : (TM_IT.find((x) => x[0] === key) || [key, key])[1],
+        key,
+      ]);
+      findings(
+        `Team monitoring findings — ${tc(d)} · ${campUp(z)}`,
+        rows,
+        (key) => itemVal(tmT, TM_IT, key),
+        "Team monitoring",
       );
-      monCaption(s, 0.45, 0.9, 4.45, `Team monitoring — ${tc(d)}`);
-      monCaption(s, 5.1, 0.9, 4.45, `AIC monitoring — ${tc(d)}`);
-      monTable(s, 0.45, 1.25, 4.45, cl, tmDefs, tmA, 9.5, 0.3);
-      monTable(s, 5.1, 1.25, 4.45, cl, amDefs, amA, 9.5, 0.3);
-      monFoot(s, monNote);
     }
-    if (!monDays.length && !tmA.some(Boolean) && !amA.some(Boolean)) {
+    if (amT) {
+      const rows = [["Overall %", "OVERALL"], ...AM_IT.map((x) => [x[1], x[0]])];
+      findings(
+        `AIC monitoring findings — ${tc(d)} · ${campUp(z)}`,
+        rows,
+        (key) => itemVal(amT, AM_IT, key),
+        "AIC monitoring",
+      );
+    }
+    if (!tmT && !amT) {
       const s = de(`Team & AIC monitoring — ${campUp(z)}`, "MON");
       s.addText(
         "No team or AIC monitoring forms are saved for this campaign yet.",
@@ -1160,10 +1174,8 @@ async function dermBuild(E, ee) {
         [
           [
             u("Tehsil"),
-            u("Team forms"),
             u("Team score"),
             u("Team UCs"),
-            u("AIC forms"),
             u("AIC score"),
             u("AIC areas"),
             u("AIC UCs"),
@@ -1177,7 +1189,6 @@ async function dermBuild(E, ee) {
                 : null;
             return [
               e(tc(t), { align: "left", bold: !0 }),
-              tcell(ta, (a) => a.n, numT),
               {
                 ...tcell(ta, (a) => a.overall, pctT),
                 options: {
@@ -1187,7 +1198,6 @@ async function dermBuild(E, ee) {
                 },
               },
               tcell(ta, (a) => a.ucs, numT),
-              tcell(aa, (a) => a.n, numT),
               {
                 ...tcell(aa, (a) => a.overall, pctT),
                 options: {
