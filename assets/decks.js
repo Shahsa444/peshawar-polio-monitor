@@ -1023,7 +1023,7 @@ async function dermBuild(E, ee) {
       tmT = curTm.length ? tmAgg(curTm) : null,
       amT = curAm.length ? amAgg(curAm) : null,
       monNote =
-        "Full campaign, all saved forms. Share of forms answering Yes (blank and not-applicable items left out). Green = 95% or more, amber = 90% to under 95%, red = below 90% or not measured.",
+        "Full campaign, all saved forms. Share of forms answering Yes (blank and not-applicable items left out). Green = 95% or more, amber = 90% to under 95%, red = below 90%. Indicators with no answers are not shown.",
       tmOrder = [
         "vita", "ccWater", "ccLid", "female", "OVERALL", "ccNeoc", "obs", "map",
         "tally", "afp", "dry", "fullFinger", "newborn", "missRec", "marker",
@@ -1039,8 +1039,11 @@ async function dermBuild(E, ee) {
         const v = a.rate[i];
         return v == null || !isFinite(v) ? null : v;
       },
-      findings = (title, rows, valOf, label) => {
-        const s = de(title, "MON"),
+      findings = (title, allRows, valOf, label) => {
+        const rows = allRows.filter(
+            ([, key]) => key === "OVERALL" || valOf(key) != null,
+          ),
+          s = de(title, "MON"),
           vals = rows.map(([, key]) => valOf(key)),
           known = vals.filter((v) => v != null),
           lo = known.length ? Math.min(...known) : 0.9,
