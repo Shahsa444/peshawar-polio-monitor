@@ -482,6 +482,95 @@ async function dermBuild(E, ee) {
     k = (W, I, N = numT) => W.map((j) => N(I(j))),
     ne = `Evening Review Meeting - District ${tc(d)}`;
   X(ne, `${V.replace("Day-", "Day ")} - ${campUp(z)}`);
+  const MB = {
+      hh: { band: [0.95, null], hb: !0 },
+      ms: { band: [0.02, null], hb: !1 },
+      icm: { band: [0.9, null], hb: !0 },
+    },
+    mapPage = async (title, vals, band, legend, fmt, note) => {
+      const s = de(title, "MAP"),
+        img = await pcrMap(d, vals, null, {
+          band: (v) => bandOf(band, v),
+          fmt,
+        });
+      if (img) {
+        const sc = Math.min(6.3 / img.w, 4.2 / img.h);
+        s.addImage({
+          data: img.data,
+          x: 0.35,
+          y: 1.0,
+          w: img.w * sc,
+          h: img.h * sc,
+        });
+      } else
+        s.addText("Map not available for this district.", {
+          x: 0.45,
+          y: 1.1,
+          w: 6,
+          h: 0.4,
+          fontFace: G,
+          fontSize: 12,
+          color: n.mute,
+        });
+      const cnt = new Map();
+      for (const uc of D.U.filter((x) => x.district === d)) {
+        const k = bandOf(band, vals.get(uc.key)) || "na";
+        cnt.set(k, (cnt.get(k) || 0) + 1);
+      }
+      s.addText("UCs by colour", {
+        x: 7.0,
+        y: 1.0,
+        w: 2.7,
+        h: 0.3,
+        fontFace: G,
+        fontSize: 12,
+        bold: !0,
+        color: n.ink,
+      });
+      let ly = 1.4;
+      for (const [lab, key] of legend) {
+        s.addShape(oe.ShapeType.rect, {
+          x: 7.0,
+          y: ly + 0.04,
+          w: 0.3,
+          h: 0.26,
+          fill: { color: pcrHex(key) },
+          line: { color: "7F7F7F", width: 0.5 },
+        });
+        s.addText(lab, {
+          x: 7.4,
+          y: ly,
+          w: 2.3,
+          h: 0.34,
+          fontFace: G,
+          fontSize: 10,
+          color: n.ink,
+          valign: "middle",
+        });
+        const cc = cnt.get(key || "na") || 0;
+        s.addText(`${cc} ${cc === 1 ? "UC" : "UCs"}`, {
+          x: 7.4,
+          y: ly + 0.33,
+          w: 2.3,
+          h: 0.25,
+          fontFace: G,
+          fontSize: 9,
+          color: n.mute,
+        });
+        ly += 0.78;
+      }
+      s.addText(note, {
+        x: 7.0,
+        y: ly + 0.1,
+        w: 2.7,
+        h: 1.3,
+        fontFace: G,
+        fontSize: 8.5,
+        italic: !0,
+        color: n.mute,
+        valign: "top",
+      });
+    };
   if (E.hr !== false) {
     ee("District profile…");
     await new Promise((W) => setTimeout(W, 0));
@@ -874,6 +963,36 @@ async function dermBuild(E, ee) {
       }
     }
   }
+  if (E.cov) {
+    ee("Coverage maps…"), await new Promise((W) => setTimeout(W, 0));
+    const covSel = dermCov(d, z, Se(z, L, A), ucKey),
+      hhVals = new Map([...covSel].map(([k, v]) => [k, v.hhcovPct])),
+      msVals = new Map([...covSel].map(([k, v]) => [k, v.msTar]));
+    await mapPage(
+      `HH coverage map — ${V} · ${campUp(z)}`,
+      hhVals,
+      MB.hh,
+      [
+        ["95% or more of target covered", "pass"],
+        ["Below 95% covered", "fail"],
+        ["No data", null],
+      ],
+      pctT,
+      "Share of the NEAP target covered by household visits, UC by UC, for the days selected in this deck.",
+    );
+    await mapPage(
+      `Still missed children map — ${V} · ${campUp(z)}`,
+      msVals,
+      MB.ms,
+      [
+        ["Below 2% of target still missed", "pass"],
+        ["2% or more still missed", "fail"],
+        ["No data", null],
+      ],
+      (v) => (v * 100).toFixed(1) + "%",
+      "Children still missed as a share of the NEAP target, UC by UC, for the days selected in this deck.",
+    );
+  }
   if (E.mon) {
     ee("Team and AIC monitoring…");
     await new Promise((W) => setTimeout(W, 0));
@@ -909,16 +1028,28 @@ async function dermBuild(E, ee) {
         ["Monitoring forms done", (a) => a.rate[11], pctT, MON_B],
         ["Finger markers (2+)", (a) => a.rate[3], pctT, MON_B],
       ],
-      monSlide = (title, defs, aggs, note) => {
-        const s = de(title, "MON");
+      tmDayDefs = tmDefs.filter((x) => !/Monitors|Carrier/.test(x[0])),
+      amDayDefs = amDefs.filter(
+        (x) => !/Monitoring forms done|Finger/.test(x[0]),
+      ),
+      monDays = [
+        ...new Set([...curTm, ...curAm].map((r) => r.day).filter(Boolean)),
+      ]
+        .sort((a, b) => +a - +b)
+        .slice(0, 14),
+      monNote =
+        "Every saved monitoring form for each campaign. Shading: green = meets the dashboard standard, amber = watch, red = below. – = no forms.",
+      monTable = (s, x, y, tw, heads, defs, aggs, fs, rh) => {
+        const fw = Math.min(2.2, tw * 0.4),
+          cw = (tw - fw) / Math.max(1, heads.length);
         s.addTable(
           [
-            [u("Indicator"), ...cl.map((c) => u(c))],
+            [u("Indicator"), ...heads.map((h) => u(h))],
             ...defs.map(([lab, f, fm, ind]) => [
               e(lab, { align: "left", bold: !0 }),
               ...aggs.map((a) => {
-                const v = a == null ? null : f(a);
-                const ok = v == null || !isFinite(v);
+                const v = a == null ? null : f(a),
+                  ok = v == null || !isFinite(v);
                 return e(ok ? "–" : fm(v), {
                   bold: !0,
                   fill: ok || !ind ? void 0 : monShade(ind, v),
@@ -927,45 +1058,89 @@ async function dermBuild(E, ee) {
             ]),
           ],
           {
-            x: 0.45,
-            y: 1.0,
-            w: 9.1,
-            colW: [2.9, ...cl.map(() => 6.2 / cl.length)],
+            x,
+            y,
+            w: tw,
+            colW: [fw, ...heads.map(() => cw)],
             fontFace: G,
-            fontSize: 11,
+            fontSize: fs,
             color: n.ink,
-            rowH: 0.36,
+            rowH: rh,
             border: { type: "solid", pt: 0.5, color: n.grid },
             autoPage: !1,
           },
         );
-        s.addText(note, {
+      },
+      monCaption = (s, x, y, tw, text) =>
+        s.addText(text, {
+          x,
+          y,
+          w: tw,
+          h: 0.28,
+          fontFace: G,
+          fontSize: 11,
+          bold: !0,
+          color: n.ink,
+        }),
+      monFoot = (s, text, y = 5.0) =>
+        s.addText(text, {
           x: 0.45,
-          y: 4.95,
+          y,
           w: 9.1,
-          h: 0.3,
+          h: 0.25,
           fontFace: G,
           fontSize: 8.5,
           italic: !0,
           color: n.mute,
         });
-      },
-      monNote =
-        "Every saved monitoring form for each campaign. Shading: green = meets the dashboard standard, amber = watch, red = below. – = no forms.";
-    if (tmA.some(Boolean))
-      monSlide(
-        `Team monitoring (Process Indicators) — ${tc(d)}`,
-        tmDefs,
-        tmA,
-        monNote,
+    // Slide 1: results for each day of the current campaign.
+    if (monDays.length) {
+      const s = de(
+          `Team & AIC monitoring — day-wise results — ${campUp(z)}`,
+          "MON",
+        ),
+        heads = monDays.map((dy) => `Day ${dy}`),
+        tmD = monDays.map((dy) => {
+          const r = curTm.filter((x) => x.day === dy);
+          return r.length ? tmAgg(r) : null;
+        }),
+        amD = monDays.map((dy) => {
+          const r = curAm.filter((x) => x.day === dy);
+          return r.length ? amAgg(r) : null;
+        });
+      monCaption(s, 0.45, 0.9, 9.1, `Team monitoring — ${tc(d)}`);
+      monTable(s, 0.45, 1.2, 9.1, heads, tmDayDefs, tmD, 9.5, 0.24);
+      monCaption(s, 0.45, 3.0, 9.1, `AIC monitoring — ${tc(d)}`);
+      monTable(s, 0.45, 3.3, 9.1, heads, amDayDefs, amD, 9.5, 0.24);
+      monFoot(s, monNote, 5.14);
+    }
+    // Slide 2: consolidated results, previous campaigns and the current one.
+    if (tmA.some(Boolean) || amA.some(Boolean)) {
+      const s = de(
+        `Team & AIC monitoring — consolidated — ${campUp(z)}`,
+        "MON",
       );
-    if (amA.some(Boolean))
-      monSlide(
-        `AIC monitoring (Process Indicators) — ${tc(d)}`,
-        amDefs,
-        amA,
-        monNote,
+      monCaption(s, 0.45, 0.9, 4.45, `Team monitoring — ${tc(d)}`);
+      monCaption(s, 5.1, 0.9, 4.45, `AIC monitoring — ${tc(d)}`);
+      monTable(s, 0.45, 1.25, 4.45, cl, tmDefs, tmA, 9.5, 0.3);
+      monTable(s, 5.1, 1.25, 4.45, cl, amDefs, amA, 9.5, 0.3);
+      monFoot(s, monNote);
+    }
+    if (!monDays.length && !tmA.some(Boolean) && !amA.some(Boolean)) {
+      const s = de(`Team & AIC monitoring — ${campUp(z)}`, "MON");
+      s.addText(
+        "No team or AIC monitoring forms are saved for this campaign yet.",
+        {
+          x: 0.45,
+          y: 1.2,
+          w: 9.1,
+          h: 0.5,
+          fontFace: G,
+          fontSize: 14,
+          color: n.mute,
+        },
       );
+    }
     const tehs = [
         ...new Set(
           D.cov
@@ -1090,7 +1265,7 @@ async function dermBuild(E, ee) {
           );
         }
       };
-    if (covUCs.length) {
+    if (covUCs.length && (curTm.length || curAm.length)) {
       monUcList(`UCs without team monitoring — ${campUp(z)}`, noTm);
       monUcList(`UCs without AIC monitoring — ${campUp(z)}`, noAm);
     }
@@ -1557,6 +1732,29 @@ async function dermBuild(E, ee) {
       },
       xe = [],
       Ne = [];
+      ee("ICM map…"), await new Promise((h) => setTimeout(h, 0));
+      const icmSet = dermIcmSet(L, A),
+        byUc = new Map();
+      for (const r of dermIcm(d, Q, icmSet)) {
+        const k = ucKey(r);
+        let o = byUc.get(k);
+        o || ((o = Object.fromEntries(ICM_F.map((f) => [f, 0]))), byUc.set(k, o));
+        o.clusters++;
+        for (const f of ICM_F) f !== "clusters" && (o[f] += r.v[f]);
+      }
+      await mapPage(
+        `ICM recall map — ${L === "full" ? "All days" : L === "only" ? `Day-${A}` : A === 1 ? "Day-1" : `Days 1–${A}`} · ${campUp(Q)}`,
+        new Map([...byUc].map(([k, o]) => [k, icmM(o).recallPct])),
+        MB.icm,
+        [
+          ["90% or more recall", "pass"],
+          ["Below 90% recall", "fail"],
+          ["No ICM", null],
+        ],
+        pctT,
+        "Children found vaccinated at ICM revisits ÷ children checked (recall), UC by UC for the ICM days selected in this deck.",
+      );
+
     for (const h of [Q]) {
       const C = D.covCamps.find((H) => campKey(H) === campKey(h)),
         R = new Map();
