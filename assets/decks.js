@@ -311,6 +311,85 @@ async function dataURL(E) {
     return null;
   }
 }
+// Automatic entrance animations (no clicks): each slide's title fades in, then charts, tables and maps
+// wipe or fade in one after another. Added to the saved file after PptxGenJS has built it.
+async function dermAddMotion(buf) {
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js");
+  const zip = await window.JSZip.loadAsync(buf),
+    NS = "http://schemas.openxmlformats.org/presentationml/2006/main",
+    parser = new DOMParser(),
+    ser = new XMLSerializer();
+  for (const f of Object.keys(zip.files).filter((x) => /^ppt\/slides\/slide\d+\.xml$/.test(x))) {
+    const xml = parser.parseFromString(await zip.file(f).async("string"), "application/xml"),
+      root = xml.documentElement,
+      tree = root.getElementsByTagNameNS(NS, "spTree")[0];
+    if (!tree) continue;
+    const targets = [];
+    for (const el of Array.from(tree.children)) {
+      const cnv = el.getElementsByTagNameNS(NS, "cNvPr")[0];
+      if (!cnv) continue;
+      const id = cnv.getAttribute("id"),
+        txt = el.textContent.trim();
+      if (el.localName === "sp") {
+        if (!txt || /^Source:/.test(txt) || /^\d+$/.test(txt) || (txt.length <= 4 && /^[A-Z]+$/.test(txt))) continue;
+        targets.push({ id, kind: "text", bld: "p" });
+      } else if (el.localName === "graphicFrame") {
+        const uri = el.getElementsByTagName("a:graphicData")[0]?.getAttribute("uri") || "";
+        targets.push({ id, kind: "wipe", bld: /chart/.test(uri) ? "g" : "" });
+      } else if (el.localName === "pic") {
+        targets.push({ id, kind: "fade", bld: "" });
+      }
+    }
+    if (!targets.length) continue;
+    let cid = 2;
+    const next = () => ++cid,
+      eff = (t, node, delay, pid, sub, filt, dur) => {
+        const a = next(), b = next(), c = next(), d = next();
+        return `<p:par><p:cTn id="${a}" presetID="${pid}" presetClass="entr" presetSubtype="${sub}" fill="hold" grpId="0" nodeType="${node}"><p:stCondLst><p:cond delay="${delay}"/></p:stCondLst><p:childTnLst><p:set><p:cBhvr><p:cTn id="${b}" dur="1" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst></p:cTn><p:tgtEl><p:spTgt spid="${t.id}"/></p:tgtEl><p:attrNameLst><p:attrName>style.visibility</p:attrName></p:attrNameLst></p:cBhvr><p:to><p:strVal val="visible"/></p:to></p:set><p:animEffect transition="in" filter="${filt}"><p:cBhvr><p:cTn id="${c}" dur="${dur}"/><p:tgtEl><p:spTgt spid="${t.id}"/></p:tgtEl></p:cBhvr></p:animEffect></p:childTnLst></p:cTn></p:par>`;
+      };
+    const first = targets[0],
+      rest = targets.slice(1),
+      g1 = next(),
+      firstFx = first.kind === "text" ? eff(first, "afterEffect", 0, 10, 0, "fade", 500) : eff(first, "afterEffect", 0, 10, 0, "fade", 500),
+      g2 = next(),
+      restFx = rest
+        .map((t, k) =>
+          t.kind === "wipe"
+            ? eff(t, "withEffect", k * 150, 22, 8, "wipe(left)", 700)
+            : eff(t, "withEffect", k * 150, 10, 0, "fade", 500),
+        )
+        .join(""),
+      outer = next(),
+      seqId = next(),
+      bld = targets
+        .filter((t) => t.bld === "p")
+        .map((t) => `<p:bldP spid="${t.id}" grpId="0"/>`)
+        .concat(targets.filter((t) => t.bld === "g").map((t) => `<p:bldGraphic spid="${t.id}" grpId="0"><p:bldAsOne/></p:bldGraphic>`))
+        .join(""),
+      timing = `<p:timing xmlns:p="${NS}"><p:tnLst><p:par><p:cTn id="1" dur="indefinite" restart="never" nodeType="tmRoot"><p:childTnLst><p:seq concurrent="1" nextAc="seek"><p:cTn id="2" dur="indefinite" nodeType="mainSeq"><p:childTnLst><p:par><p:cTn id="${outer}" fill="hold"><p:stCondLst><p:cond delay="indefinite"/><p:cond evt="onBegin" delay="0"><p:tn val="2"/></p:cond></p:stCondLst><p:childTnLst><p:par><p:cTn id="${g1}" fill="hold"><p:stCondLst><p:cond delay="0"/></p:stCondLst><p:childTnLst>${firstFx}</p:childTnLst></p:cTn></p:par>${rest.length ? `<p:par><p:cTn id="${g2}" fill="hold"><p:stCondLst><p:cond delay="500"/></p:stCondLst><p:childTnLst>${restFx}</p:childTnLst></p:cTn></p:par>` : ""}</p:childTnLst></p:cTn></p:par></p:childTnLst></p:cTn><p:prevCondLst><p:cond evt="onPrev" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:prevCondLst><p:nextCondLst><p:cond evt="onNext" delay="0"><p:tgtEl><p:sldTgt/></p:tgtEl></p:cond></p:nextCondLst></p:seq></p:childTnLst></p:cTn></p:par></p:tnLst>${bld ? `<p:bldLst>${bld}</p:bldLst>` : ""}</p:timing>`,
+      transition = `<p:transition xmlns:p="${NS}" spd="med"><p:fade/></p:transition>`,
+      tDoc = parser.parseFromString(timing, "application/xml").documentElement,
+      trDoc = parser.parseFromString(transition, "application/xml").documentElement;
+    for (const old of [...root.getElementsByTagNameNS(NS, "timing"), ...root.getElementsByTagNameNS(NS, "transition")]) old.remove();
+    const ext = Array.from(root.children).find((c) => c.localName === "extLst") || null;
+    root.insertBefore(xml.importNode(trDoc, true), ext);
+    root.insertBefore(xml.importNode(tDoc, true), ext);
+    zip.file(f, '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n' + ser.serializeToString(root));
+  }
+  return zip.generateAsync({ type: "arraybuffer", compression: "DEFLATE" });
+}
+function dermSave(data, name) {
+  const url = URL.createObjectURL(
+    new Blob([data], { type: "application/vnd.openxmlformats-officedocument.presentationml.presentation" }),
+  );
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = name;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 4000);
+}
 async function dermBuild(E, ee) {
   if ((await loadScript(DERM.lib), !window.PptxGenJS))
     throw new Error("PowerPoint library did not load");
@@ -1834,10 +1913,10 @@ async function dermBuild(E, ee) {
   }
   if (E.tuc && dermDays(d, z).length) {
     ee("Tehsil and UC comparison…"), await new Promise((W) => setTimeout(W, 0));
+    X("Tehsil and UC comparison", `${V} \u00b7 ${campUp(z)}`);
     const sp = dermCmpSpec(d, z, L, A),
       cols = sp.cols,
-      winLab =
-        L === "full" ? "full campaign" : L === "only" ? `day ${A}` : A === 1 ? "day 1" : `days 1–${A}`,
+      tillLab = L === "full" ? "full campaign" : L === "only" ? `Day ${A} only` : `till Day ${A}`,
       memo = new Map(),
       LV = { uc: ucKey, teh: (r) => r.tehsil, all: () => "all" },
       get = (ix, lv) => {
@@ -1846,6 +1925,7 @@ async function dermBuild(E, ee) {
         return memo.get(key);
       },
       upto = (i) => Array.from({ length: i + 1 }, (_, j) => j),
+      cell = (ix, lv, src, k, field) => get(ix, lv)[src].get(k)?.[field] ?? null,
       ucList = [
         ...new Map(
           D.cov
@@ -1856,256 +1936,412 @@ async function dermBuild(E, ee) {
         .map(([k, t]) => ({ k, t, uc: k.split("|")[1] }))
         .sort((a, b) => (a.t + a.uc).localeCompare(b.t + b.uc)),
       tehList = [...new Set(ucList.map((r) => r.t))].sort(),
+      tehRows = [
+        ...tehList.map((t) => ({ k: t, lv: "teh", name: tc(t) })),
+        { k: "all", lv: "all", name: `${tc(d)} total` },
+      ],
+      ucRows = ucList.map((r) => ({ k: r.k, lv: "uc", name: r.uc, t: r.t })),
       hasIcm = !!D.icmByKey[campKey(z)],
       hasAm = monCampOf(D.amCamps, z) != null,
-      cellPct = (v, ind) => e(pctT(v), { fill: ind ? monShade(ind, v) : void 0, bold: !!ind }),
-      cellNum = (v) => e(numT(v)),
-      palette = ["1F5C8B", "8FAADC", "00B050", "FFC000", "C00000", "7F7F7F", "5B9BD5"],
-      FAM = [
-        {
-          title: "HH and daily coverage",
-          chartFmt: "0%",
-          compHead: cols.flatMap((i) => [`Day ${i + 1} daily`, `Day ${i + 1} to date`]),
-          compCells: (k, lv) =>
-            cols.flatMap((i) => [
-              cellPct(get([i], lv).cov.get(k)?.dailyPct ?? null, MB.daily),
-              cellPct(get(upto(i), lv).cov.get(k)?.hhcovPct ?? null, MB.hh),
-            ]),
-          compVal: (k, lv, i) => get([i], lv).cov.get(k)?.dailyPct ?? null,
-          consHead: ["NEAP target", "HH covered", "HH coverage %", "Daily target (window)", "Daily covered (window)", "Daily coverage %"],
-          consCells: (k, lv) => {
-            const h = get(sp.hh, lv).cov.get(k),
-              c = get(sp.cons, lv).cov.get(k);
-            return [
-              cellNum(h?.neap),
-              cellNum(h?.hhCov),
-              cellPct(h?.hhcovPct ?? null, MB.hh),
-              cellNum(c?.tsTarget),
-              cellNum(c?.hhCov),
-              cellPct(c?.dailyPct ?? null, MB.daily),
-            ];
-          },
-          consVal: (k, lv) => get(sp.hh, lv).cov.get(k)?.hhcovPct ?? null,
-          chartName: "HH coverage %",
-          noteComp: "Daily = that day only. To date = day 1 up to that day, against the NEAP target.",
-          noteCons: "Consolidated for the selected days. Coverage to date uses the NEAP target from day 1. Daily figures add up the daily targets of those days.",
-        },
-        {
-          title: "Missed children",
-          chartFmt: "#,##0",
-          compHead: cols.map((i) => `Day ${i + 1} still missed`),
-          compCells: (k, lv) => cols.map((i) => cellNum(get([i], lv).cov.get(k)?.still ?? null)),
-          compVal: (k, lv, i) => get([i], lv).cov.get(k)?.still ?? null,
-          consHead: ["Still NA", "Still refusals", "Still leftovers", "Total still missed", "% of NEAP target"],
-          consCells: (k, lv) => {
-            const c = get(sp.cons, lv).cov.get(k),
-              h = get(sp.hh, lv).cov.get(k);
-            return [
-              cellNum(c?.stillNA),
-              cellNum(c?.stillRef),
-              cellNum(c?.stillLO),
-              cellNum(c?.still),
-              cellPct(h?.msTar ?? null, null),
-            ];
-          },
-          consVal: (k, lv) => get(sp.cons, lv).cov.get(k)?.still ?? null,
-          chartName: "Total still missed",
-          noteComp: "Still missed = children not vaccinated on that day (NA, refusals and leftovers), from the coverage forms.",
-          noteCons: "Still missed for the selected days (NA, refusals, leftovers). % of NEAP target uses the target from day 1.",
-        },
-        {
-          title: "ICM recall",
-          chartFmt: "0%",
-          skip: !hasIcm,
-          compHead: cols.flatMap((i) => [`Day ${i + 1} clusters`, `Day ${i + 1} recall %`]),
-          compCells: (k, lv) =>
-            cols.flatMap((i) => {
-              const o = get([i], lv).icm.get(k);
-              return [cellNum(o?.clusters ?? null), cellPct(o?.recallPct ?? null, MB.icm)];
-            }),
-          compVal: (k, lv, i) => get([i], lv).icm.get(k)?.recallPct ?? null,
-          consHead: ["Clusters", "Children checked", "Vaccinated on recall", "Missed", "Recall %", "Seen F.M %"],
-          consCells: (k, lv) => {
-            const o = get(sp.cons, lv).icm.get(k);
-            return [
-              cellNum(o?.clusters ?? null),
-              cellNum(o?.children ?? null),
-              cellNum(o?.vaccinated ?? null),
-              cellNum(o?.missed ?? null),
-              cellPct(o?.recallPct ?? null, MB.icm),
-              cellPct(o?.seenPct ?? null, null),
-            ];
-          },
-          consVal: (k, lv) => get(sp.cons, lv).icm.get(k)?.recallPct ?? null,
-          chartName: "ICM recall %",
-          noteComp: "Clusters = ICM clusters taken that day. Recall = children found vaccinated on ICM revisit \u00f7 children checked.",
-          noteCons: "Recall = children found vaccinated on ICM revisit \u00f7 children checked, for the selected days.",
-        },
-        {
-          title: "AIC supervision",
-          chartFmt: "0%",
-          skip: !hasAm,
-          compHead: cols.flatMap((i) => [`Day ${i + 1} areas`, `Day ${i + 1} score %`]),
-          compCells: (k, lv) =>
-            cols.flatMap((i) => {
-              const a = get([i], lv).am.get(k);
-              return [cellNum(a?.areas ?? null), cellPct(a?.overall ?? null, MON_B)];
-            }),
-          compVal: (k, lv, i) => get([i], lv).am.get(k)?.overall ?? null,
-          consHead: ["AIC forms", "Areas supervised", "AIC score %"],
-          consCells: (k, lv) => {
-            const a = get(sp.cons, lv).am.get(k);
-            return [
-              cellNum(a?.n ?? null),
-              cellNum(a?.areas ?? null),
-              cellPct(a?.overall ?? null, MON_B),
-            ];
-          },
-          consVal: (k, lv) => get(sp.cons, lv).am.get(k)?.overall ?? null,
-          chartName: "AIC score %",
-          noteComp: "Areas = polio areas with an AIC monitoring form that day. Score = share of Yes answers on scored items.",
-          noteCons: "Score = share of Yes answers on scored items across the selected days. Areas = unique areas supervised.",
-        },
-      ],
-      famOn = FAM.filter((f) => !f.skip),
-      foot = (s, txt) =>
-        s.addText(txt, {
-          x: 0.3,
-          y: 5.02,
-          w: 9.4,
-          h: 0.25,
-          fontFace: G,
-          fontSize: 7.5,
-          italic: !0,
-          color: n.mute,
-        }),
-      tehPage = (f, comp) => {
-        const heads = comp ? f.compHead : f.consHead,
-          s = de(
-            comp
-              ? `${f.title} by tehsil — day-wise comparison · ${campUp(z)}`
-              : `${f.title} by tehsil — consolidated, ${winLab} · ${campUp(z)}`,
-            "TEH",
-          ),
-          rowsLv = [
-            ...tehList.map((t) => ({ k: t, lv: "teh", t })),
-            { k: "all", lv: "all", t: null },
-          ],
-          body = rowsLv.map((r) => [
-            r.t == null
-              ? e(`${tc(d)} total`, { align: "left", bold: !0, fill: { color: "EEF5E9" } })
-              : e(tc(r.t), { align: "left", bold: !0 }),
-            ...(comp ? f.compCells(r.k, r.lv) : f.consCells(r.k, r.lv)),
-          ]),
-          withChart = tehList.length <= 6,
-          top = withChart ? 2.95 : 0.85,
-          rowH = Math.min(0.3, (4.95 - top) / (body.length + 1));
-        if (withChart) {
-          const series = comp
-            ? cols.map((i) => ({
-                name: `Day ${i + 1}`,
-                labels: tehList.map(tc),
-                values: tehList.map((t) => f.compVal(t, "teh", i) ?? 0),
-              }))
-            : [
-                {
-                  name: f.chartName,
-                  labels: tehList.map(tc),
-                  values: tehList.map((t) => f.consVal(t, "teh") ?? 0),
-                },
-              ];
-          s.addChart(oe.ChartType.bar, series, {
-            x: 0.3,
-            y: 0.8,
-            w: 9.4,
-            h: 2.05,
-            barDir: "col",
-            barGrouping: "clustered",
-            chartColors: comp ? palette : [n.blue],
+      PAL = ["1F5C8B", "8FAADC", "00B050", "FFC000", "C00000", "7F7F7F", "5B9BD5"],
+      GRN = "1E8E3E",
+      ORG = "F28C28",
+      RED = "E53935",
+      AMB = "FFC000",
+      ftxt = (s, t) =>
+        s.addText(t, { x: 0.3, y: 5.02, w: 9.4, h: 0.25, fontFace: G, fontSize: 7.5, italic: !0, color: n.mute }),
+      clean = (o) => Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined)),
+      bars = (s, series, o = {}) =>
+        s.addChart(
+          oe.ChartType.bar,
+          series,
+          clean({
+            x: o.x ?? 0.3,
+            y: 0.82,
+            w: o.w ?? 9.4,
+            h: 4.15,
+            fontFace: G,
+            barDir: "bar",
+            catAxisOrientation: "maxMin",
+            barGrouping: o.grouping || "clustered",
+            chartColors: o.colors,
             showValue: !0,
-            dataLabelFormatCode: f.chartFmt,
+            dataLabelFormatCode: o.fmt || "0%",
             dataLabelFontSize: 7,
-            valAxisLabelFormatCode: f.chartFmt,
+            dataLabelPosition: o.grouping === "stacked" ? "ctr" : "outEnd",
             valAxisMinVal: 0,
-            ...(f.chartFmt === "0%" ? { valAxisMaxVal: 1 } : {}),
+            valAxisMaxVal: o.max,
+            valAxisLabelFormatCode: o.fmt || "0%",
             valAxisLabelFontSize: 7,
-            catAxisLabelFontSize: 8,
-            showLegend: comp,
-            legendPos: "r",
+            catAxisLabelFontSize: 7,
+            showLegend: series.length > 1,
+            legendPos: "b",
             legendFontSize: 8,
+            barGapWidthPct: 40,
+          }),
+        ),
+      pagesOf = (arr, per) =>
+        Array.from({ length: Math.max(1, Math.ceil(arr.length / per)) }, (_, q) => arr.slice(q * per, q * per + per)),
+      pg = (t, q, total) => (total > 1 ? `${t} (${q + 1}/${total})` : t),
+      twoBar = (s, rows, vals, bench, o) => {
+        const pct = Math.round(bench * 100);
+        bars(
+          s,
+          [
+            {
+              name: `At or above ${pct}%`,
+              labels: rows.map(o.label),
+              values: vals.map((v) => (v != null && v >= bench ? v : null)),
+            },
+            {
+              name: `Below ${pct}%`,
+              labels: rows.map(o.label),
+              values: vals.map((v) => (v != null && v < bench ? v : null)),
+            },
+          ],
+          { colors: [GRN, o.bad || ORG], grouping: "stacked", max: 1, w: o.w, x: o.x },
+        );
+      },
+      addMap = async (s, vals, bandFn, legend, fmt) => {
+        const img = await pcrMap(d, vals, null, { band: bandFn, fmt: fmt || pctT });
+        if (img) {
+          const sc = Math.min(3.2 / img.w, 3.2 / img.h);
+          s.addImage({
+            data: img.data,
+            x: 6.5 + (3.2 - img.w * sc) / 2,
+            y: 0.9,
+            w: img.w * sc,
+            h: img.h * sc,
           });
         }
-        s.addTable([[u("Tehsil"), ...heads.map((h) => u(h))], ...body], {
-          x: 0.3,
-          y: top,
-          w: 9.4,
-          colW: [1.9, ...heads.map(() => 7.5 / heads.length)],
-          fontFace: G,
-          fontSize: 7.5,
-          color: n.ink,
-          rowH,
-          border: { type: "solid", pt: 0.5, color: n.grid },
-          autoPage: !1,
-        });
-        foot(s, comp ? f.noteComp : f.noteCons);
-      },
-      ucPages = (f, comp) => {
-        const ROWS = 18,
-          heads = comp ? f.compHead : f.consHead,
-          pages = Math.max(1, Math.ceil(ucList.length / ROWS));
-        for (let q = 0; q < pages; q++) {
-          const part = ucList.slice(q * ROWS, q * ROWS + ROWS),
-            s = de(
-              (comp
-                ? `${f.title} by UC — day-wise comparison`
-                : `${f.title} by UC — consolidated, ${winLab}`) +
-                (pages > 1 ? ` (${q + 1}/${pages})` : ""),
-              "UC",
-            );
-          s.addTable(
-            [
-              [u("Tehsil"), u("UC"), ...heads.map((h) => u(h))],
-              ...part.map((r) => [
-                e(tc(r.t), { align: "left" }),
-                e(r.uc, { align: "left", bold: !0 }),
-                ...(comp ? f.compCells(r.k, "uc") : f.consCells(r.k, "uc")),
-              ]),
-            ],
-            {
-              x: 0.3,
-              y: 0.85,
-              w: 9.4,
-              colW: [1.2, 1.5, ...heads.map(() => 6.7 / heads.length)],
-              fontFace: G,
-              fontSize: 7,
-              color: n.ink,
-              rowH: 0.2,
-              margin: 0.02,
-              border: { type: "solid", pt: 0.5, color: n.grid },
-              autoPage: !1,
-            },
-          );
-          foot(s, comp ? f.noteComp : f.noteCons);
+        const cnt = new Map();
+        for (const r of ucList) {
+          const k = bandFn(vals.get(r.k)) || "na";
+          cnt.set(k, (cnt.get(k) || 0) + 1);
         }
-      };
-    if (ucList.length && famOn.length) {
-      X("Tehsil and UC comparison", `${V} · ${campUp(z)}`);
-      for (const f of famOn) {
-        tehPage(f, !0);
-        ucPages(f, !0);
-      }
-      for (const f of famOn) {
-        tehPage(f, !1);
-        ucPages(f, !1);
+        let ly = 4.22;
+        for (const [lab, key] of legend) {
+          s.addShape(oe.ShapeType.rect, {
+            x: 6.5,
+            y: ly + 0.04,
+            w: 0.22,
+            h: 0.16,
+            fill: { color: pcrHex(key) },
+            line: { color: "7F7F7F", width: 0.5 },
+          });
+          s.addText(`${lab} · ${cnt.get(key || "na") || 0} UCs`, {
+            x: 6.8,
+            y: ly,
+            w: 3.0,
+            h: 0.24,
+            fontFace: G,
+            fontSize: 8,
+            color: n.ink,
+            valign: "middle",
+          });
+          ly += 0.24;
+        }
+      },
+      vmap = (ix, src, field) => new Map(ucList.map((r) => [r.k, cell(ix, "uc", src, r.k, field)])),
+      hhBand = (v) => (v == null || !isFinite(v) ? null : v >= 0.95 ? "pass" : "fail"),
+      icmBand = (v) => (v == null || !isFinite(v) ? null : v >= 0.9 ? "pass" : "fail"),
+      amBand = (v) => (v == null || !isFinite(v) ? null : v >= 0.9 ? "pass" : v >= 0.8 ? "watch" : "fail"),
+      lfBand = (v) => (v == null ? null : v > 0 ? "fail" : "pass"),
+      ranked = (field) =>
+        ucRows
+          .map((r) => ({ ...r, v: cell(sp.cons, "uc", "cov", r.k, field) ?? 0 }))
+          .filter((r) => r.v > 0)
+          .sort((a, b) => b.v - a.v);
+
+    // ---- Day-wise comparative slides (one series per day) ----
+    const dayLab = (i) => `Day ${i + 1}`;
+    {
+      const s = de(`HH coverage by tehsil — day-wise, to date · ${campUp(z)}`, "TEH");
+      bars(
+        s,
+        cols.map((i) => ({
+          name: dayLab(i),
+          labels: tehRows.map((r) => r.name),
+          values: tehRows.map((r) => cell(upto(i), r.lv, "cov", r.k, "hhcovPct")),
+        })),
+        { colors: PAL, max: 1 },
+      );
+      ftxt(s, "Each bar is coverage from day 1 up to that day, against the NEAP target. Benchmark 95%.");
+    }
+    {
+      const s = de(`Daily coverage by tehsil — day-wise · ${campUp(z)}`, "TEH");
+      bars(
+        s,
+        cols.map((i) => ({
+          name: dayLab(i),
+          labels: tehRows.map((r) => r.name),
+          values: tehRows.map((r) => cell([i], r.lv, "cov", r.k, "dailyPct")),
+        })),
+        { colors: PAL, max: 1.2 },
+      );
+      ftxt(s, "Each bar is that day only: children covered ÷ that day's daily target. Benchmark 95%.");
+    }
+    {
+      const s = de(`Children still missed by tehsil — day-wise · ${campUp(z)}`, "TEH");
+      bars(
+        s,
+        cols.map((i) => ({
+          name: dayLab(i),
+          labels: tehRows.map((r) => r.name),
+          values: tehRows.map((r) => cell([i], r.lv, "cov", r.k, "still")),
+        })),
+        { colors: PAL, fmt: "#,##0" },
+      );
+      ftxt(s, "Children not vaccinated on that day (NA, refusals and leftovers), from the coverage forms.");
+    }
+    if (hasIcm) {
+      const s = de(`ICM recall by tehsil — day-wise · ${campUp(z)}`, "ICM");
+      bars(
+        s,
+        cols.map((i) => ({
+          name: dayLab(i),
+          labels: tehRows.map((r) => r.name),
+          values: tehRows.map((r) => cell([i], r.lv, "icm", r.k, "recallPct")),
+        })),
+        { colors: PAL, max: 1 },
+      );
+      ftxt(s, "Recall = children found vaccinated on ICM revisit ÷ children checked. Benchmark 90%.");
+    }
+    if (hasAm) {
+      const s = de(`AIC monitoring score by tehsil — day-wise · ${campUp(z)}`, "AIC");
+      bars(
+        s,
+        cols.map((i) => ({
+          name: dayLab(i),
+          labels: tehRows.map((r) => r.name),
+          values: tehRows.map((r) => cell([i], r.lv, "am", r.k, "overall")),
+        })),
+        { colors: PAL, max: 1 },
+      );
+      ftxt(s, "Score = share of Yes answers on scored AIC monitoring items that day. Benchmark 90%.");
+    }
+    {
+      const P = pagesOf(ucRows, 15),
+        tot = P.length;
+      P.forEach((part, q) => {
+        const s = de(pg(`HH coverage by UC — day-wise, to date · ${campUp(z)}`, q, tot), "UC");
+        bars(
+          s,
+          cols.map((i) => ({
+            name: dayLab(i),
+            labels: part.map((r) => r.name),
+            values: part.map((r) => cell(upto(i), "uc", "cov", r.k, "hhcovPct")),
+          })),
+          { colors: PAL, max: 1 },
+        );
+        ftxt(s, "Each bar is coverage from day 1 up to that day, against the NEAP target, UC by UC.");
+      });
+    }
+
+    // ---- Consolidated slides (selected window) ----
+    {
+      const s = de(`HH coverage by tehsil — ${tillLab} · ${campUp(z)}`, "TEH");
+      twoBar(
+        s,
+        tehRows,
+        tehRows.map((r) => cell(sp.hh, r.lv, "cov", r.k, "hhcovPct")),
+        0.95,
+        {
+          label: (r) =>
+            `${r.name} (${numT(cell(sp.hh, r.lv, "cov", r.k, "hhCov"))} / ${numT(cell(sp.hh, r.lv, "cov", r.k, "neap"))})`,
+        },
+      );
+      ftxt(s, "Label: children covered / NEAP target from day 1. Benchmark 95%.");
+    }
+    {
+      const s = de(`Daily coverage by tehsil — ${tillLab} · ${campUp(z)}`, "TEH");
+      twoBar(
+        s,
+        tehRows,
+        tehRows.map((r) => cell(sp.cons, r.lv, "cov", r.k, "dailyPct")),
+        0.95,
+        {
+          label: (r) =>
+            `${r.name} (${numT(cell(sp.cons, r.lv, "cov", r.k, "hhCov"))} / ${numT(cell(sp.cons, r.lv, "cov", r.k, "tsTarget"))})`,
+        },
+      );
+      ftxt(s, "Label: children covered / daily target for the selected days. Benchmark 95%.");
+    }
+    {
+      const s = de(`Missed children by tehsil — ${tillLab} · ${campUp(z)}`, "TEH");
+      bars(
+        s,
+        [
+          { name: "NA", labels: tehRows.map((r) => r.name), values: tehRows.map((r) => cell(sp.cons, r.lv, "cov", r.k, "stillNA")) },
+          { name: "Refusals", labels: tehRows.map((r) => r.name), values: tehRows.map((r) => cell(sp.cons, r.lv, "cov", r.k, "stillRef")) },
+          { name: "Leftovers", labels: tehRows.map((r) => r.name), values: tehRows.map((r) => cell(sp.cons, r.lv, "cov", r.k, "stillLO")) },
+        ],
+        { grouping: "stacked", colors: ["F4C7C3", ORG, "C00000"], fmt: "#,##0" },
+      );
+      ftxt(s, "Children still missed for the selected days, by reason. Leftovers = security, boycott and other leftovers.");
+    }
+    if (hasIcm) {
+      const s = de(`ICM recall by tehsil — ${tillLab} · ${campUp(z)}`, "ICM");
+      twoBar(
+        s,
+        tehRows,
+        tehRows.map((r) => cell(sp.cons, r.lv, "icm", r.k, "recallPct")),
+        0.9,
+        {
+          bad: RED,
+          label: (r) => `${r.name} (${numT(cell(sp.cons, r.lv, "icm", r.k, "clusters"))} clusters)`,
+        },
+      );
+      ftxt(s, "Recall = children found vaccinated on ICM revisit ÷ children checked. Benchmark 90%.");
+    }
+    if (hasAm) {
+      const s = de(`AIC monitoring score by tehsil — ${tillLab} · ${campUp(z)}`, "AIC");
+      const vals = tehRows.map((r) => cell(sp.cons, r.lv, "am", r.k, "overall"));
+      bars(
+        s,
+        [
+          { name: "90% or more", labels: tehRows.map((r) => `${r.name} (${numT(cell(sp.cons, r.lv, "am", r.k, "areas"))} areas)`), values: vals.map((v) => (v != null && v >= 0.9 ? v : null)) },
+          { name: "80% to 89%", labels: tehRows.map((r) => r.name), values: vals.map((v) => (v != null && v >= 0.8 && v < 0.9 ? v : null)) },
+          { name: "Below 80%", labels: tehRows.map((r) => r.name), values: vals.map((v) => (v != null && v < 0.8 ? v : null)) },
+        ],
+        { grouping: "stacked", colors: [GRN, AMB, RED], max: 1 },
+      );
+      ftxt(s, "Score = share of Yes answers on scored AIC items. Label: areas supervised.");
+    }
+
+    // UC pages: bars (left) with the district map (right), as in the Chief Secretary deck.
+    {
+      const hh = vmap(sp.hh, "cov", "hhcovPct"),
+        P = pagesOf(ucRows, 30),
+        tot = P.length;
+      for (let q = 0; q < P.length; q++) {
+        const part = P[q],
+          s = de(pg(`HH coverage by UC — ${tillLab} · ${campUp(z)}`, q, tot), "UC");
+        twoBar(s, part, part.map((r) => hh.get(r.k)), 0.95, { label: (r) => r.name, w: 6.0 });
+        await addMap(s, hh, hhBand, [["95% or more covered", "pass"], ["Below 95%", "fail"], ["No data", null]]);
+        ftxt(s, "Map and bars use the same UC colours. Benchmark 95% of NEAP target.");
       }
     }
+    for (const [title, field, colour] of [
+      ["NA children still missed by UC", "stillNA", ORG],
+      ["Refusal children still missed by UC", "stillRef", RED],
+    ]) {
+      const R = ranked(field);
+      if (!R.length) continue;
+      const P = pagesOf(R, 30), tot = P.length;
+      P.forEach((part, q) => {
+        const s = de(pg(`${title} — ${tillLab} · ${campUp(z)}`, q, tot), "UC");
+        bars(s, [{ name: title, labels: part.map((r) => `${r.name} · ${tc(r.t)}`), values: part.map((r) => r.v) }], {
+          colors: [colour],
+          fmt: "#,##0",
+        });
+        ftxt(s, "UCs with no children still missed are not shown.");
+      });
+    }
+    {
+      const lf = vmap(sp.cons, "cov", "stillLO"),
+        R = ranked("stillLO"),
+        P = pagesOf(R, 30),
+        tot = P.length;
+      for (let q = 0; q < P.length; q++) {
+        const part = P[q],
+          s = de(pg(`Leftover children still missed by UC — ${tillLab} · ${campUp(z)}`, q, tot), "UC");
+        bars(s, [{ name: "Leftovers", labels: part.map((r) => `${r.name} · ${tc(r.t)}`), values: part.map((r) => r.v) }], {
+          colors: [RED],
+          fmt: "#,##0",
+          w: 6.0,
+        });
+        await addMap(s, lf, lfBand, [["Leftovers reported", "fail"], ["No leftovers", "pass"], ["No data", null]], numT);
+        ftxt(s, "Leftovers = security, boycott and other leftovers still not vaccinated.");
+      }
+    }
+    if (hasIcm) {
+      const ic = vmap(sp.cons, "icm", "recallPct"),
+        P = pagesOf(ucRows, 30),
+        tot = P.length;
+      for (let q = 0; q < P.length; q++) {
+        const part = P[q],
+          s = de(pg(`ICM recall by UC — ${tillLab} · ${campUp(z)}`, q, tot), "ICM");
+        twoBar(s, part, part.map((r) => ic.get(r.k)), 0.9, {
+          bad: RED,
+          w: 6.0,
+          label: (r) => `${r.name} (${numT(cell(sp.cons, "uc", "icm", r.k, "clusters"))})`,
+        });
+        await addMap(s, ic, icmBand, [["90% or more recall", "pass"], ["Below 90%", "fail"], ["No ICM", null]]);
+        ftxt(s, "Label: ICM clusters taken. Benchmark 90%.");
+      }
+      const TB = pagesOf(ucRows, 22),
+        tt = TB.length;
+      TB.forEach((part, q) => {
+        const s = de(pg(`ICM monitoring by UC — ${tillLab} · ${campUp(z)}`, q, tt), "ICM");
+        const rowsT = part.map((r) => {
+          const c = (f) => cell(sp.cons, "uc", "icm", r.k, f),
+            rc = c("recallPct");
+          return [
+            e(tc(r.t), { align: "left" }),
+            e(r.name, { align: "left", bold: !0 }),
+            e(numT(c("clusters"))),
+            e(numT(c("children"))),
+            e(numT(c("vaccinated"))),
+            e(pctT(rc), { bold: !0, fill: rc == null ? void 0 : { color: rc >= 0.9 ? "C6EFCE" : "FFC7CE" } }),
+            e(numT(c("missed"))),
+            e(pctT(c("seenPct"))),
+          ];
+        });
+        s.addTable(
+          [
+            [u("Tehsil"), u("UC"), u("Clusters"), u("Children checked"), u("Vaccinated on recall"), u("Recall %"), u("Missed"), u("Seen F.M %")],
+            ...rowsT,
+          ],
+          {
+            x: 0.3,
+            y: 0.85,
+            w: 9.4,
+            colW: [1.3, 1.9, 0.9, 1.1, 1.3, 1.0, 0.9, 1.0],
+            fontFace: G,
+            fontSize: 7,
+            color: n.ink,
+            rowH: 0.2,
+            margin: 0.02,
+            border: { type: "solid", pt: 0.5, color: n.grid },
+            autoPage: !1,
+          },
+        );
+        ftxt(s, "Recall benchmark 90%: green at or above, red below.");
+      });
+    }
+    if (hasAm) {
+      const am = vmap(sp.cons, "am", "overall"),
+        P = pagesOf(ucRows, 30),
+        tot = P.length;
+      for (let q = 0; q < P.length; q++) {
+        const part = P[q],
+          s = de(pg(`AIC monitoring score by UC — ${tillLab} · ${campUp(z)}`, q, tot), "AIC");
+        const vals = part.map((r) => am.get(r.k));
+        bars(
+          s,
+          [
+            { name: "90% or more", labels: part.map((r) => `${r.name} (${numT(cell(sp.cons, "uc", "am", r.k, "areas"))})`), values: vals.map((v) => (v != null && v >= 0.9 ? v : null)) },
+            { name: "80% to 89%", labels: part.map((r) => r.name), values: vals.map((v) => (v != null && v >= 0.8 && v < 0.9 ? v : null)) },
+            { name: "Below 80%", labels: part.map((r) => r.name), values: vals.map((v) => (v != null && v < 0.8 ? v : null)) },
+          ],
+          { grouping: "stacked", colors: [GRN, AMB, RED], max: 1, w: 6.0 },
+        );
+        await addMap(s, am, amBand, [["90% or more", "pass"], ["80% to 89%", "watch"], ["Below 80%", "fail"], ["No AIC", null]]);
+        ftxt(s, "Score = share of Yes answers on scored AIC items. Label: areas supervised.");
+      }
+    }
+    // Section divider placed before the comparative slides.
   }
   ee("Saving the file\u2026");
   const Ue = `ERM ${tc(d)} ${V.replace("'", "")} ${z}.pptx`.replace(
     /[\\/:*?"<>|]/g,
     "-",
   );
-  return await oe.writeFile({ fileName: Ue }), pe;
+  ee("Adding animations\u2026");
+  const motion = await dermAddMotion(await oe.write({ outputType: "arraybuffer" }));
+  dermSave(motion, Ue);
+  return pe;
 }
 const PCR = {
   C: {
