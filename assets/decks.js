@@ -59,6 +59,44 @@ function dermIcm(E, ee, n, d = () => !0) {
       z.camp === ee && z.district === E && (!n || n.has(String(z.day))) && d(z),
   );
 }
+// Day positions for the tehsil and UC comparison slides. They follow the same download choice as the rest of the deck:
+// one day (compared with the day before), days 1 to N together, or the full campaign.
+function dermCmpSpec(E, ee, n, d) {
+  const days = dermDays(E, ee),
+    N = Math.min(Math.max(1, d || 1), days.length),
+    upto = Array.from({ length: N }, (_, j) => j);
+  if (n === "full")
+    return { days, cols: days.map((_, j) => j), cons: null, hh: null, N };
+  if (n === "only")
+    return { days, cols: N > 1 ? [N - 2, N - 1] : [0], cons: [N - 1], hh: upto, N };
+  return { days, cols: upto, cons: upto, hh: upto, N };
+}
+// Coverage, ICM and AIC monitoring figures for the given day positions (null = whole campaign), grouped by keyFn.
+function dermCmpData(E, ee, ix, keyFn) {
+  const days = dermDays(E, ee),
+    labs = ix == null ? null : new Set(ix.map((j) => days[j])),
+    nums = ix == null ? null : new Set(ix.map((j) => String(j + 1))),
+    cov = dermCov(E, ee, labs, keyFn),
+    icm = new Map();
+  for (const r of dermIcm(E, ee, nums)) {
+    const k = keyFn(r);
+    let o = icm.get(k);
+    o || ((o = Object.fromEntries(ICM_F.map((f) => [f, 0]))), icm.set(k, o));
+    o.clusters++;
+    for (const f of ICM_F) f !== "clusters" && (o[f] += r.v[f]);
+  }
+  for (const [k, o] of icm) icm.set(k, icmM(o));
+  const amB = monCampOf(D.amCamps, ee),
+    am = new Map();
+  if (amB)
+    for (const r of D.am)
+      if (r.camp === amB && r.district === E && (!nums || nums.has(r.day))) {
+        const k = keyFn(r);
+        (am.get(k) || am.set(k, []).get(k)).push(r);
+      }
+  for (const [k, list] of am) am.set(k, amAgg(list));
+  return { cov, icm, am };
+}
 function dermPrevCamps(E, ee, n) {
   const d = n.indexOf(ee),
     z = (Q) =>
@@ -174,6 +212,7 @@ function dermOpen() {
       <label><input type="checkbox" id="dm-s2" checked> Still-missed UCs by tehsil (this round)</label>
       <label><input type="checkbox" id="dm-s3" checked> ICM analysis (last 3 rounds + this round)</label>
       <label><input type="checkbox" id="dm-s4" checked> Team &amp; AIC monitoring (process indicators)</label>
+      <label><input type="checkbox" id="dm-s5" checked> Tehsil &amp; UC comparison (day-wise and consolidated)</label>
     </div></div>
     <div class="dm-foot"><span class="note" id="dm-msg"></span><button class="btn pri dm-go" id="dm-go" type="button"><span>Download PowerPoint</span></button></div>
   </div>`,
@@ -241,6 +280,7 @@ function dermOpen() {
               blocks: $("#dm-s2", d).checked,
               icm: $("#dm-s3", d).checked,
               mon: $("#dm-s4", d).checked,
+              tuc: $("#dm-s5", d).checked,
             };
           (A.disabled = !0),
             A.classList.add("busy"),
@@ -1791,6 +1831,274 @@ async function dermBuild(E, ee) {
     }
     Le("UCs with zero ICM clusters", xe),
       Le("UCs where ICM found no missed children", Ne);
+  }
+  if (E.tuc && dermDays(d, z).length) {
+    ee("Tehsil and UC comparison…"), await new Promise((W) => setTimeout(W, 0));
+    const sp = dermCmpSpec(d, z, L, A),
+      cols = sp.cols,
+      winLab =
+        L === "full" ? "full campaign" : L === "only" ? `day ${A}` : A === 1 ? "day 1" : `days 1–${A}`,
+      memo = new Map(),
+      LV = { uc: ucKey, teh: (r) => r.tehsil, all: () => "all" },
+      get = (ix, lv) => {
+        const key = (ix == null ? "all" : ix.join(",")) + "|" + lv;
+        if (!memo.has(key)) memo.set(key, dermCmpData(d, z, ix, LV[lv]));
+        return memo.get(key);
+      },
+      upto = (i) => Array.from({ length: i + 1 }, (_, j) => j),
+      ucList = [
+        ...new Map(
+          D.cov
+            .filter((r) => r.camp === z && r.district === d)
+            .map((r) => [ucKey(r), r.tehsil || "—"]),
+        ),
+      ]
+        .map(([k, t]) => ({ k, t, uc: k.split("|")[1] }))
+        .sort((a, b) => (a.t + a.uc).localeCompare(b.t + b.uc)),
+      tehList = [...new Set(ucList.map((r) => r.t))].sort(),
+      hasIcm = !!D.icmByKey[campKey(z)],
+      hasAm = monCampOf(D.amCamps, z) != null,
+      cellPct = (v, ind) => e(pctT(v), { fill: ind ? monShade(ind, v) : void 0, bold: !!ind }),
+      cellNum = (v) => e(numT(v)),
+      palette = ["1F5C8B", "8FAADC", "00B050", "FFC000", "C00000", "7F7F7F", "5B9BD5"],
+      FAM = [
+        {
+          title: "HH and daily coverage",
+          chartFmt: "0%",
+          compHead: cols.flatMap((i) => [`Day ${i + 1} daily`, `Day ${i + 1} to date`]),
+          compCells: (k, lv) =>
+            cols.flatMap((i) => [
+              cellPct(get([i], lv).cov.get(k)?.dailyPct ?? null, MB.daily),
+              cellPct(get(upto(i), lv).cov.get(k)?.hhcovPct ?? null, MB.hh),
+            ]),
+          compVal: (k, lv, i) => get([i], lv).cov.get(k)?.dailyPct ?? null,
+          consHead: ["NEAP target", "HH covered", "HH coverage %", "Daily target (window)", "Daily covered (window)", "Daily coverage %"],
+          consCells: (k, lv) => {
+            const h = get(sp.hh, lv).cov.get(k),
+              c = get(sp.cons, lv).cov.get(k);
+            return [
+              cellNum(h?.neap),
+              cellNum(h?.hhCov),
+              cellPct(h?.hhcovPct ?? null, MB.hh),
+              cellNum(c?.tsTarget),
+              cellNum(c?.hhCov),
+              cellPct(c?.dailyPct ?? null, MB.daily),
+            ];
+          },
+          consVal: (k, lv) => get(sp.hh, lv).cov.get(k)?.hhcovPct ?? null,
+          chartName: "HH coverage %",
+          noteComp: "Daily = that day only. To date = day 1 up to that day, against the NEAP target.",
+          noteCons: "Consolidated for the selected days. Coverage to date uses the NEAP target from day 1. Daily figures add up the daily targets of those days.",
+        },
+        {
+          title: "Missed children",
+          chartFmt: "#,##0",
+          compHead: cols.map((i) => `Day ${i + 1} still missed`),
+          compCells: (k, lv) => cols.map((i) => cellNum(get([i], lv).cov.get(k)?.still ?? null)),
+          compVal: (k, lv, i) => get([i], lv).cov.get(k)?.still ?? null,
+          consHead: ["Still NA", "Still refusals", "Still leftovers", "Total still missed", "% of NEAP target"],
+          consCells: (k, lv) => {
+            const c = get(sp.cons, lv).cov.get(k),
+              h = get(sp.hh, lv).cov.get(k);
+            return [
+              cellNum(c?.stillNA),
+              cellNum(c?.stillRef),
+              cellNum(c?.stillLO),
+              cellNum(c?.still),
+              cellPct(h?.msTar ?? null, null),
+            ];
+          },
+          consVal: (k, lv) => get(sp.cons, lv).cov.get(k)?.still ?? null,
+          chartName: "Total still missed",
+          noteComp: "Still missed = children not vaccinated on that day (NA, refusals and leftovers), from the coverage forms.",
+          noteCons: "Still missed for the selected days (NA, refusals, leftovers). % of NEAP target uses the target from day 1.",
+        },
+        {
+          title: "ICM recall",
+          chartFmt: "0%",
+          skip: !hasIcm,
+          compHead: cols.flatMap((i) => [`Day ${i + 1} clusters`, `Day ${i + 1} recall %`]),
+          compCells: (k, lv) =>
+            cols.flatMap((i) => {
+              const o = get([i], lv).icm.get(k);
+              return [cellNum(o?.clusters ?? null), cellPct(o?.recallPct ?? null, MB.icm)];
+            }),
+          compVal: (k, lv, i) => get([i], lv).icm.get(k)?.recallPct ?? null,
+          consHead: ["Clusters", "Children checked", "Vaccinated on recall", "Missed", "Recall %", "Seen F.M %"],
+          consCells: (k, lv) => {
+            const o = get(sp.cons, lv).icm.get(k);
+            return [
+              cellNum(o?.clusters ?? null),
+              cellNum(o?.children ?? null),
+              cellNum(o?.vaccinated ?? null),
+              cellNum(o?.missed ?? null),
+              cellPct(o?.recallPct ?? null, MB.icm),
+              cellPct(o?.seenPct ?? null, null),
+            ];
+          },
+          consVal: (k, lv) => get(sp.cons, lv).icm.get(k)?.recallPct ?? null,
+          chartName: "ICM recall %",
+          noteComp: "Clusters = ICM clusters taken that day. Recall = children found vaccinated on ICM revisit \u00f7 children checked.",
+          noteCons: "Recall = children found vaccinated on ICM revisit \u00f7 children checked, for the selected days.",
+        },
+        {
+          title: "AIC supervision",
+          chartFmt: "0%",
+          skip: !hasAm,
+          compHead: cols.flatMap((i) => [`Day ${i + 1} areas`, `Day ${i + 1} score %`]),
+          compCells: (k, lv) =>
+            cols.flatMap((i) => {
+              const a = get([i], lv).am.get(k);
+              return [cellNum(a?.areas ?? null), cellPct(a?.overall ?? null, MON_B)];
+            }),
+          compVal: (k, lv, i) => get([i], lv).am.get(k)?.overall ?? null,
+          consHead: ["AIC forms", "Areas supervised", "AIC score %"],
+          consCells: (k, lv) => {
+            const a = get(sp.cons, lv).am.get(k);
+            return [
+              cellNum(a?.n ?? null),
+              cellNum(a?.areas ?? null),
+              cellPct(a?.overall ?? null, MON_B),
+            ];
+          },
+          consVal: (k, lv) => get(sp.cons, lv).am.get(k)?.overall ?? null,
+          chartName: "AIC score %",
+          noteComp: "Areas = polio areas with an AIC monitoring form that day. Score = share of Yes answers on scored items.",
+          noteCons: "Score = share of Yes answers on scored items across the selected days. Areas = unique areas supervised.",
+        },
+      ],
+      famOn = FAM.filter((f) => !f.skip),
+      foot = (s, txt) =>
+        s.addText(txt, {
+          x: 0.3,
+          y: 5.02,
+          w: 9.4,
+          h: 0.25,
+          fontFace: G,
+          fontSize: 7.5,
+          italic: !0,
+          color: n.mute,
+        }),
+      tehPage = (f, comp) => {
+        const heads = comp ? f.compHead : f.consHead,
+          s = de(
+            comp
+              ? `${f.title} by tehsil — day-wise comparison · ${campUp(z)}`
+              : `${f.title} by tehsil — consolidated, ${winLab} · ${campUp(z)}`,
+            "TEH",
+          ),
+          rowsLv = [
+            ...tehList.map((t) => ({ k: t, lv: "teh", t })),
+            { k: "all", lv: "all", t: null },
+          ],
+          body = rowsLv.map((r) => [
+            r.t == null
+              ? e(`${tc(d)} total`, { align: "left", bold: !0, fill: { color: "EEF5E9" } })
+              : e(tc(r.t), { align: "left", bold: !0 }),
+            ...(comp ? f.compCells(r.k, r.lv) : f.consCells(r.k, r.lv)),
+          ]),
+          withChart = tehList.length <= 6,
+          top = withChart ? 2.95 : 0.85,
+          rowH = Math.min(0.3, (4.95 - top) / (body.length + 1));
+        if (withChart) {
+          const series = comp
+            ? cols.map((i) => ({
+                name: `Day ${i + 1}`,
+                labels: tehList.map(tc),
+                values: tehList.map((t) => f.compVal(t, "teh", i) ?? 0),
+              }))
+            : [
+                {
+                  name: f.chartName,
+                  labels: tehList.map(tc),
+                  values: tehList.map((t) => f.consVal(t, "teh") ?? 0),
+                },
+              ];
+          s.addChart(oe.ChartType.bar, series, {
+            x: 0.3,
+            y: 0.8,
+            w: 9.4,
+            h: 2.05,
+            barDir: "col",
+            barGrouping: "clustered",
+            chartColors: comp ? palette : [n.blue],
+            showValue: !0,
+            dataLabelFormatCode: f.chartFmt,
+            dataLabelFontSize: 7,
+            valAxisLabelFormatCode: f.chartFmt,
+            valAxisMinVal: 0,
+            ...(f.chartFmt === "0%" ? { valAxisMaxVal: 1 } : {}),
+            valAxisLabelFontSize: 7,
+            catAxisLabelFontSize: 8,
+            showLegend: comp,
+            legendPos: "r",
+            legendFontSize: 8,
+          });
+        }
+        s.addTable([[u("Tehsil"), ...heads.map((h) => u(h))], ...body], {
+          x: 0.3,
+          y: top,
+          w: 9.4,
+          colW: [1.9, ...heads.map(() => 7.5 / heads.length)],
+          fontFace: G,
+          fontSize: 7.5,
+          color: n.ink,
+          rowH,
+          border: { type: "solid", pt: 0.5, color: n.grid },
+          autoPage: !1,
+        });
+        foot(s, comp ? f.noteComp : f.noteCons);
+      },
+      ucPages = (f, comp) => {
+        const ROWS = 18,
+          heads = comp ? f.compHead : f.consHead,
+          pages = Math.max(1, Math.ceil(ucList.length / ROWS));
+        for (let q = 0; q < pages; q++) {
+          const part = ucList.slice(q * ROWS, q * ROWS + ROWS),
+            s = de(
+              (comp
+                ? `${f.title} by UC — day-wise comparison`
+                : `${f.title} by UC — consolidated, ${winLab}`) +
+                (pages > 1 ? ` (${q + 1}/${pages})` : ""),
+              "UC",
+            );
+          s.addTable(
+            [
+              [u("Tehsil"), u("UC"), ...heads.map((h) => u(h))],
+              ...part.map((r) => [
+                e(tc(r.t), { align: "left" }),
+                e(r.uc, { align: "left", bold: !0 }),
+                ...(comp ? f.compCells(r.k, "uc") : f.consCells(r.k, "uc")),
+              ]),
+            ],
+            {
+              x: 0.3,
+              y: 0.85,
+              w: 9.4,
+              colW: [1.2, 1.5, ...heads.map(() => 6.7 / heads.length)],
+              fontFace: G,
+              fontSize: 7,
+              color: n.ink,
+              rowH: 0.2,
+              margin: 0.02,
+              border: { type: "solid", pt: 0.5, color: n.grid },
+              autoPage: !1,
+            },
+          );
+          foot(s, comp ? f.noteComp : f.noteCons);
+        }
+      };
+    if (ucList.length && famOn.length) {
+      X("Tehsil and UC comparison", `${V} · ${campUp(z)}`);
+      for (const f of famOn) {
+        tehPage(f, !0);
+        ucPages(f, !0);
+      }
+      for (const f of famOn) {
+        tehPage(f, !1);
+        ucPages(f, !1);
+      }
+    }
   }
   ee("Saving the file\u2026");
   const Ue = `ERM ${tc(d)} ${V.replace("'", "")} ${z}.pptx`.replace(
